@@ -32,7 +32,7 @@
                             Semua Produk
                         @endif
                     </h1>
-                    <p class="text-gray-600">Menampilkan {{ $barang->count() }} dari {{ $totalBarang }} produk</p>
+                    {{-- <p class="text-gray-600">Menampilkan {{ $barang->count() }} dari {{ $totalBarang }} produk</p> --}}
                 </div>
                 @if (request('brand'))
                     <a href="{{ route('pelanggan.barang') }}"
@@ -232,7 +232,7 @@
                                                 Rp {{ number_format($item->harga_diskon, 0, ',', '.') }}
                                             </p>
                                         @else
-                                            <p class="text-lg font-bold text-primary">{{ $item->formatted_harga }}</p>
+                                            <p class="text-lg font-bold text-[#009990]">{{ $item->formatted_harga }}</p>
                                         @endif
                                     </div>
                                     <a href="{{ route('pelanggan.detailBarang', $item->kode_barang) }}"

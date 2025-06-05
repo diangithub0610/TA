@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Tipe;
 use App\Models\Brand;
 use App\Models\Barang;
+use App\Models\Ulasan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PelangganController extends Controller
 {
     public function beranda()
-    {   
+    {
         $brands = Brand::all();
         $barang = Barang::all();
         return view('pelanggan.beranda.index', compact('barang', 'brands'));
@@ -56,22 +58,22 @@ class PelangganController extends Controller
         $brands = Brand::all();
         $tipes = Tipe::all();
 
-        return view('pelanggan.produk.index', compact('barang', 'brands', 'tipes'));
+        return view('pelanggan.barang.index', compact('barang', 'brands', 'tipes'));
     }
 
-    public function detailBarang($kodeBarang)
+    public function detailBarang($kode_barang)
     {
         $barang = Barang::with([
             'tipe.brand',
             'detailBarangs.warna',
             // 'gambarBarang'
-        ])->where('kode_barang', $kodeBarang)
+        ])->where('kode_barang', $kode_barang)
             ->where('is_active', true)
             ->firstOrFail();
 
         $barangTerkait = Barang::with(['tipe.brand'])
             ->where('kode_tipe', $barang->kode_tipe)
-            ->where('kode_barang', '!=', $kodeBarang)
+            ->where('kode_barang', '!=', $kode_barang)
             ->where('is_active', true)
             ->take(4)
             ->get();
@@ -102,13 +104,49 @@ class PelangganController extends Controller
         }
         // dd($detailByUkuranWarna);
 
+        // Ambil ulasan terkait barang
+        $ulasan = Ulasan::where('kode_barang', $barang->kode_barang)
+            ->latest()
+            ->paginate(5); // paginasi
+
+        // Hitung rata-rata rating
+        $averageRating = Ulasan::where('kode_barang', $barang->kode_barang)->avg('rating') ?? 0;
+
+        // Hitung total ulasan
+        $totalUlasan = Ulasan::where('kode_barang', $barang->kode_barang)->count();
+
+        // Cek apakah user bisa memberikan ulasan
+        $canReview = false;
+        $hasPurchased = false;
+
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // Cek apakah user pernah beli barang ini dan belum pernah mengulas
+            $hasPurchased = $user->transaksis()
+                ->whereHas('detailTransaksis', function ($query) use ($barang) {
+                    $query->where('kode_barang', $barang->kode_barang);
+                })
+                ->where('status', 'selesai')
+                ->exists();
+
+            $hasReviewed = Ulasan::where('kode_barang', $barang->kode_barang)
+                ->where('id_pelanggan', $user->id_pelanggan)
+                ->exists();
+
+            $canReview = $hasPurchased && !$hasReviewed;
+        }
+
+
         return view('pelanggan.barang.show', compact(
             'barang',
             'barangTerkait',
             'ukuranTersedia',
             'warnaTersedia',
-            'detailByUkuranWarna'
+            'detailByUkuranWarna',
+            'ulasan',
+            'averageRating',
+            'totalUlasan', 'canReview', 'hasPurchased'
         ));
-
     }
 }

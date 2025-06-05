@@ -56,7 +56,8 @@
                                         <th>Admin</th>
                                         <th>Tanggal Pemusnahan</th>
                                         <th>Alasan</th>
-                                        <th>Jumlah</th>
+                                        <th>Jumlah Diajukan</th>
+                                        <th>Jumlah Disetujui</th>
                                         <th>Bukti Gambar</th>
                                         <th>Status</th>
                                         @if (auth()->user()->role == 'owner')
@@ -73,7 +74,8 @@
                                                 <td>{{ $pemusnahan->admin->nama_admin }}</td>
                                                 <td>{{ $pemusnahan->tanggal_pemusnahan }}</td>
                                                 <td>{{ $pemusnahan->alasan }}</td>
-                                                <td>{{ $pemusnahan->jumlah }}</td>
+                                                <td>{{ $pemusnahan->jumlah_diajukan }}</td>
+                                                <td>{{ $pemusnahan->disetujui }}</td>
                                                 <td class="text-center">
                                                     <a href="#" class="btn btn-info btn-sm" data-bs-toggle="modal"
                                                         data-bs-target="#modalBukti{{ $pemusnahan->kode_pemusnahan }}">
@@ -114,7 +116,7 @@
                                                         @if ($pemusnahan->status == 'diajukan')
                                                             <div class="d-flex gap-2">
                                                                 <button type="button" class="btn btn-success btn-sm"
-                                                                    onclick="setujui('{{ $pemusnahan->kode_pemusnahan }}')">Setujui</button>
+                                                                    onclick="setujui('{{ $pemusnahan->kode_pemusnahan }}', {{ $pemusnahan->jumlah_diajukan }})">Setujui</button>
                                                                 <button type="button" class="btn btn-danger btn-sm"
                                                                     onclick="tolak('{{ $pemusnahan->kode_pemusnahan }}')">Tolak</button>
                                                             </div>
@@ -150,31 +152,37 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function setujui(kode) {
-            Swal.fire({
-                title: 'Setujui Pemusnahan',
-                text: 'Masukkan jumlah yang disetujui:',
-                input: 'number',
-                inputAttributes: {
-                    min: 1
-                },
-                inputValidator: (value) => {
-                    if (!value || value <= 0) {
-                        return 'Jumlah harus diisi dan lebih dari 0';
-                    }
-                },
-                showCancelButton: true,
-                confirmButtonText: 'Setujui',
-                cancelButtonText: 'Batal',
-                preConfirm: (jumlah) => {
-                    document.getElementById('form-persetujuan').action =
-                        `/pemusnahan-barang/persetujuan/${kode}`;
-                    document.getElementById('aksi-input').value = 'disetujui';
-                    document.getElementById('jumlah-input').value = jumlah;
-                    document.getElementById('form-persetujuan').submit();
-                }
-            });
+       function setujui(kode, jumlahDiajukan) {
+    Swal.fire({
+        title: 'Setujui Pemusnahan',
+        text: 'Masukkan jumlah yang disetujui:',
+        input: 'number',
+        inputAttributes: {
+            min: 1,
+            max: jumlahDiajukan
+        },
+        inputValue: jumlahDiajukan, // default value dari jumlah diajukan
+        inputValidator: (value) => {
+            if (!value || value <= 0) {
+                return 'Jumlah harus diisi dan lebih dari 0';
+            }
+            if (value > jumlahDiajukan) {
+                return `Jumlah tidak boleh melebihi jumlah pengajuan (${jumlahDiajukan})`;
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Setujui',
+        cancelButtonText: 'Batal',
+        preConfirm: (jumlah) => {
+            document.getElementById('form-persetujuan').action =
+                `/pemusnahan-barang/persetujuan/${kode}`;
+            document.getElementById('aksi-input').value = 'disetujui';
+            document.getElementById('jumlah-input').value = jumlah;
+            document.getElementById('form-persetujuan').submit();
         }
+    });
+}
+
 
         function tolak(kode) {
             Swal.fire({

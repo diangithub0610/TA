@@ -81,7 +81,7 @@ class Barang extends Model
         return 'Rp ' . number_format($this->harga_normal, 0, ',', '.');
     }
 
-    
+
 
     public function getHargaPotonganAttribute()
     {
@@ -124,9 +124,9 @@ class Barang extends Model
     // Scope untuk barang dengan rating tinggi
     public function scopeHighRated($query, $minRating = 4)
     {
-        return $query->whereHas('ulasan', function($q) use ($minRating) {
+        return $query->whereHas('ulasan', function ($q) use ($minRating) {
             $q->selectRaw('AVG(rating) as avg_rating')
-              ->havingRaw('avg_rating >= ?', [$minRating]);
+                ->havingRaw('avg_rating >= ?', [$minRating]);
         });
     }
 
@@ -134,9 +134,9 @@ class Barang extends Model
     public function latestUlasan($limit = 5)
     {
         return $this->ulasan()
-                    ->with('user')
-                    ->orderBy('tanggal_review', 'desc')
-                    ->limit($limit)
-                    ->get();
+            ->with('user')
+            ->orderBy('tanggal_review', 'desc')
+            ->limit($limit)
+            ->get();
     }
 }

@@ -83,21 +83,58 @@ class PemusnahanBarangController extends Controller
     
         $pemusnahan = PemusnahanBarang::where('kode_pemusnahan', $kode_pemusnahan)->firstOrFail();
     
-        if ($request->aksi === 'disetujui') {
-            $request->validate([
-                'jumlah' => 'required|integer|min:1|max:' . $pemusnahan->jumlah,
-            ], [
-                'jumlah.max' => 'Jumlah yang disetujui tidak boleh melebihi jumlah pengajuan (' . $pemusnahan->jumlah . ').'
-            ]);
-    
-            $pemusnahan->jumlah = $request->jumlah;
+        // Pastikan status masih dalam tahap pengajuan
+        if ($pemusnahan->status !== 'diajukan') {
+            return redirect()->route('pemusnahan-barang.index')
+                ->with('error', 'Pemusnahan ini sudah diproses sebelumnya.');
         }
     
-        $pemusnahan->status = $request->aksi;
+        if ($request->aksi === 'disetujui') {
+            $request->validate([
+                'jumlah' => 'required|integer|min:1|max:' . $pemusnahan->jumlah_diajukan,
+            ], [
+                'jumlah.max' => 'Jumlah yang disetujui tidak boleh melebihi jumlah pengajuan (' . $pemusnahan->jumlah_diajukan . ').'
+            ]);
+    
+            // Set jumlah yang disetujui
+            $pemusnahan->jumlah_disetujui = $request->jumlah;
+    
+            // Kurangi stok di detail_barang berdasarkan jumlah yang disetujui
+            $detailBarang = $pemusnahan->detailBarang; // Pastikan relasi detailBarang() ada di model PemusnahanBarang
+            
+            if ($detailBarang) {
+                // Cek apakah stok mencukupi
+                if ($detailBarang->stok < $request->jumlah) {
+                    return redirect()->back()
+                        ->with('error', 'Stok tidak mencukupi. Stok tersedia: ' . $detailBarang->stok . ', diminta: ' . $request->jumlah);
+                }
+    
+                // Kurangi stok sesuai jumlah yang disetujui
+                $detailBarang->stok -= $request->jumlah;
+                $detailBarang->save();
+            } else {
+                return redirect()->back()
+                    ->with('error', 'Detail barang tidak ditemukan.');
+            }
+    
+            $pemusnahan->status = 'disetujui';
+            $statusMessage = 'Pemusnahan disetujui dan stok telah dikurangi sebanyak ' . $request->jumlah . ' unit.';
+            
+        } elseif ($request->aksi === 'ditolak') {
+            // Jika ditolak, tidak ada pengurangan stok
+            $pemusnahan->status = 'ditolak';
+            $pemusnahan->jumlah_disetujui = 0; // Set ke 0 karena ditolak
+            $statusMessage = 'Pemusnahan ditolak. Stok tidak dikurangi.';
+        }
+    
+        // Set tanggal pemusnahan jika disetujui
+        if ($request->aksi === 'disetujui') {
+            $pemusnahan->tanggal_pemusnahan = now()->toDateString();
+        }
+    
         $pemusnahan->save();
     
-        return redirect()->route('pemusnahan-barang.index')->with('success', 'Status pemusnahan berhasil diperbarui.');
-    }
-    
-    
+        return redirect()->route('pemusnahan-barang.index')
+            ->with('success', $statusMessage);
+    }  
 }

@@ -113,7 +113,7 @@
                                     <div class="form-group">
                                         <label for="biaya_pendaftaran">Biaya Pendaftaran Reseller</label>
                                         <input type="text" class="form-control" id="biaya_pendaftaran"
-                                            name="biaya_pendaftaran"
+                                            name="biaya_pendaftaran_reseller"
                                             value="{{ $toko->biaya_pendaftaran_reseller ?? old('biaya_pendaftaran_reseller') }}"requ>
                                     </div>
                                 </div>

@@ -9,14 +9,17 @@
                   </a>
                   
                 <!-- Search Bar -->
-                <div class="relative hidden md:block">
-                    <input type="text" placeholder="Cari produk..."
-                        class="w-80 pl-4 pr-10 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                    <button
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-500">
+                <form action="{{ route('pelanggan.barang') }}" method="GET" class="relative hidden md:block">
+                    <input type="text" 
+                           name="cari" 
+                           value="{{ request('cari') }}"
+                           placeholder="Cari produk atau brand..."
+                           class="w-80 pl-4 pr-10 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                    <button type="submit"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-500 hover:text-primary">
                         <i class="ri-search-line"></i>
                     </button>
-                </div>
+                </form>
             </div>
 
             <!-- Icons -->

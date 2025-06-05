@@ -7,8 +7,10 @@ use App\Models\Tipe;
 use App\Models\Brand;
 use App\Models\Warna;
 use App\Models\Barang;
+use Illuminate\Support\Str;
 use App\Models\DetailBarang;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -179,7 +181,7 @@ class BarangController extends Controller
                         'kode_barang' => $kode_barang,
                         'kode_warna' => $warna,
                         'ukuran' => $detail['ukuran'],
-                        'stok' => $detail['stok'] ?? 0
+                        // 'stok' => $detail['stok'] ?? 0
                     ];
                 }
                 Log::debug('Details to create:', $detailsToCreate);
@@ -255,7 +257,7 @@ class BarangController extends Controller
 
                 // Cek duplikasi
                 if ($existingDetails->has($key)) {
-                    throw new \Exception("Detail dengan warna dan ukuran {$ukuran} sudah ada");
+                    throw new Exception("Detail dengan warna dan ukuran {$ukuran} sudah ada");
                 }
 
                 // Generate kode detail
@@ -500,11 +502,13 @@ class BarangController extends Controller
                     } else {
                         // Buat detail baru jika tidak ada
                         DetailBarang::create([
+                            'kode_detail' => Str::uuid(), // atau generate kode kustom
                             'kode_barang' => $kode_barang,
                             'kode_warna' => $detail['kode_warna'],
                             'ukuran' => $detail['ukuran'],
                             'stok' => $detail['stok']
                         ]);
+                        
                     }
                 }
 
@@ -586,7 +590,7 @@ class BarangController extends Controller
 
             return redirect()->route('barang.index')
                 ->with('success', 'Barang berhasil dihapus');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->route('barang.index')
                 ->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
         }

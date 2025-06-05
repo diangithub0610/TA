@@ -162,14 +162,27 @@ class BarangMasukController extends Controller
     public function getProdukByBrand(Request $request)
     {
         $kodeBrand = $request->kode_brand;
+        // $kodeBrand = 'PATR';
+        
+        // Ambil semua kode_tipe dari brand ini
+    $kodeTipeList = DB::table('tipe')
+    ->where('kode_brand', $kodeBrand)
+    ->pluck('kode_tipe');
 
-        // Ambil barang berdasarkan brand melalui relasi tipe
-        $barangs = DB::table('barang')
-            ->join('tipe', 'barang.kode_tipe', '=', 'tipe.kode_tipe')
-            ->where('tipe.kode_brand', $kodeBrand)
-            ->where('barang.is_active', 1)
-            ->select('barang.kode_barang', 'barang.nama_barang')
-            ->get();
+// Ambil semua barang yang tipe-nya termasuk dalam daftar di atas
+$barangs = DB::table('barang')
+    ->whereIn('kode_tipe', $kodeTipeList)
+    ->where('is_active', 1)
+    ->select(
+        'kode_barang',
+        'nama_barang',
+        'harga_normal',
+        'gambar',
+        'kode_tipe'
+    )
+    ->get();
+
+            // dd($barangs);
 
         return response()->json($barangs);
     }

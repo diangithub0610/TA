@@ -49,6 +49,7 @@ class TokoController extends Controller
             'rajaongkir_id' => 'nullable|string|max:20',
             'no_telp' => 'nullable|string|max:15',
             'email' => 'nullable|email|max:100',
+            'biaya_pendaftaran_reseller' => 'nullable',
         ]);
 
         $toko = Toko::first();
@@ -68,6 +69,7 @@ class TokoController extends Controller
         $toko->rajaongkir_id = $request->rajaongkir_id;
         $toko->no_telp = $request->no_telp;
         $toko->email = $request->email;
+        $toko->biaya_pendaftaran_reseller = $request->biaya_pendaftaran_reseller;
 
         $toko->save();
 
@@ -77,23 +79,4 @@ class TokoController extends Controller
         return redirect()->route('admin.toko.index')->with('success', 'Pengaturan toko berhasil disimpan');
     }
 
-    public function updateBiayaPendaftaran(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'biaya_pendaftaran_reseller' => 'required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        $toko = Toko::first();
-        if ($toko) {
-            $toko->update([
-                'biaya_pendaftaran_reseller' => $request->biaya_pendaftaran_reseller
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Biaya pendaftaran reseller berhasil diperbarui.');
-    }
 }

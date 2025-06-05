@@ -258,15 +258,7 @@
                         pattern="^\\d+(\\.\\d+)?$"
                     >
                 </div>
-                <div class="col-md-3">
-                    <input 
-                        type="number" 
-                        class="form-control stok-input" 
-                        name="detail_warnas[${detailIndex}][stok]" 
-                        placeholder="Stok"
-                        min="0"
-                    >
-                </div>
+      
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="button" class="btn btn-danger remove-detail-btn">
                         <i class="fas fa-trash"></i> Hapus

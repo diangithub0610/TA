@@ -21,7 +21,8 @@ class PemusnahanBarang extends Model
         'kode_detail',
         'id_admin',
         'tanggal_pemusnahan',
-        'jumlah',
+        'jumlah_diajukan',
+        'jumlah_disetujui',
         'alasan',
         'bukti_gambar',
         'status'

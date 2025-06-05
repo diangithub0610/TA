@@ -26,6 +26,7 @@ use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\RegistrasiController;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\AdminPesananController;
+use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\PemusnahanBarangController;
 
 
@@ -124,8 +125,6 @@ Route::middleware(['auth:admin', 'role:shopkeeper'])->prefix('admin')->name('adm
     Route::get('/transaksi/{kode_transaksi}/invoice', [AdminPesananController::class, 'invoice'])->name('admin-transaksi.invoice');
     Route::post('/transaksi/bulk-update-status', [AdminPesananController::class, 'bulkUpdateStatus'])->name('admin-transaksi.bulk-update-status');
     Route::get('/transaksi-statistics', [AdminPesananController::class, 'statistics'])->name('admin-transaksi.statistics');
-
-   
 });
 
 Route::prefix('kasir')->name('kasir.')->group(function () {
@@ -146,7 +145,7 @@ Route::prefix('kasir')->name('kasir.')->group(function () {
     /////
 
     Route::get('/transaksi', [KasirController::class, 'riwayat'])->name('riwayat');
-    
+
     // Route untuk detail transaksi
     Route::get('/transaksi/{kode_transaksi}', [KasirController::class, 'show'])->name('admin.shopkeeper.detail');
 });
@@ -264,7 +263,7 @@ Route::middleware(['auth:pelanggan'])->group(function () {
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
     Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
     Route::post('/profil/foto', [ProfilController::class, 'updateFoto'])->name('profil.update.foto');
-   
+
     //
     Route::get('/profil-alamat', [ProfilController::class, 'alamat'])->name('profil.alamat');
     Route::get('/change-password', [ProfilController::class, 'showChangePasswordForm'])->name('change-password');
@@ -294,22 +293,32 @@ Route::prefix('admin/persediaan')->group(function () {
 //produk-pelanggan
 Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
     // Route untuk halaman produk dengan filter dan sorting
-    Route::get('/barang', [BarangController::class, 'barang'])->name('barang');
-    
+    Route::get('/barang', [PelangganController::class, 'barang'])->name('barang');
+
+    // Route untuk halaman produk dengan filter dan sorting
+    // Route::get('/barang/cari', [BarangController::class, 'barang'])->name('cariBarang');
+
     // Route untuk filter berdasarkan brand (redirect ke halaman produk dengan parameter brand)
     Route::get('/produk/brand/{brandId}', [BarangController::class, 'byBrand'])->name('produk.byBrand');
 });
 
 
-Route::middleware(['auth'])->group(function () {
-    // Routes untuk Ulasan
-    Route::get('/ulasan/barang/{kode_barang}', [UlasanController::class, 'getUlasanByBarang'])->name('ulasan.by-barang');
-    Route::get('/ulasan/create/{kode_barang}', [UlasanController::class, 'create'])->name('ulasan.create');
-    Route::post('/ulasan', [UlasanController::class, 'store'])->name('ulasan.store');
-    Route::get('/ulasan/{id}/edit', [UlasanController::class, 'edit'])->name('ulasan.edit');
-    Route::put('/ulasan/{id}', [UlasanController::class, 'update'])->name('ulasan.update');
-    Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy'])->name('ulasan.destroy');
-});
+// Route::middleware(['auth:pelanggan'])->group(function () {
+// Routes untuk Ulasan
+// Route::get('/ulasan/barang/{kode_barang}', [UlasanController::class, 'getUlasanByBarang'])->name('ulasan.by-barang');
+// Route::get('/ulasan/create/{kode_barang}', [UlasanController::class, 'create'])->name('ulasan.create');
+// Route::post('/ulasan', [UlasanController::class, 'store'])->name('ulasan.store');
+Route::get('/ulasan/create/{kode_transaksi}', [UlasanController::class, 'create'])->name('ulasan.create');
+Route::post('/ulasan/store', [UlasanController::class, 'store'])->name('ulasan.store');
+// });
 
 // Route publik untuk melihat ulasan
 Route::get('/ulasan/{kode_barang}', [UlasanController::class, 'index'])->name('ulasan.index');
+
+
+// routes/web.php
+
+
+Route::get('/pesanan', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
+Route::get('/pesanan-ku/{kode_transaksi}', [CustomerOrderController::class, 'show'])->name('customer.orders.show');
+Route::get('/pesanan/{kode_transaksi}/invoice', [CustomerOrderController::class, 'downloadInvoice'])->name('customer.orders.invoice');

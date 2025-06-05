@@ -176,12 +176,18 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div id="contentUlasan" class="mt-6 prose prose-sm max-w-none cursor-pointer"
-                    onclick="window.location.href='{{ route('ulasan.index', ['kode_barang' => $barang->kode_barang]) }}'">
-                    <h3>Ulasan Produk</h3>
-                    <p>error.</p>
+                <!-- Ulasan Produk -->
+                <div id="contentUlasan" class="mt-10 hidden">
+                    @include('pelanggan.barang.ulasan', [
+                        'ulasan' => $ulasan,
+                        'averageRating' => $averageRating,
+                        'totalUlasan' => $totalUlasan,
+                        'canReview' => $canReview,
+                        'hasPurchased' => $hasPurchased,
+                        'barang' => $barang,
+                    ])
                 </div>
+
             </div>
         </div>
 

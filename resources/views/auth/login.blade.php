@@ -19,7 +19,7 @@
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-8">
             <div class="flex justify-center mb-8">
-                <img src="https://ai-public.creatie.ai/gen_page/logo_placeholder.png" alt="Logo" class="h-12">
+                <img src="{{ asset('img/logo/logo-wf-panjang.png') }}" alt="navbar brand" class="h-10 w-auto object-contain" />
             </div>
 
             <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">Masuk ke Akun Anda</h2>
