@@ -20,30 +20,38 @@ class BrandController extends Controller
             'nama_brand' => 'required|string|max:25',
             'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048' // Optional logo upload
         ]);
-
+    
+        // Cek apakah nama brand sudah ada (case-insensitive)
+        $existingBrand = Brand::whereRaw('LOWER(nama_brand) = ?', [strtolower($request->nama_brand)])->exists();
+    
+        if ($existingBrand) {
+            return back()->withErrors(['nama_brand' => 'Brand sudah diinput.'])->withInput();
+        }
+    
         $kode_brand = Brand::generateKodeBrand($request->nama_brand);
         $brandData = [
             'kode_brand' => $kode_brand,
             'nama_brand' => $request->nama_brand
         ];
-
+    
         // Handle logo upload
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
-
+    
             // Generate unique filename with kode_brand and upload date
             $filename = $kode_brand . '_' . now()->format('Ymd') . '.' . $logo->getClientOriginalExtension();
-
+    
             // Store in brand folder
             $logoPath = $logo->storeAs('brand', $filename, 'public');
-
+    
             $brandData['logo'] = $logoPath;
         }
-
+    
         Brand::create($brandData);
-
+    
         return back()->with('success', 'Brand berhasil ditambahkan');
     }
+    
 
     public function update(Request $request, $kode_brand)
     {

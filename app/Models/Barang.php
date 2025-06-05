@@ -36,6 +36,11 @@ class Barang extends Model
         return $this->hasMany(DetailBarang::class, 'kode_barang', 'kode_barang');
     }
 
+    public function detailBarang()
+    {
+        return $this->hasMany(DetailBarang::class, 'kode_barang', 'kode_barang');
+    }
+
     // Method untuk generate kode barang otomatis
     public static function generateKodeBarang($kode_tipe)
     {
@@ -89,5 +94,49 @@ class Barang extends Model
         $harga = $this->harga_setelah_potongan;
         return 'Rp ' . number_format($harga, 0, ',', '.');
     }
-   
+    public function ulasan()
+    {
+        return $this->hasMany(Ulasan::class, 'kode_barang', 'kode_barang');
+    }
+
+    // Method untuk mendapatkan rata-rata rating
+    public function averageRating()
+    {
+        return $this->ulasan()->avg('rating') ?: 0;
+    }
+
+    // Method untuk mendapatkan total ulasan
+    public function totalUlasan()
+    {
+        return $this->ulasan()->count();
+    }
+
+    // Method untuk mendapatkan distribusi rating
+    public function ratingDistribution()
+    {
+        $distribution = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $distribution[$i] = $this->ulasan()->where('rating', $i)->count();
+        }
+        return $distribution;
+    }
+
+    // Scope untuk barang dengan rating tinggi
+    public function scopeHighRated($query, $minRating = 4)
+    {
+        return $query->whereHas('ulasan', function($q) use ($minRating) {
+            $q->selectRaw('AVG(rating) as avg_rating')
+              ->havingRaw('avg_rating >= ?', [$minRating]);
+        });
+    }
+
+    // Method untuk mendapatkan ulasan terbaru
+    public function latestUlasan($limit = 5)
+    {
+        return $this->ulasan()
+                    ->with('user')
+                    ->orderBy('tanggal_review', 'desc')
+                    ->limit($limit)
+                    ->get();
+    }
 }

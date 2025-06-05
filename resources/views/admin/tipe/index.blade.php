@@ -77,3 +77,17 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+@if ($errors->has('nama_tipe'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal Menambahkan Tipe',
+        text: '{{ $errors->first('nama_tipe') }}',
+        confirmButtonColor: '#d33'
+    });
+</script>
+@endif
+
+    
+@endpush

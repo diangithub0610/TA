@@ -224,13 +224,29 @@
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#"
                         aria-expanded="false">
-                        <div class="avatar-sm">
-                            <img src="{{ asset('img/profile.jpg') }}" alt="..."
-                                class="avatar-img rounded-circle" />
-                        </div>
+                        @php
+                        $admin = Auth::guard('admin')->user();
+                        $foto = $admin?->foto_profil; // asumsikan field 'foto' menyimpan nama file gambar
+                        $nama = $admin?->nama_admin ?? 'A';
+                        $inisial = strtoupper(Str::substr($nama, 0, 1));
+                    @endphp
+                    
+                    <div class="avatar-sm d-flex align-items-center justify-content-center">
+                        @if ($foto)
+                            <img src="{{ asset('storage/foto/' . $foto) }}" alt="Foto Profil"
+                                 class="avatar-img rounded-circle" style="object-fit: cover;" />
+                        @else
+                            <div class="avatar-img rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                 style="width: 40px; height: 40px; font-weight: bold;">
+                                {{ $inisial }}
+                            </div>
+                        @endif
+                    </div>
+                    
                         <span class="profile-username">
                             <span class="op-7">Hi,</span>
-                            <span class="fw-bold">Hizrian</span>
+                            <span class="fw-bold">{{ Auth::guard('admin')->user()->nama_admin }}
+                            </span>
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-user animated fadeIn">

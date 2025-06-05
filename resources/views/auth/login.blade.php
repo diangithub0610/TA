@@ -82,7 +82,8 @@
 
             <p class="mt-8 text-center text-sm text-gray-600">
                 Belum punya akun?
-                <a href="#" class="font-medium text-custom hover:text-custom-dark">Daftar sekarang</a>
+                <a href="{{ route('register') }}" class="font-medium text-custom hover:text-custom-dark">Daftar
+                    sekarang</a>
             </p>
         </div>
     </div>

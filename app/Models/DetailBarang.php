@@ -33,12 +33,20 @@ class DetailBarang extends Model
     }
 
     // Method untuk generate kode detail barang
+    // public static function generateKodeDetail($kode_barang, $kode_warna, $nextNumber = 1)
+    // {
+    //     $prefix = "{$kode_barang}-{$kode_warna}";
+    //     $formattedNumber = str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
+    //     return "{$prefix}-{$formattedNumber}";
+    // }
+
     public static function generateKodeDetail($kode_barang, $kode_warna, $nextNumber = 1)
-    {
-        $prefix = "{$kode_barang}-{$kode_warna}";
-        $formattedNumber = str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
-        return "{$prefix}-{$formattedNumber}";
-    }
+{
+    $prefix = "{$kode_barang}-{$kode_warna}";
+    $formattedNumber = str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
+    return "{$prefix}-{$formattedNumber}";
+}
+
 
     public function getHargaPelangganAttribute()
     {

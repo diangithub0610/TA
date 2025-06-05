@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\GenerateId;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Toko;
 use App\Services\RajaOngkirService;
-use App\Helpers\GenerateId;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
 
 class TokoController extends Controller
 {
@@ -74,5 +75,25 @@ class TokoController extends Controller
         Cache::forget('toko_data');
 
         return redirect()->route('admin.toko.index')->with('success', 'Pengaturan toko berhasil disimpan');
+    }
+
+    public function updateBiayaPendaftaran(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'biaya_pendaftaran_reseller' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $toko = Toko::first();
+        if ($toko) {
+            $toko->update([
+                'biaya_pendaftaran_reseller' => $request->biaya_pendaftaran_reseller
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Biaya pendaftaran reseller berhasil diperbarui.');
     }
 }

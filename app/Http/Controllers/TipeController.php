@@ -28,11 +28,20 @@ class TipeController extends Controller
             'kode_brand' => 'required|exists:brand,kode_brand',
             'potongan_harga' => 'nullable|numeric|min:0|max:100000000'
         ]);
-
+    
+        // Cek apakah tipe dengan nama dan brand yang sama sudah ada (case insensitive)
+        $exists = Tipe::whereRaw('LOWER(nama_tipe) = ?', [strtolower($validatedData['nama_tipe'])])
+            ->where('kode_brand', $validatedData['kode_brand'])
+            ->exists();
+    
+        if ($exists) {
+            return back()->withErrors(['nama_tipe' => 'Tipe dengan nama dan brand tersebut sudah ada.'])->withInput();
+        }
+    
         // Generate kode tipe otomatis
         $kode_tipe = Tipe::generateKodeTipe($validatedData['nama_tipe'], $validatedData['kode_brand']);
-
-        // Validasi ulang kode tipe yang di-generate
+    
+        // Validasi kode_tipe yang dihasilkan
         $validasi_kode = validator([
             'kode_tipe' => $kode_tipe
         ], [
@@ -43,12 +52,11 @@ class TipeController extends Controller
                 'regex:/^[A-Z0-9-]+$/'
             ]
         ]);
-
+    
         // Jika kode sudah ada, tambahkan angka
         $counter = 1;
         while ($validasi_kode->fails()) {
             $kode_tipe = $kode_tipe . $counter;
-
             $validasi_kode = validator([
                 'kode_tipe' => $kode_tipe
             ], [
@@ -59,18 +67,16 @@ class TipeController extends Controller
                     'regex:/^[A-Z0-9-]+$/'
                 ]
             ]);
-
             $counter++;
         }
-
-        // Tambahkan kode tipe ke data yang akan disimpan
+    
         $validatedData['kode_tipe'] = $kode_tipe;
-
+    
         Tipe::create($validatedData);
-
-        return redirect()->route('tipe.index')
-            ->with('success', 'Tipe berhasil ditambahkan');
+    
+        return redirect()->route('tipe.index')->with('success', 'Tipe berhasil ditambahkan');
     }
+    
 
     public function edit($kode_tipe)
     {

@@ -12,17 +12,11 @@ class Pelanggan extends Authenticatable
     protected $table = 'Pelanggan';
     protected $primaryKey = 'id_pelanggan';
     public $incrementing = false;
+    public $timestamps = false;
 
     protected $fillable = [
-        'id_pelanggan',
-        'nama_pelanggan',
-        'no_hp',
-        'email',
-        'alamat',
-        'username',
-        'role',
-        'foto_profil',
-        'kata_sandi'
+        'id_pelanggan', 'nama_pelanggan', 'no_hp', 'email', 'alamat_pengguna', 'username',
+        'foto_profil', 'kata_sandi', 'role',
     ];
 
     protected $hidden = [
@@ -30,10 +24,10 @@ class Pelanggan extends Authenticatable
     ];
 
     // Mutator for password hashing
-    public function setKataSandiAttribute($value)
-    {
-        $this->attributes['kata_sandi'] = bcrypt($value);
-    }
+    // public function setKataSandiAttribute($value)
+    // {
+    //     $this->attributes['kata_sandi'] = bcrypt($value);
+    // }
 
     // Check user role methods
     public function isPelanggan()
@@ -53,6 +47,7 @@ class Pelanggan extends Authenticatable
 
     public function alamat()
     {
+        //return $this->hasMany(Alamat::class);
         return $this->hasMany(Alamat::class, 'id_pelanggan', 'id_pelanggan');
     }
 
@@ -66,12 +61,40 @@ class Pelanggan extends Authenticatable
         return $this->hasMany(Transaksi::class, 'id_pelanggan', 'id_pelanggan');
     }
 
-    // Aksesor untuk harga berdasarkan role
-    public function getHargaAttribute($harga_normal)
+    public function pendaftaran()
     {
-        if ($this->role === 'pelanggan') {
-            return $harga_normal * 1.1;
+        return $this->hasOne(Pendaftaran::class, 'id_pelanggan', 'id_pelanggan');
+    }
+    // Aksesor untuk harga berdasarkan role
+    public function getHargaAttribute()
+    {
+        // Ambil model barang yang sedang diakses
+        $barang = $this;
+    
+        // Jika user tidak login, tampilkan harga normal
+        if (!auth()->check()) {
+            return $barang->harga_normal;
         }
-        return $harga_normal;
+    
+        $user = auth()->user();
+    
+        // Jika user adalah pelanggan, tampilkan harga normal
+        if ($user->role === 'pelanggan') {
+            return $barang->harga_normal;
+        }
+    
+        // Jika user adalah reseller
+        if ($user->role === 'reseller') {
+            // Cek apakah ada tipe dan potongan harga
+            if ($barang->tipe && $barang->tipe->potongan_harga) {
+                return $barang->harga_normal - $barang->tipe->potongan_harga;
+            }
+            
+            // Jika reseller tapi tidak ada potongan, tetap harga normal
+            return $barang->harga_normal;
+        }
+    
+        // Default fallback untuk role lain
+        return $barang->harga_normal;
     }
 }

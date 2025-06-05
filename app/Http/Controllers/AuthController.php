@@ -63,16 +63,18 @@ class AuthController extends Controller
             Auth::guard('admin')->login($admin, $remember);
 
             // Redirect based on role
-            switch ($admin->role) {
-                case 'gudang':
-                    return redirect()->route('gudang.dashboard');
-                case 'pemesanan':
-                    return redirect()->route('pemesanan.dashboard');
-                case 'owner':
-                    return redirect()->route('dashboard');
-                default:
-                    return redirect()->route('dashboard');
-            }
+            // switch ($admin->role) {
+            //     case 'gudang':
+            //         return redirect()->route('gudang.dashboard');
+            //     case 'pemesanan':
+            //         return redirect()->route('pemesanan.dashboard');
+            //     case 'owner':
+            //         return redirect()->route('dashboard');
+            //     default:
+            //         return redirect()->route('dashboard');
+
+            return redirect()->route('dashboard');
+            
         } elseif ($pelanggan && Hash::check($password, $pelanggan->kata_sandi)) {
             // Login pelanggan
             Auth::guard('pelanggan')->login($pelanggan, $remember);

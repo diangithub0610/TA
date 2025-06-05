@@ -29,6 +29,7 @@ class Toko extends Model
         'kode_pos',
         'rajaongkir_id',
         'no_telp',
-        'email'
+        'email',
+        'biaya_pendaftaran_reseller'
     ];
 }

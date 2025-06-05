@@ -12,6 +12,11 @@
                 <a href="#" class="btn btn-primary btn-round">Add Customer</a>
             </div>
         </div>
+        @php
+    $user = Auth::guard('admin')->user();
+    $role = $user?->role;
+@endphp
+        {{-- {{ dd($role) }} --}}
         <div class="row">
             <div class="col-sm-6 col-md-3">
                 <div class="card card-stats card-round">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class ProfilController extends Controller
 {
@@ -17,69 +18,97 @@ class ProfilController extends Controller
     public function index()
     {
         $pelanggan = auth()->guard('pelanggan')->user();
-        return view('web.profil.index', compact('pelanggan'));
+        return view('profil.index', compact('pelanggan'));
+    }
+
+    public function alamat()
+    {
+        $pelanggan = auth()->guard('pelanggan')->user();
+        $alamat = $pelanggan->alamat;
+        $alamatUtama = $pelanggan->alamat->where('is_utama', 1)->first();
+        return view('profil.alamat', compact('pelanggan', 'alamat', 'alamatUtama'));
     }
 
     public function update(Request $request)
     {
-        $pelanggan = auth()->guard('pelanggan')->user();
+        $user = auth()->guard('pelanggan')->user();
 
         $request->validate([
             'nama_pelanggan' => 'required|string|max:50',
-            'no_hp' => 'required|string|max:15',
-            'email' => 'required|email|max:100|unique:pelanggan,email,' . $pelanggan->id_pelanggan . ',id_pelanggan',
-            'username' => 'required|string|max:25|unique:pelanggan,username,' . $pelanggan->id_pelanggan . ',id_pelanggan',
-            'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'email' => 'required|email|max:100',
+            'no_hp' => 'nullable|string|max:15',
         ]);
 
-        // Update data profil
-        $dataPelanggan = [
+        $user->update([
             'nama_pelanggan' => $request->nama_pelanggan,
-            'no_hp' => $request->no_hp,
             'email' => $request->email,
-            'username' => $request->username
-        ];
+            'no_hp' => $request->no_hp,
+        ]);
 
-        // Upload foto profil jika ada
-        if ($request->hasFile('foto_profil')) {
-            // Hapus foto lama jika ada
-            if ($pelanggan->foto_profil) {
-                Storage::disk('public')->delete($pelanggan->foto_profil);
-            }
-
-            $path = $request->file('foto_profil')->store('pelanggan', 'public');
-            $dataPelanggan['foto_profil'] = $path;
-        }
-
-        $pelanggan->update($dataPelanggan);
-
-        return redirect()->route('profil.index')->with('success', 'Profil berhasil diperbarui');
+        return redirect()->route('profil.index')->with('success', 'Profil berhasil diperbarui.');
     }
 
-    public function password()
+    public function updateFoto(Request $request)
     {
-        return view('web.profil.password');
-    }
+        $user = auth()->guard('pelanggan')->user();
 
-    public function updatePassword(Request $request)
-    {
         $request->validate([
-            'kata_sandi_lama' => 'required',
-            'kata_sandi' => 'required|string|min:8|confirmed'
+            'foto_profil' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $pelanggan = auth()->guard('pelanggan')->user();
-
-        // Verifikasi kata sandi lama
-        if (!Hash::check($request->kata_sandi_lama, $pelanggan->kata_sandi)) {
-            return redirect()->back()->with('error', 'Kata sandi lama tidak sesuai');
+        // Hapus foto lama jika ada
+        if ($user->foto_profil && Storage::exists('public/profil/' . $user->foto_profil)) {
+            Storage::delete('public/profil/' . $user->foto_profil);
         }
 
-        // Update kata sandi
-        $pelanggan->update([
-            'kata_sandi' => Hash::make($request->kata_sandi)
-        ]);
+        // Simpan foto baru
+        $foto = $request->file('foto_profil');
+        $namaFile = $user->username . '.' . $foto->getClientOriginalExtension();
+        $foto->storeAs('public/profil', $namaFile);
 
-        return redirect()->route('profil.password')->with('success', 'Kata sandi berhasil diperbarui');
+        $user->update(['foto_profil' => $namaFile]);
+
+        return redirect()->route('profil.index')->with('success', 'Foto profil berhasil diperbarui.');
     }
+
+    /**
+     * Tampilkan form ubah password
+     */
+    public function showChangePasswordForm()
+    {
+        $pelanggan = auth()->guard('pelanggan')->user();
+        return view('profil.ubah-password',compact('pelanggan'));
+    }
+
+   
+public function changePassword(Request $request)
+{
+    // Validasi input
+    $request->validate([
+        'current_password' => 'required',
+        'new_password' => 'required|confirmed|min:6',
+    ], [
+        'current_password.required' => 'Password lama harus diisi.',
+        'new_password.required' => 'Password baru harus diisi.',
+        'new_password.confirmed' => 'Konfirmasi password tidak cocok.',
+        'new_password.min' => 'Password baru minimal 6 karakter.',
+    ]);
+
+    // Ambil data user
+    $user = auth()->guard('pelanggan')->user();
+
+    // Cek apakah password lama cocok dengan hash Bcrypt
+    if (!Hash::check($request->current_password, $user->password)) {
+        return redirect()->back()
+            ->with('error', 'Password lama tidak sesuai.')
+            ->withInput();
+    }
+
+    // Update password dengan hash Bcrypt
+    $user->password = Hash::make($request->new_password);
+    $user->save();
+
+    return redirect()->back()->with('success', 'Password berhasil diubah!');
+}
+
 }

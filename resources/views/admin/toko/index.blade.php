@@ -110,6 +110,12 @@
                                         <input type="email" class="form-control" id="email" name="email"
                                             value="{{ $toko->email ?? old('email') }}" required>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="biaya_pendaftaran">Biaya Pendaftaran Reseller</label>
+                                        <input type="text" class="form-control" id="biaya_pendaftaran"
+                                            name="biaya_pendaftaran"
+                                            value="{{ $toko->biaya_pendaftaran_reseller ?? old('biaya_pendaftaran_reseller') }}"requ>
+                                    </div>
                                 </div>
                             </div>
 
@@ -242,6 +248,7 @@
                         alert('Gagal mengambil data lokasi. Silakan coba lagi.');
                     });
             }
+
         });
     </script>
 @endpush

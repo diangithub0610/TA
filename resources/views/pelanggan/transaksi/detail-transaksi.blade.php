@@ -4,7 +4,7 @@
     <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
 <div class="container mx-auto px-4 py-8">
     <div class="flex items-center mb-6">
-        <a href="{{ route('transaksi.index') }}" class="text-gray-500 hover:text-custom mr-3">
+        <a href="{{ route('transaksi.index') }}" class="text-gray-500 hover:text-primary mr-3">
             <i class="fas fa-arrow-left"></i>
         </a>
         <h1 class="text-2xl font-bold">Detail Pesanan #{{ $transaksi->kode_transaksi }}</h1>
@@ -19,7 +19,7 @@
             </div>
             @if($transaksi->status === 'dikirim')
             <a href="{{ route('transaksi.terima', $transaksi->kode_transaksi) }}" 
-                class="bg-custom text-white py-2 px-4 rounded-lg hover:bg-custom/90"
+                class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90"
                 onclick="return confirm('Apakah Anda yakin telah menerima pesanan ini?')">
                 Pesanan Diterima
             </a>
@@ -34,8 +34,8 @@
         
         <div class="mt-6">
             <ol class="flex items-center w-full">
-                <li class="flex items-center {{ in_array($transaksi->status, ['belum_dibayar', 'menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'text-custom' : 'text-gray-500' }} space-x-2.5">
-                    <span class="flex items-center justify-center w-8 h-8 border {{ in_array($transaksi->status, ['belum_dibayar', 'menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'border-custom' : 'border-gray-500' }} rounded-full shrink-0">
+                <li class="flex items-center {{ in_array($transaksi->status, ['belum_dibayar', 'menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'text-primary' : 'text-gray-500' }} space-x-2.5">
+                    <span class="flex items-center justify-center w-8 h-8 border {{ in_array($transaksi->status, ['belum_dibayar', 'menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'border-primary' : 'border-gray-500' }} rounded-full shrink-0">
                         1
                     </span>
                     <span>
@@ -43,11 +43,11 @@
                         <p class="text-sm">{{ $transaksi->pembayaran->status_label }}</p>
                     </span>
                 </li>
-                <li class="flex w-full items-center {{ in_array($transaksi->status, ['menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'text-custom' : 'text-gray-500' }}">
-                    <div class="flex-1 h-0.5 {{ in_array($transaksi->status, ['menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'bg-custom' : 'bg-gray-300' }}"></div>
+                <li class="flex w-full items-center {{ in_array($transaksi->status, ['menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'text-primary' : 'text-gray-500' }}">
+                    <div class="flex-1 h-0.5 {{ in_array($transaksi->status, ['menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai']) ? 'bg-primary' : 'bg-grey-300' }}"></div>
                 </li>
-                <li class="flex items-center {{ in_array($transaksi->status, ['diproses', 'dikirim', 'selesai']) ? 'text-custom' : 'text-gray-500' }} space-x-2.5">
-                    <span class="flex items-center justify-center w-8 h-8 border {{ in_array($transaksi->status, ['diproses', 'dikirim', 'selesai']) ? 'border-custom' : 'border-gray-500' }} rounded-full shrink-0">
+                <li class="flex items-center {{ in_array($transaksi->status, ['diproses', 'dikirim', 'selesai']) ? 'text-primary' : 'text-gray-500' }} space-x-2.5">
+                    <span class="flex items-center justify-center w-8 h-8 border {{ in_array($transaksi->status, ['diproses', 'dikirim', 'selesai']) ? 'border-primary' : 'border-gray-500' }} rounded-full shrink-0">
                         2
                     </span>
                     <span>
@@ -55,11 +55,11 @@
                         <p class="text-sm">{{ $transaksi->status === 'diproses' ? 'Sedang diproses' : ($transaksi->status === 'dikirim' || $transaksi->status === 'selesai' ? 'Selesai diproses' : 'Menunggu') }}</p>
                     </span>
                 </li>
-                <li class="flex w-full items-center {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'text-custom' : 'text-gray-500' }}">
-                    <div class="flex-1 h-0.5 {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'bg-custom' : 'bg-gray-300' }}"></div>
+                <li class="flex w-full items-center {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'text-primary' : 'text-gray-500' }}">
+                    <div class="flex-1 h-0.5 {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'bg-primary' : 'bg-gray-300' }}"></div>
                 </li>
-                <li class="flex items-center {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'text-custom' : 'text-gray-500' }} space-x-2.5">
-                    <span class="flex items-center justify-center w-8 h-8 border {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'border-custom' : 'border-gray-500' }} rounded-full shrink-0">
+                <li class="flex items-center {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'text-primary' : 'text-gray-500' }} space-x-2.5">
+                    <span class="flex items-center justify-center w-8 h-8 border {{ in_array($transaksi->status, ['dikirim', 'selesai']) ? 'border-primary' : 'border-gray-500' }} rounded-full shrink-0">
                         3
                     </span>
                     <span>
@@ -67,11 +67,11 @@
                         <p class="text-sm">{{ $transaksi->status === 'dikirim' ? 'Dalam pengiriman' : ($transaksi->status === 'selesai' ? 'Terkirim' : 'Menunggu') }}</p>
                     </span>
                 </li>
-                <li class="flex w-full items-center {{ $transaksi->status === 'selesai' ? 'text-custom' : 'text-gray-500' }}">
-                    <div class="flex-1 h-0.5 {{ $transaksi->status === 'selesai' ? 'bg-custom' : 'bg-gray-300' }}"></div>
+                <li class="flex w-full items-center {{ $transaksi->status === 'selesai' ? 'text-primary' : 'text-gray-500' }}">
+                    <div class="flex-1 h-0.5 {{ $transaksi->status === 'selesai' ? 'bg-primary' : 'bg-gray-300' }}"></div>
                 </li>
-                <li class="flex items-center {{ $transaksi->status === 'selesai' ? 'text-custom' : 'text-gray-500' }} space-x-2.5">
-                    <span class="flex items-center justify-center w-8 h-8 border {{ $transaksi->status === 'selesai' ? 'border-custom' : 'border-gray-500' }} rounded-full shrink-0">
+                <li class="flex items-center {{ $transaksi->status === 'selesai' ? 'text-primary' : 'text-gray-500' }} space-x-2.5">
+                    <span class="flex items-center justify-center w-8 h-8 border {{ $transaksi->status === 'selesai' ? 'border-primary' : 'border-gray-500' }} rounded-full shrink-0">
                         4
                     </span>
                     <span>
@@ -114,7 +114,7 @@
                                 @if($transaksi->pengiriman && $transaksi->pengiriman->resi)
                                 <div>
                                     <p class="text-sm font-medium">No. Resi:</p>
-                                    <p class="text-xs font-medium text-custom">{{ $transaksi->pengiriman->resi }}</p>
+                                    <p class="text-xs font-medium text-primary">{{ $transaksi->pengiriman->resi }}</p>
                                 </div>
                                 @endif
                             </div>
@@ -125,7 +125,7 @@
                                     <div class="absolute top-0 left-0 h-full">
                                         <div class="h-full w-0.5 bg-gray-200"></div>
                                     </div>
-                                    <div class="absolute top-1 left-0 w-3 h-3 rounded-full bg-custom -translate-x-1.5"></div>
+                                    <div class="absolute top-1 left-0 w-3 h-3 rounded-full bg-primary -translate-x-1.5"></div>
                                     <div>
                                         <p class="text-sm font-medium">Status: {{ $transaksi->pengiriman->status_label }}</p>
                                         @if($transaksi->pengiriman->tanggal_pengiriman)
@@ -217,7 +217,7 @@
                     <div class="mt-4 pt-4 border-t">
                         <div class="flex justify-between mb-4">
                             <span class="font-medium">Total Tagihan</span>
-                            <span class="text-lg font-bold text-custom">
+                            <span class="text-lg font-bold text-primary">
                                 Rp {{ number_format($transaksi->total, 0, ',', '.') }}
                             </span>
                         </div>
@@ -249,7 +249,7 @@
                     @if($transaksi->status === 'belum_dibayar' && $transaksi->pembayaran->status === 'pending')
                     <div class="mt-4">
                         <a href="{{ route('pembayaran.show', $transaksi->kode_transaksi) }}" 
-                            class="block w-full bg-custom text-white text-center py-2 rounded-lg hover:bg-custom/90">
+                            class="block w-full bg-primary text-white text-center py-2 rounded-lg hover:bg-primary/90">
                             Bayar Sekarang
                         </a>
                     </div>

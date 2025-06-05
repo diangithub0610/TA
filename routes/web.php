@@ -1,15 +1,20 @@
 <?php
 
+use App\Models\persediaan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TipeController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\KasirController;
 use App\Http\Controllers\WarnaController;
 use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\OngkirController;
 use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\UlasanController;
+use App\Http\Controllers\PesananController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KeranjangController;
@@ -18,9 +23,10 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PemusnahanController;
 use App\Http\Controllers\PersediaanController;
+use App\Http\Controllers\RegistrasiController;
 use App\Http\Controllers\BarangMasukController;
+use App\Http\Controllers\AdminPesananController;
 use App\Http\Controllers\PemusnahanBarangController;
-
 
 
 /*
@@ -75,7 +81,7 @@ Route::get('/get-saved-addresses', [AlamatController::class, 'getSavedAddresses'
 // Route::get('/search-destination', [CheckoutController::class, 'searchDestination'])->name('checkout.search-destination');
 
 // Login
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -88,14 +94,67 @@ Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register', [AuthController::class, 'doRegister'])->name('do.register');
 
 
-Route::get('/', [DashboardController::class, 'index']);
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+//barang masuk -- jika belum ada 
+Route::get('/barang-masuk/get-produk-by-brand', [BarangMasukController::class, 'getProdukByBrand'])
+    ->name('barang-masuk.get-produk-by-brand');
+
+Route::get('/barang-masuk/get-barang-by-brand', [BarangMasukController::class, 'getBarangByBrand'])
+    ->name('barang-masuk.get-barang-by-brand');
+
+// Route untuk mendapatkan tipe berdasarkan brand  
+Route::get('/barang-masuk/get-tipe-by-brand', [BarangMasukController::class, 'getTipeByBrand'])
+    ->name('barang-masuk.get-tipe-by-brand');
+
+// Route untuk menyimpan barang baru dari form barang masuk
+Route::post('/barang-masuk/store-barang-baru', [BarangMasukController::class, 'storeBarangBaru'])
+    ->name('barang-masuk.store-barang-baru');
+
+Route::get('/barang-masuk/get-detail-by-produk', [BarangMasukController::class, 'getDetailByProduk'])
+    ->name('barang-masuk.get-detail-by-produk');
+
+Route::middleware(['auth:admin', 'role:shopkeeper'])->prefix('admin')->name('admin-')->group(function () {
+    // Route untuk transaksi
+    Route::get('/transaksi', [AdminPesananController::class, 'index'])->name('transaksi.index');
+    Route::get('/transaksi/{kode_transaksi}', [AdminPesananController::class, 'show'])->name('admin-transaksi.show');
+    Route::post('/transaksi/{kode_transaksi}/terima', [AdminPesananController::class, 'terima'])->name('transaksi.terima');
+    Route::post('/transaksi/{kode_transaksi}/tolak', [AdminPesananController::class, 'tolak'])->name('transaksi.tolak');
+    Route::post('/transaksi/{kode_transaksi}/update-status', [AdminPesananController::class, 'updateStatus'])->name('transaksi.update-status');
+    Route::get('/transaksi/{kode_transaksi}/invoice', [AdminPesananController::class, 'invoice'])->name('admin-transaksi.invoice');
+    Route::post('/transaksi/bulk-update-status', [AdminPesananController::class, 'bulkUpdateStatus'])->name('admin-transaksi.bulk-update-status');
+    Route::get('/transaksi-statistics', [AdminPesananController::class, 'statistics'])->name('admin-transaksi.statistics');
+
+   
+});
+
+Route::prefix('kasir')->name('kasir.')->group(function () {
+    // Main kasir page
+    Route::get('/', [KasirController::class, 'index'])->name('index');
+
+    // Get products with filters
+    Route::get('/barang', [KasirController::class, 'getBarang'])->name('barang');
+
+    // Get product details/variants
+    Route::get('/barang/{kode_barang}/detail', [KasirController::class, 'getDetailBarang'])->name('barang.detail');
+
+    // Store transaction
+    Route::post('/transaksi', [KasirController::class, 'store'])->name('store');
+
+    // Print receipt
+    Route::get('/print/{kode_transaksi}', [KasirController::class, 'print'])->name('print');
+    /////
+
+    Route::get('/transaksi', [KasirController::class, 'riwayat'])->name('riwayat');
+    
+    // Route untuk detail transaksi
+    Route::get('/transaksi/{kode_transaksi}', [KasirController::class, 'show'])->name('admin.shopkeeper.detail');
+});
 
 
-Route::middleware(['auth:admin', 'role:gudang'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    // Route::prefix('pelanggan')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('gudang.dashboard');
-    // });
+
+Route::middleware(['auth:admin', 'role:gudang,owner'])->group(function () {
+
     // Master Data
     Route::resource('brand', BrandController::class)->only('index', 'store', 'update', 'destroy');
     Route::resource('warna', WarnaController::class);
@@ -105,8 +164,11 @@ Route::middleware(['auth:admin', 'role:gudang'])->group(function () {
     // Barang Masuk
     Route::resource('barang-masuk', BarangMasukController::class);
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // Persediaan
-    Route::resource('persediaan', PersediaanController::class);
+    // Route::resource('persediaan', PersediaanController::class);
 
     // Pemusnahan
     Route::get('/pemusnahan-barang', [PemusnahanBarangController::class, 'index'])->name('pemusnahan-barang.index');
@@ -163,7 +225,7 @@ Route::middleware(['auth:pelanggan'])->group(function () {
 
     // Routes untuk Raja Ongkir (versi baru)
     // Route::get('/checkout/search-destination', [CheckoutController::class, 'searchDestination'])->name('checkout.search-destination');
-    
+
 
     // Pembayaran
     Route::get('/pembayaran/{kodeTransaksi}', [PembayaranController::class, 'show'])->name('pembayaran.show');
@@ -176,7 +238,7 @@ Route::middleware(['auth:pelanggan'])->group(function () {
     Route::get('pembayaran/unfinish', [PembayaranController::class, 'unfinish'])->name('pembayaran.unfinish');
     Route::get('pembayaran/error', [PembayaranController::class, 'error'])->name('pembayaran.error');
     // Route::get('pembayaran/{kodeTransaksi}', [PembayaranController::class, 'show'])->name('pembayaran.show');
-    
+
     Route::get('/pembayaran/finish', [PembayaranController::class, 'finish'])->name('pembayaran.finish');
     Route::get('/pembayaran/unfinish', [PembayaranController::class, 'unfinish'])->name('pembayaran.unfinish');
     Route::get('/pembayaran/error', [PembayaranController::class, 'error'])->name('pembayaran.error');
@@ -187,6 +249,10 @@ Route::middleware(['auth:pelanggan'])->group(function () {
     Route::get('/transaksi/{kodeTransaksi}/terima', [TransaksiController::class, 'terimaBarang'])->name('transaksi.terima');
     Route::get('/transaksi/{kodeTransaksi}/batalkan', [TransaksiController::class, 'batalkan'])->name('transaksi.batalkan');
 
+    // Daftar pesanan
+    // Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
+
+
     // Alamat
     // Route::get('/alamat', [AlamatController::class, 'index'])->name('alamat.index');
     // Route::post('/alamat/simpan', [AlamatController::class, 'simpan'])->name('alamat.simpan');
@@ -196,9 +262,54 @@ Route::middleware(['auth:pelanggan'])->group(function () {
 
     // Profil
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
-    Route::post('/profil/update', [ProfilController::class, 'update'])->name('profil.update');
-    Route::get('/profil/password', [ProfilController::class, 'password'])->name('profil.password');
-    Route::post('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.update-password');
+    Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
+    Route::post('/profil/foto', [ProfilController::class, 'updateFoto'])->name('profil.update.foto');
+   
+    //
+    Route::get('/profil-alamat', [ProfilController::class, 'alamat'])->name('profil.alamat');
+    Route::get('/change-password', [ProfilController::class, 'showChangePasswordForm'])->name('change-password');
+    Route::post('/change-password', [ProfilController::class, 'changePassword'])->name('change-password.update');
+
+
+    //pendaftaran
+    // Route untuk pendaftaran
+
+});
+
+Route::get('/register', [App\Http\Controllers\RegistrasiController::class, 'index'])->name('register');
+Route::post('/register', [App\Http\Controllers\RegistrasiController::class, 'store'])->name('register.store');
+Route::get('/pembayaran-pendaftaran/{id}', [App\Http\Controllers\RegistrasiController::class, 'showPembayaran'])->name('pembayaran-pendaftaran.show');
+
+
+
+
+//persediaan
+// Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
+// Routes untuk persediaan
+Route::prefix('admin/persediaan')->group(function () {
+    Route::get('/', [PersediaanController::class, 'index'])->name('persediaan.index');
+    Route::get('/export-pdf', [PersediaanController::class, 'exportPdf'])->name('persediaan.export.pdf');
+});
+
+//produk-pelanggan
+Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
+    // Route untuk halaman produk dengan filter dan sorting
+    Route::get('/barang', [BarangController::class, 'barang'])->name('barang');
+    
+    // Route untuk filter berdasarkan brand (redirect ke halaman produk dengan parameter brand)
+    Route::get('/produk/brand/{brandId}', [BarangController::class, 'byBrand'])->name('produk.byBrand');
 });
 
 
+Route::middleware(['auth'])->group(function () {
+    // Routes untuk Ulasan
+    Route::get('/ulasan/barang/{kode_barang}', [UlasanController::class, 'getUlasanByBarang'])->name('ulasan.by-barang');
+    Route::get('/ulasan/create/{kode_barang}', [UlasanController::class, 'create'])->name('ulasan.create');
+    Route::post('/ulasan', [UlasanController::class, 'store'])->name('ulasan.store');
+    Route::get('/ulasan/{id}/edit', [UlasanController::class, 'edit'])->name('ulasan.edit');
+    Route::put('/ulasan/{id}', [UlasanController::class, 'update'])->name('ulasan.update');
+    Route::delete('/ulasan/{id}', [UlasanController::class, 'destroy'])->name('ulasan.destroy');
+});
+
+// Route publik untuk melihat ulasan
+Route::get('/ulasan/{kode_barang}', [UlasanController::class, 'index'])->name('ulasan.index');

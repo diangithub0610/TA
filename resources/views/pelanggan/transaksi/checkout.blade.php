@@ -20,106 +20,103 @@
                             @if ($alamat->count() > 0)
                                 <div class="space-y-4">
                                     @foreach ($alamat as $adr)
-<div class="border rounded-lg p-4 {{ $adr->is_utama ? 'border-custom' : 'border-gray-200' }} cursor-pointer alamat-card"
-     data-id="{{ $adr->id_alamat }}" 
-     data-kecamatan-id="{{ $adr->kecamatan_id }}">
-    <div class="flex justify-between">
-        <div>
-            <div class="flex items-center">
-                <h3 class="font-medium">{{ $adr->nama_alamat }}</h3>
-                @if($adr->is_utama)
-                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Utama</span>
-                @endif
-            </div>
-            <p class="text-sm text-gray-600 mt-1">{{ $adr->nama_penerima }}
-                ({{ $adr->no_hp_penerima }})
-            </p>
-            <p class="text-sm text-gray-600 mt-1">
-                {{ $adr->alamat_lengkap }}, {{ $adr->kelurahan }},
-                {{ $adr->kecamatan }},
-                {{ $adr->kota }}, {{ $adr->provinsi }}, {{ $adr->kode_pos }}
-            </p>
-        </div>
-        <div>
-            <div>
-                <input type="radio" name="alamat_pengiriman"
-                    id="alamat-{{ $adr->id_alamat }}"
-                    value="{{ $adr->id_alamat }}"
-                    data-kecamatan-id="{{ $adr->kecamatan_id }}"
-                    {{ $adr->is_utama ? 'checked' : '' }} 
-                    class="radio-alamat">
-            </div>
-        </div>
-    </div>
-</div>
-@endforeach
+                                        <div class="border rounded-lg p-4 {{ $adr->is_utama ? 'border-custom' : 'border-gray-200' }} cursor-pointer alamat-card"
+                                            data-id="{{ $adr->id_alamat }}" data-kecamatan-id="{{ $adr->kecamatan_id }}">
+                                            <div class="flex justify-between">
+                                                <div>
+                                                    <div class="flex items-center">
+                                                        <h3 class="font-medium">{{ $adr->nama_alamat }}</h3>
+                                                        @if ($adr->is_utama)
+                                                            <span
+                                                                class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Utama</span>
+                                                        @endif
+                                                    </div>
+                                                    <p class="text-sm text-gray-600 mt-1">{{ $adr->nama_penerima }}
+                                                        ({{ $adr->no_hp_penerima }})
+                                                    </p>
+                                                    <p class="text-sm text-gray-600 mt-1">
+                                                       {{ $adr->nama_alamat}}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <div>
+                                                        <input type="radio" name="alamat_pengiriman"
+                                                            id="alamat-{{ $adr->id_alamat }}"
+                                                            value="{{ $adr->id_alamat }}"
+                                                            data-kecamatan-id="{{ $adr->kecamatan_id }}"
+                                                            {{ $adr->is_utama ? 'checked' : '' }} class="radio-alamat">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Menangani klik pada card alamat
-    const alamatCards = document.querySelectorAll('.alamat-card');
-    
-    // Fungsi untuk mengatur border pada semua card
-    function updateBorders(selectedId) {
-        alamatCards.forEach(function(card) {
-            const cardId = card.getAttribute('data-id');
-            if (cardId === selectedId) {
-                card.classList.remove('border-gray-200');
-                card.classList.add('border-custom');
-            } else {
-                card.classList.remove('border-custom');
-                card.classList.add('border-gray-200');
-            }
-        });
-    }
-    
-    // Set border awal berdasarkan radio button yang sudah checked
-    const checkedRadio = document.querySelector('input[name="alamat_pengiriman"]:checked');
-    if (checkedRadio) {
-        updateBorders(checkedRadio.value);
-    }
-    
-    // Event listener untuk klik pada card
-    alamatCards.forEach(function(card) {
-        card.addEventListener('click', function() {
-            const alamatId = this.getAttribute('data-id');
-            const radioBtn = document.getElementById('alamat-' + alamatId);
-            
-            // Mengecek semua radio button terkait alamat
-            const allRadios = document.querySelectorAll('input[name="alamat_pengiriman"]');
-            allRadios.forEach(function(radio) {
-                radio.checked = false;
-            });
-            
-            // Pilih radio button yang sesuai
-            radioBtn.checked = true;
-            
-            // Update border pada semua card
-            updateBorders(alamatId);
-            
-            // Trigger event change untuk radio button
-            const event = new Event('change');
-            radioBtn.dispatchEvent(event);
-        });
-    });
-    
-    // Tambahkan event listener pada radio button untuk menangani kasus klik langsung pada radio
-    const radioButtons = document.querySelectorAll('.radio-alamat');
-    radioButtons.forEach(function(radio) {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                updateBorders(this.value);
-            }
-        });
-    });
-});
-</script>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            // Menangani klik pada card alamat
+                                            const alamatCards = document.querySelectorAll('.alamat-card');
+
+                                            // Fungsi untuk mengatur border pada semua card
+                                            function updateBorders(selectedId) {
+                                                alamatCards.forEach(function(card) {
+                                                    const cardId = card.getAttribute('data-id');
+                                                    if (cardId === selectedId) {
+                                                        card.classList.remove('border-gray-200');
+                                                        card.classList.add('border-custom');
+                                                    } else {
+                                                        card.classList.remove('border-custom');
+                                                        card.classList.add('border-gray-200');
+                                                    }
+                                                });
+                                            }
+
+                                            // Set border awal berdasarkan radio button yang sudah checked
+                                            const checkedRadio = document.querySelector('input[name="alamat_pengiriman"]:checked');
+                                            if (checkedRadio) {
+                                                updateBorders(checkedRadio.value);
+                                            }
+
+                                            // Event listener untuk klik pada card
+                                            alamatCards.forEach(function(card) {
+                                                card.addEventListener('click', function() {
+                                                    const alamatId = this.getAttribute('data-id');
+                                                    const radioBtn = document.getElementById('alamat-' + alamatId);
+
+                                                    // Mengecek semua radio button terkait alamat
+                                                    const allRadios = document.querySelectorAll('input[name="alamat_pengiriman"]');
+                                                    allRadios.forEach(function(radio) {
+                                                        radio.checked = false;
+                                                    });
+
+                                                    // Pilih radio button yang sesuai
+                                                    radioBtn.checked = true;
+
+                                                    // Update border pada semua card
+                                                    updateBorders(alamatId);
+
+                                                    // Trigger event change untuk radio button
+                                                    const event = new Event('change');
+                                                    radioBtn.dispatchEvent(event);
+                                                });
+                                            });
+
+                                            // Tambahkan event listener pada radio button untuk menangani kasus klik langsung pada radio
+                                            const radioButtons = document.querySelectorAll('.radio-alamat');
+                                            radioButtons.forEach(function(radio) {
+                                                radio.addEventListener('change', function() {
+                                                    if (this.checked) {
+                                                        updateBorders(this.value);
+                                                    }
+                                                });
+                                            });
+                                        });
+                                    </script>
                                 </div>
                             @else
                                 <div class="text-center py-4">
                                     <p class="text-gray-500 mb-4">Anda belum memiliki alamat pengiriman</p>
                                     <button type="button" id="btnTambahAlamat"
-                                        class="btn-tambah-alamat bg-custom text-white py-2 px-4 rounded-lg hover:bg-custom/90">
+                                        class="btn-tambah-alamat bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90">
                                         Tambah Alamat Baru
                                     </button>
                                 </div>
@@ -152,22 +149,26 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
                                         data-kurir="jne">
-                                        <img src="{{ asset('img/ekspedisi/jne.png') }}" alt="JNE" class="h-8 mx-auto mb-1">
+                                        <img src="{{ asset('img/ekspedisi/jne.png') }}" alt="JNE"
+                                            class="h-8 mx-auto mb-1">
                                         <span class="text-sm">JNE</span>
                                     </div>
                                     <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
                                         data-kurir="pos">
-                                        <img src="{{ asset('img/ekspedisi/pos.png') }}" alt="POS" class="h-8 mx-auto mb-1">
+                                        <img src="{{ asset('img/ekspedisi/pos.png') }}" alt="POS"
+                                            class="h-8 mx-auto mb-1">
                                         <span class="text-sm">POS</span>
                                     </div>
                                     <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
                                         data-kurir="tiki">
-                                        <img src="{{ asset('img/ekspedisi/tiki.png') }}" alt="TIKI" class="h-8 mx-auto mb-1">
+                                        <img src="{{ asset('img/ekspedisi/tiki.png') }}" alt="TIKI"
+                                            class="h-8 mx-auto mb-1">
                                         <span class="text-sm">TIKI</span>
                                     </div>
                                     <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
                                         data-kurir="jnt">
-                                        <img src="{{ asset('img/ekspedisi/jnt.png') }}" alt="J&T" class="h-8 mx-auto mb-1">
+                                        <img src="{{ asset('img/ekspedisi/jnt.png') }}" alt="J&T"
+                                            class="h-8 mx-auto mb-1">
                                         <span class="text-sm">J&T</span>
                                     </div>
                                 </div>
@@ -314,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
 
                                     <button type="submit" id="btnBayar"
-                                        class="w-full bg-custom text-white py-3 px-4 rounded-lg hover:bg-custom/90 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                        class="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                                         disabled>
                                         Bayar Sekarang
                                     </button>
@@ -373,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     class="flex-1 border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
                                     placeholder="Ketik minimal 3 huruf...">
                                 <button type="button" id="btn_search_location"
-                                    class="px-3 py-2 bg-custom text-white rounded-lg hover:bg-custom/90">
+                                    class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
                                     Cari
                                 </button>
                             </div>
@@ -444,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mt-6 flex justify-end space-x-3">
                         <button type="button" id="btnBatalAlamat"
                             class="px-4 py-2 border rounded-lg hover:bg-gray-100">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-custom text-white rounded-lg hover:bg-custom/90">Simpan
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Simpan
                             Alamat</button>
                     </div>
                 </form>
@@ -667,7 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Reset UI
                 document.querySelectorAll('.kurir-option').forEach(el => {
-                    el.classList.remove('border-custom', 'bg-custom/10');
+                    el.classList.remove('border-custom', 'bg-primary/10');
                 });
 
                 document.getElementById('layananKurir').classList.add('hidden');
@@ -687,9 +688,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.addEventListener('click', function() {
                     // Reset UI
                     kurirOptions.forEach(opt => {
-                        opt.classList.remove('border-custom', 'bg-custom/10');
+                        opt.classList.remove('border-custom', 'bg-primary/10');
                     });
-                    this.classList.add('border-custom', 'bg-custom/10');
+                    this.classList.add('border-custom', 'bg-primary/10');
 
                     // Set selected kurir
                     selectedKurir = this.dataset.kurir;
@@ -842,11 +843,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Remove selection from all services
                             document.querySelectorAll('.layanan-option').forEach(opt => {
                                 opt.classList.remove('border-custom',
-                                    'bg-custom/10');
+                                    'bg-primary/10');
                             });
 
                             // Highlight selected service
-                            this.classList.add('border-custom', 'bg-custom/10');
+                            this.classList.add('border-custom', 'bg-primary/10');
 
                             // Update form inputs
                             selectedLayanan = this.dataset.layanan;
@@ -1104,10 +1105,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Format number to currency
             function formatNumber(number) {
-    // Ensure number is an integer by using Math.round()
-    const roundedNumber = Math.round(Number(number));
-    return roundedNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
+                // Ensure number is an integer by using Math.round()
+                const roundedNumber = Math.round(Number(number));
+                return roundedNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
 
             // Handle dropship checkbox initial state
             if (isDropshipCheckbox.checked) {

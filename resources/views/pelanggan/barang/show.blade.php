@@ -1,8 +1,8 @@
 @extends('pelanggan.layouts.app')
 @section('title', 'Detail Produk')
 @section('content')
-{{-- {{dd($barang)}} --}}
-    <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-20">
+    {{-- {{dd($barang)}} --}}
+    <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 px-8 lg:px-20 py-8">
             <div class="glide">
                 <!-- Main product image -->
@@ -13,7 +13,7 @@
                 {{-- @if ($barang->gambarBarang->count() > 0)
                     <div class="mt-4 grid grid-cols-4 gap-2">
                         <img src="{{ asset('storage/' . $barang->gambar_utama) }}" alt="{{ $barang->nama_barang }}"
-                            class="w-full h-20 object-cover rounded-lg cursor-pointer border-2 border-custom thumbnail-image active"
+                            class="w-full h-20 object-cover rounded-lg cursor-pointer border-2 border-primary thumbnail-image active"
                             data-src="{{ asset('storage/' . $barang->gambar_utama) }}">
 
                         @foreach ($barang->gambarBarang as $gambar)
@@ -36,22 +36,22 @@
                         @if (auth()->guard('pelanggan')->user()->role == 'pelanggan')
                             <span class="text-sm text-gray-500 line-through">Rp
                                 {{ number_format($barang->harga_normal * 1.1, 0, ',', '.') }}</span>
-                            <h2 class="text-2xl font-bold text-custom">Rp
-                                {{ number_format($barang->harga_normal * 1.1  - $barang->tipe->potongan_harga , 0, ',', '.') }}
+                            <h2 class="text-2xl font-bold text-primary">Rp
+                                {{ number_format($barang->harga_normal * 1.1 - $barang->tipe->potongan_harga, 0, ',', '.') }}
                             </h2>
                         @else
                             <span class="text-sm text-gray-500 line-through">Rp
                                 {{ number_format($barang->harga_normal, 0, ',', '.') }}</span>
-                            <h2 class="text-2xl font-bold text-custom">Rp
-                                {{ number_format($barang->harga_normal  - $barang->tipe->potongan_harga , 0, ',', '.') }}
+                            <h2 class="text-2xl font-bold text-primary">Rp
+                                {{ number_format($barang->harga_normal - $barang->tipe->potongan_harga, 0, ',', '.') }}
                             </h2>
                         @endif
                     @else
                         <!-- Harga untuk pengunjung (belum login) -->
                         <span class="text-sm text-gray-500 line-through">Rp
                             {{ number_format($barang->harga_normal * 1.1, 0, ',', '.') }}</span>
-                        <h2 class="text-2xl font-bold text-custom">Rp
-                            {{ number_format($barang->harga_normal * 1.1  - $barang->tipe->potongan_harga , 0, ',', '.') }}
+                        <h2 class="text-2xl font-bold text-primary">Rp
+                            {{ number_format($barang->harga_normal * 1.1 - $barang->tipe->potongan_harga, 0, ',', '.') }}
                         </h2>
                     @endauth
 
@@ -69,7 +69,7 @@
                         <div class="grid grid-cols-4 gap-4 mt-4" id="ukuranContainer">
                             @foreach ($ukuranTersedia as $ukuran)
                                 <button type="button" data-ukuran="{{ $ukuran }}"
-                                    class="ukuran-btn !rounded-button px-4 py-2 border border-gray-300 text-sm font-medium hover:border-custom">
+                                    class="ukuran-btn !rounded-button px-4 py-2 border border-gray-300 text-sm font-medium hover:border-primary">
                                     {{ $ukuran }}
                                 </button>
                             @endforeach
@@ -92,24 +92,24 @@
                             <h3 class="text-sm font-medium text-gray-900">Jumlah</h3>
                             <div class="flex items-center border border-gray-300 rounded-lg">
                                 <button type="button" id="btnMinus"
-                                    class="!rounded-button px-3 py-1 text-gray-600 hover:text-custom">-</button>
+                                    class="!rounded-button px-3 py-1 text-gray-600 hover:text-primary">-</button>
                                 <input type="number" name="jumlah" id="jumlah" class="w-12 text-center border-0"
                                     value="1" min="1">
                                 <button type="button" id="btnPlus"
-                                    class="!rounded-button px-3 py-1 text-gray-600 hover:text-custom">+</button>
+                                    class="!rounded-button px-3 py-1 text-gray-600 hover:text-primary">+</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-8">
                         <button type="submit" id="btnBeliSekarang" formaction="{{ route('checkout.beli-langsung') }}"
-                            class="!rounded-button w-full bg-custom text-white px-6 py-3 text-base font-medium hover:bg-custom/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            class="!rounded-button w-full bg-primary text-white px-6 py-3 text-base font-medium hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             disabled>
                             <i class="fas fa-credit-card mr-2"></i>
                             Beli Sekarang
                         </button>
                         <button type="submit" id="btnKeranjang"
-                            class="!rounded-button w-full mt-4 border border-custom text-custom px-6 py-3 text-base font-medium hover:bg-custom/10 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
+                            class="!rounded-button w-full mt-4 border border-primary text-primary px-6 py-3 text-base font-medium hover:bg-primary/10 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
                             disabled>
                             <i class="fas fa-shopping-cart mr-2"></i>
                             Tambah ke Keranjang
@@ -122,7 +122,7 @@
                 <div class="border-b border-gray-200">
                     <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                         <button id="tabDeskripsi"
-                            class="border-custom text-custom hover:text-custom/90 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                            class="border-primary text-primary hover:text-primary/90 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                             Deskripsi
                         </button>
                         <button id="tabSpesifikasi"
@@ -177,9 +177,10 @@
                     </table>
                 </div>
 
-                <div id="contentUlasan" class="mt-6 prose prose-sm max-w-none hidden">
+                <div id="contentUlasan" class="mt-6 prose prose-sm max-w-none cursor-pointer"
+                    onclick="window.location.href='{{ route('ulasan.index', ['kode_barang' => $barang->kode_barang]) }}'">
                     <h3>Ulasan Produk</h3>
-                    <p>Belum ada ulasan untuk produk ini.</p>
+                    <p>error.</p>
                 </div>
             </div>
         </div>
@@ -195,7 +196,7 @@
                                     class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300">
                                 <button
                                     class="absolute top-4 right-4 bg-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <i class="far fa-heart text-custom"></i>
+                                    <i class="far fa-heart text-primary"></i>
                                 </button>
                             </div>
                             <h3 class="font-semibold mb-2">{{ $item->nama_barang }}</h3>
@@ -212,10 +213,10 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <span class="text-sm text-gray-500 line-through">{{ $item->formatted_harga }}</span>
-                                    <p class="text-lg font-bold text-custom">{{ $item->harga_diskon }}</p>
+                                    <p class="text-lg font-bold text-primary">{{ $item->harga_diskon }}</p>
                                 </div>
                                 <a href="{{ route('pelanggan.detailBarang', $item->kode_barang) }}"
-                                    class="bg-custom text-white px-4 py-2 !rounded-button hover:bg-custom/90">
+                                    class="bg-primary text-white px-4 py-2 !rounded-button hover:bg-primary/90">
                                     <i class="fas fa-shopping-cart mr-2"></i>
                                     Beli
                                 </a>
@@ -244,8 +245,8 @@
             thumbnails.forEach(thumb => {
                 thumb.addEventListener('click', function() {
                     mainImage.src = this.dataset.src;
-                    thumbnails.forEach(t => t.classList.remove('border-custom', 'active'));
-                    this.classList.add('border-custom', 'active');
+                    thumbnails.forEach(t => t.classList.remove('border-primary', 'active'));
+                    this.classList.add('border-primary', 'active');
                 });
             });
 
@@ -254,11 +255,12 @@
             ukuranButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     ukuranButtons.forEach(b => {
-                        b.classList.remove('bg-custom/10', 'border-custom', 'text-custom');
+                        b.classList.remove('bg-primary/10', 'border-primary',
+                            'text-primary');
                         b.classList.add('border-gray-300');
                     });
 
-                    this.classList.add('bg-custom/10', 'border-custom', 'text-custom');
+                    this.classList.add('bg-primary/10', 'border-primary', 'text-primary');
                     this.classList.remove('border-gray-300');
 
                     // Konversi ke string dengan satu desimal
@@ -286,16 +288,16 @@
                 const stokInfo = document.getElementById('stokInfo');
                 const kodeDetailInput = document.getElementById('kodeDetail');
                 const jumlahInput = document.getElementById('jumlah');
-// Reset buy buttons
+                // Reset buy buttons
                 btnBeliSekarang.disabled = true;
                 btnKeranjang.disabled = true;
 
                 if (selectedUkuran && selectedWarna) {
                     // Debugging detail barang
                     console.log('Detail Ukuran:', detailBarang[selectedUkuran]);
-                    console.log('Detail Kombinasi:', 
-                        detailBarang[selectedUkuran] ? 
-                        detailBarang[selectedUkuran][selectedWarna] : 
+                    console.log('Detail Kombinasi:',
+                        detailBarang[selectedUkuran] ?
+                        detailBarang[selectedUkuran][selectedWarna] :
                         'Tidak ada'
                     );
 
@@ -303,7 +305,7 @@
                     if (detailBarang[selectedUkuran] && detailBarang[selectedUkuran][selectedWarna]) {
                         const detail = detailBarang[selectedUkuran][selectedWarna];
                         console.log('Detail Produk:', detail);
-                        
+
                         const maxStok = detail.stok;
                         console.log('Max Stok:', maxStok);
 
@@ -391,18 +393,18 @@
                 contentUlasan.classList.add('hidden');
 
                 // Remove active class from all tabs
-                tabDeskripsi.classList.remove('border-custom', 'text-custom');
+                tabDeskripsi.classList.remove('border-primary', 'text-primary');
                 tabDeskripsi.classList.add('border-transparent', 'text-gray-500');
 
-                tabSpesifikasi.classList.remove('border-custom', 'text-custom');
+                tabSpesifikasi.classList.remove('border-primary', 'text-primary');
                 tabSpesifikasi.classList.add('border-transparent', 'text-gray-500');
 
-                tabUlasan.classList.remove('border-custom', 'text-custom');
+                tabUlasan.classList.remove('border-primary', 'text-primary');
                 tabUlasan.classList.add('border-transparent', 'text-gray-500');
 
                 // Add active class to selected tab
                 activeTab.classList.remove('border-transparent', 'text-gray-500');
-                activeTab.classList.add('border-custom', 'text-custom');
+                activeTab.classList.add('border-primary', 'text-primary');
 
                 // Show active content
                 activeContent.classList.remove('hidden');

@@ -15,32 +15,37 @@ class TransaksiController extends Controller
     {
         $this->middleware('auth:pelanggan');
     }
-    
-    public function index()
+
+    public function index(Request $request)
     {
-        $transaksi = Transaksi::with(['detailTransaksi.detailBarang.barang', 'pembayaran'])
-            ->where('id_pelanggan', auth()->guard('pelanggan')->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-            
-        return view('admin.transaksi.transaksi.index', compact('transaksi'));
+        $query = Transaksi::with(['detailTransaksi.detailBarang.barang', 'pembayaran'])
+            ->where('id_pelanggan', auth()->guard('pelanggan')->id());
+
+        // Filter berdasarkan status jika ada
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $transaksi = $query->orderBy('tanggal_transaksi', 'desc')->paginate(10);
+
+        return view('pelanggan.transaksi.daftar-pesanan', compact('transaksi'));
     }
-    
+
     public function detail($kodeTransaksi)
     {
         $transaksi = Transaksi::with([
-                'detailTransaksi.detailBarang.barang',
-                'detailTransaksi.detailBarang.warna',
-                'pelanggan',
-                'alamat',
-                'pembayaran',
-                'pengiriman.detailPengiriman'
-            ])
+            'detailTransaksi.detailBarang.barang',
+            'detailTransaksi.detailBarang.warna',
+            'pelanggan',
+            'alamat',
+            'pembayaran',
+            'pengiriman.detailPengiriman'
+        ])
             ->where('id_pelanggan', auth()->guard('pelanggan')->id())
             ->where('kode_transaksi', $kodeTransaksi)
             ->firstOrFail();
-            
-        return view('admin.transaksi.transaksi.detail', compact('transaksi'));
+
+        return view('pelanggan.transaksi.detail-transaksi', compact('transaksi'));
     }
 
     public function terimaBarang(Request $request, $kodeTransaksi)

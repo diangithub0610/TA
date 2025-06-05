@@ -46,8 +46,8 @@
                                             <td>{{ $brand->kode_brand }}</td>
                                             <td class="text-center">
                                                 <div class="avatar">
-                                                    <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->nama_brand }}"
-                                                        class="avatar-img rounded">
+                                                    <img src="{{ asset('storage/' . $brand->logo) }}"
+                                                        alt="{{ $brand->nama_brand }}" class="avatar-img rounded">
                                                 </div>
                                             </td>
                                             <td>{{ $brand->nama_brand }}</td>
@@ -67,7 +67,7 @@
                                                         title="Hapus">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
-                                                </form>
+                                                </form>                                              
                                             </td>
                                         </tr>
                                     @endforeach
@@ -153,7 +153,11 @@
 @endsection
 
 @push('scripts')
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
+        // Preview gambar
         function previewLogo(event, previewId) {
             const input = event.target;
             const preview = document.getElementById(previewId);
@@ -173,20 +177,23 @@
             }
         }
 
+        // Saat tombol Edit diklik
         document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.getElementById('editNama').value = this.dataset.nama;
-                document.getElementById('formEdit').action = `/brand/${this.dataset.id}`;
+            btn.addEventListener('click', function () {
+                const kode = this.dataset.id;
+                const nama = this.dataset.nama;
+                const logo = this.dataset.logo;
 
-                // Set existing logo
-                const existingLogo = this.dataset.logo;
+                document.getElementById('editNama').value = nama;
+                document.getElementById('formEdit').action = `/brand/${kode}`;
+
                 const logoPreview = document.getElementById('editLogoPreview');
                 const existingLogoInput = document.getElementById('editExistingLogo');
 
-                if (existingLogo) {
-                    logoPreview.src = existingLogo;
+                if (logo) {
+                    logoPreview.src = `/storage/${logo}`;
                     logoPreview.style.display = 'block';
-                    existingLogoInput.value = existingLogo;
+                    existingLogoInput.value = logo;
                 } else {
                     logoPreview.src = '';
                     logoPreview.style.display = 'none';
@@ -195,4 +202,27 @@
             });
         });
     </script>
+
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#3085d6'
+            });
+        </script>
+    @endif
+
+    @if ($errors->has('nama_brand'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menambahkan Brand',
+                text: '{{ $errors->first('nama_brand') }}',
+                confirmButtonColor: '#d33'
+            });
+        </script>
+    @endif
 @endpush
+

@@ -25,3 +25,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //             ->name('pembayaran.notification')
 //             ->withoutMiddleware(['csrf']);
 //     });
+
+
+Route::post('/midtrans/notification/pendaftaran', [App\Http\Controllers\RegistrasiController::class, 'notifikasi'])->name('midtrans.notification');

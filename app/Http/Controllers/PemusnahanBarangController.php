@@ -80,11 +80,24 @@ class PemusnahanBarangController extends Controller
         $request->validate([
             'aksi' => 'required|in:disetujui,ditolak',
         ]);
-
+    
         $pemusnahan = PemusnahanBarang::where('kode_pemusnahan', $kode_pemusnahan)->firstOrFail();
+    
+        if ($request->aksi === 'disetujui') {
+            $request->validate([
+                'jumlah' => 'required|integer|min:1|max:' . $pemusnahan->jumlah,
+            ], [
+                'jumlah.max' => 'Jumlah yang disetujui tidak boleh melebihi jumlah pengajuan (' . $pemusnahan->jumlah . ').'
+            ]);
+    
+            $pemusnahan->jumlah = $request->jumlah;
+        }
+    
         $pemusnahan->status = $request->aksi;
         $pemusnahan->save();
-
+    
         return redirect()->route('pemusnahan-barang.index')->with('success', 'Status pemusnahan berhasil diperbarui.');
     }
+    
+    
 }

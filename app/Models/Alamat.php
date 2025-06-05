@@ -66,6 +66,11 @@ class Alamat extends Model
         return "{$this->alamat_lengkap}, {$this->kelurahan}, {$this->kecamatan}, {$this->kota}, {$this->provinsi} {$this->kode_pos}";
     }
 
+    public function getNamaAlamatAttribute()
+    {
+        return "{$this->alamat_lengkap}, {$this->kelurahan}, {$this->kecamatan}, {$this->kota}, {$this->provinsi} {$this->kode_pos}";
+    }
+
     public function pelanggan()
     {
         return $this->belongsTo(Pelanggan::class, 'id_pelanggan', 'id_pelanggan');
