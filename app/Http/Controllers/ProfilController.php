@@ -81,34 +81,33 @@ class ProfilController extends Controller
     }
 
    
-public function changePassword(Request $request)
-{
-    // Validasi input
-    $request->validate([
-        'current_password' => 'required',
-        'new_password' => 'required|confirmed|min:6',
-    ], [
-        'current_password.required' => 'Password lama harus diisi.',
-        'new_password.required' => 'Password baru harus diisi.',
-        'new_password.confirmed' => 'Konfirmasi password tidak cocok.',
-        'new_password.min' => 'Password baru minimal 6 karakter.',
-    ]);
-
-    // Ambil data user
-    $user = auth()->guard('pelanggan')->user();
-
-    // Cek apakah password lama cocok dengan hash Bcrypt
-    if (!Hash::check($request->current_password, $user->password)) {
-        return redirect()->back()
-            ->with('error', 'Password lama tidak sesuai.')
-            ->withInput();
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password',
+        ], [
+            'current_password.required' => 'Password lama harus diisi.',
+            'new_password.required' => 'Password baru harus diisi.',
+            'new_password.min' => 'Password baru minimal 6 karakter.',
+            'confirm_password.required' => 'Konfirmasi password harus diisi.',
+            'confirm_password.same' => 'Konfirmasi password tidak cocok.',
+        ]);
+    
+        $user = auth()->guard('pelanggan')->user();
+    
+        if (!Hash::check($request->current_password, $user->kata_sandi)) {
+            return redirect()->back()
+                ->with('error', 'Password lama tidak sesuai.')
+                ->withInput();
+        }
+    
+        $user->kata_sandi = Hash::make($request->new_password);
+        $user->save();
+    
+        return redirect()->back()->with('success', 'Password berhasil diubah!');
     }
-
-    // Update password dengan hash Bcrypt
-    $user->password = Hash::make($request->new_password);
-    $user->save();
-
-    return redirect()->back()->with('success', 'Password berhasil diubah!');
-}
+    
 
 }

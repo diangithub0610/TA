@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Barang;
 use App\Models\Ulasan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class PelangganController extends Controller
@@ -14,13 +15,13 @@ class PelangganController extends Controller
     public function beranda()
     {
         $brands = Brand::all();
-        $barang = Barang::all();
+        $barang = Barang::all()->where('is_active', 1);;
         return view('pelanggan.beranda.index', compact('barang', 'brands'));
     }
     public function barang(Request $request)
     {
         $query = Barang::with(['tipe.brand'])
-            ->where('is_active', true);
+            ->where('is_active', 1);
 
         if ($request->has('brand') && $request->brand) {
             $query->whereHas('tipe', function ($q) use ($request) {
@@ -63,18 +64,19 @@ class PelangganController extends Controller
 
     public function detailBarang($kode_barang)
     {
+        // dd('halo');
         $barang = Barang::with([
             'tipe.brand',
             'detailBarangs.warna',
             // 'gambarBarang'
         ])->where('kode_barang', $kode_barang)
-            ->where('is_active', true)
+            ->where('is_active', 1)
             ->firstOrFail();
 
         $barangTerkait = Barang::with(['tipe.brand'])
             ->where('kode_tipe', $barang->kode_tipe)
             ->where('kode_barang', '!=', $kode_barang)
-            ->where('is_active', true)
+            ->where('is_active', 1)
             ->take(4)
             ->get();
 
@@ -146,7 +148,39 @@ class PelangganController extends Controller
             'detailByUkuranWarna',
             'ulasan',
             'averageRating',
-            'totalUlasan', 'canReview', 'hasPurchased'
+            'totalUlasan',
+            'canReview',
+            'hasPurchased'
         ));
+    }
+    public function resellerLoyal()
+    {
+        // Berdasarkan jumlah transaksi
+        $byTransaksi = DB::table('transaksi')
+            ->join('pelanggan', 'transaksi.id_pelanggan', '=', 'pelanggan.id_pelanggan')
+            ->select('pelanggan.nama_pelanggan', DB::raw('COUNT(*) as total_transaksi'))
+            ->where('pelanggan.role', 'reseller')
+            ->where('transaksi.status', '!=', 'dibatalkan')
+            ->groupBy('transaksi.id_pelanggan')
+            ->orderByDesc('total_transaksi')
+            ->limit(10)
+            ->get();
+
+        // Berdasarkan total spend
+        $bySpend = DB::table('transaksi')
+            ->join('detail_transaksi', 'transaksi.kode_transaksi', '=', 'detail_transaksi.kode_transaksi')
+            ->join('pelanggan', 'transaksi.id_pelanggan', '=', 'pelanggan.id_pelanggan')
+            ->select(
+                'pelanggan.nama_pelanggan',
+                DB::raw('SUM(detail_transaksi.harga * detail_transaksi.kuantitas + transaksi.ongkir) as total_spend')
+            )
+            ->where('pelanggan.role', 'reseller')
+            ->where('transaksi.status', '!=', 'dibatalkan')
+            ->groupBy('transaksi.id_pelanggan')
+            ->orderByDesc('total_spend')
+            ->limit(10)
+            ->get();
+
+        return view('admin.reseller-ranking', compact('byTransaksi', 'bySpend'));
     }
 }

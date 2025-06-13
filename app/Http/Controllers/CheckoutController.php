@@ -58,7 +58,7 @@ class CheckoutController extends Controller
 
         $provinsi = $this->rajaOngkirService->getProvinces();
 
-        return view('pelanggan.transaksi.checkout', compact('keranjang', 'subtotal', 'pelanggan', 'alamat', 'alamatUtama','provinsi'));
+        return view('pelanggan.transaksi.checkout', compact('keranjang', 'subtotal', 'pelanggan', 'alamat', 'alamatUtama', 'provinsi'));
     }
 
     public function beliLangsung(Request $request)
@@ -310,6 +310,8 @@ class CheckoutController extends Controller
 
     public function proses(Request $request)
     {
+
+
         $request->validate([
             'id_alamat' => 'required|exists:alamat,id_alamat',
             'ekspedisi' => 'required|string',
@@ -375,6 +377,15 @@ class CheckoutController extends Controller
                 // Kurangi stok
                 $detailBarang->decrement('stok', $item['jumlah']);
             }
+
+            $total = 0;
+            foreach ($keranjang as $item) {
+                $total += $item['jumlah'] * $item['harga'];
+            }
+            $total += $request->ongkir;
+
+            $transaksi->update(['total' => $total]);
+
 
             // Buat pembayaran
             $pembayaran = Pembayaran::create([

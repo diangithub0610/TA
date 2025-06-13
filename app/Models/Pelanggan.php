@@ -16,7 +16,8 @@ class Pelanggan extends Authenticatable
 
     protected $fillable = [
         'id_pelanggan', 'nama_pelanggan', 'no_hp', 'email', 'alamat_pengguna', 'username',
-        'foto_profil', 'kata_sandi', 'role',
+        'foto_profil', 'kata_sandi', 'role', 'reset_password_token',
+        'reset_password_expires_at'
     ];
 
     protected $hidden = [
@@ -97,4 +98,5 @@ class Pelanggan extends Authenticatable
         // Default fallback untuk role lain
         return $barang->harga_normal;
     }
+
 }

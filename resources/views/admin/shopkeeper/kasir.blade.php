@@ -1,562 +1,1071 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Kasir - Point of Sale')
-
 @section('content')
+
+    @push('styles')
+        <style>
+            /* Custom CSS untuk Sistem Kasir */
+
+            /* Animasi dan Transisi */
+            * {
+                transition: all 0.3s ease;
+            }
+
+            /* Card Styling */
+            .card-shadow {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+                border: none;
+                border-radius: 15px;
+                overflow: hidden;
+            }
+
+            .card-shadow:hover {
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+                transform: translateY(-2px);
+            }
+
+            /* Product Card Animations */
+            .product-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+
+            .product-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+                border-color: #667eea;
+            }
+
+            .product-image {
+                transition: transform 0.4s ease;
+            }
+
+            .product-card:hover .product-image {
+                transform: scale(1.1);
+            }
+
+            /* Header Gradients */
+            .cart-header {
+                background: blue;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .cart-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: blue;
+                /* animation: shimmer 3s infinite; */
+            }
+
+            .product-header {
+                background: blue;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .product-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: blue;
+                /* animation: shimmer 3s infinite; */
+            }
+
+            @keyframes shimmer {
+                0% {
+                    left: -100%;
+                }
+
+                100% {
+                    left: 100%;
+                }
+            }
+
+            /* Button Styles */
+            .btn-gradient {
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                border: none;
+                color: white;
+                position: relative;
+                overflow: hidden;
+                z-index: 1;
+            }
+
+            .btn-gradient::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(45deg, #764ba2, #667eea);
+                z-index: -1;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .btn-gradient:hover::before {
+                opacity: 1;
+            }
+
+            .btn-gradient:hover {
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            }
+
+            /* Cart Item Styling */
+            .cart-item {
+                border-left: 4px solid #667eea;
+                background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+                transition: all 0.3s ease;
+            }
+
+            .cart-item:hover {
+                border-left-color: #f5576c;
+                background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+                transform: translateX(5px);
+            }
+
+            /* Quantity Controls */
+            .quantity-control {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .quantity-btn {
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                border: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #f8f9fa;
+                color: #495057;
+                transition: all 0.3s ease;
+            }
+
+            .quantity-btn:hover {
+                background: #667eea;
+                color: white;
+                transform: scale(1.1);
+            }
+
+            /* Search Input */
+            .search-container {
+                position: relative;
+            }
+
+            .search-input {
+                padding-left: 50px;
+                border: 2px solid #e9ecef;
+                border-radius: 25px;
+                transition: all 0.3s ease;
+            }
+
+            .search-input:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+                transform: scale(1.02);
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 18px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #6c757d;
+                z-index: 2;
+            }
+
+            /* Transaction Type Cards */
+            .transaction-type-card {
+                border: 2px solid #e9ecef;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: white;
+            }
+
+            .transaction-type-card:hover {
+                border-color: #667eea;
+                background: #f8f9ff;
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            }
+
+            .transaction-type-card.active {
+                border-color: #667eea;
+                background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+            }
+
+            /* Marketplace Options */
+            .marketplace-option {
+                border: 2px solid #e9ecef;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: white;
+            }
+
+            .marketplace-option:hover {
+                border-color: #28a745;
+                background: #f8fff9;
+                transform: translateY(-3px);
+            }
+
+            .marketplace-option.bg-primary {
+                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+                border-color: #007bff;
+                transform: scale(1.05);
+            }
+
+            /* Scrollbar Styling */
+            #productContainer::-webkit-scrollbar,
+            #cartItems::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            #productContainer::-webkit-scrollbar-track,
+            #cartItems::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            #productContainer::-webkit-scrollbar-thumb,
+            #cartItems::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                border-radius: 10px;
+            }
+
+            #productContainer::-webkit-scrollbar-thumb:hover,
+            #cartItems::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(135deg, #764ba2, #667eea);
+            }
+
+            /* Badge Animations */
+            #cartCount {
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0% {
+                    transform: scale(1);
+                }
+
+                50% {
+                    transform: scale(1.1);
+                }
+
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+            /* Empty Cart State */
+            #emptyCart {
+                opacity: 0.6;
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+
+                to {
+                    opacity: 0.6;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Loading States */
+            .btn:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+
+            /* Variant Modal */
+            .variant-card {
+                border: 2px solid transparent;
+                transition: all 0.3s ease;
+            }
+
+            .variant-card:hover {
+                border-color: #667eea;
+                background: #f8f9ff;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            }
+
+            /* Responsive Design */
+            @media (max-width: 768px) {
+                .card-shadow {
+                    margin-bottom: 20px;
+                }
+
+                .product-card:hover {
+                    transform: translateY(-4px) scale(1.01);
+                }
+
+                .search-input {
+                    padding-left: 45px;
+                }
+
+                .search-icon {
+                    left: 15px;
+                }
+            }
+
+            /* Success/Error States */
+            .text-success {
+                color: #28a745 !important;
+                font-weight: 600;
+            }
+
+            .text-danger {
+                color: #dc3545 !important;
+                font-weight: 600;
+            }
+
+            /* Form Controls */
+            .form-control:focus,
+            .form-select:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
+            /* Price Display */
+            .text-primary {
+                color: #667eea !important;
+                font-weight: 700;
+            }
+
+            /* Total Amount */
+            #totalAmount {
+                font-size: 1.5rem;
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+        </style>
+    @endpush
     <div class="container-fluid py-4">
-        <!-- Top Panel - Product Selection -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Pilih Produk</h5>
+        <div class="row">
+            <!-- Card Pilih Produk -->
+            <div class="col-lg-7 mb-4">
+                <div class="card card-shadow h-100">
+                    <div class="card-header product-header p-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shopping-cart me-3 fs-4"></i>
+                            <h5 class="mb-0 fw-bold">Pilih Produk</h5>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <!-- Search and Filter -->
+                        <!-- Search dan Filter -->
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                    <input type="text" class="form-control" id="searchProduct"
+                            <div class="col-md-8">
+                                <div class="search-container">
+                                    <input type="text" id="searchInput" class="form-control search-input"
                                         placeholder="Cari produk...">
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <select class="form-select" id="filterBrand">
+                                <select id="brandFilter" class="form-select">
                                     <option value="">Semua Brand</option>
                                     @foreach ($brands as $brand)
-                                        <option value="{{ $brand->kode_brand }}">{{ $brand->nama_brand }}</option>
+                                        <option value="{{ $brand->kode_tipe }}">{{ $brand->nama_tipe }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-primary w-100" id="btnFilter">
-                                    <i class="fas fa-filter"></i> Filter
+                        </div>
+                
+                        <!-- Product Grid -->
+                        <div id="productContainer">
+                            <div class="row" id="productGrid">
+                                @foreach ($products as $product)
+                                    @php
+                                        $stok = $product->detailBarang->sum('stok');
+                                        $isOutOfStock = $stok <= 0;
+                                    @endphp
+                                    <div class="col-md-6 col-lg-4 mb-3 product-item">
+                                        <div class="card product-card h-100 {{ $isOutOfStock ? 'bg-light text-muted' : '' }}"
+                                            data-product="{{ json_encode([
+                                                'kode_barang' => $product->kode_barang,
+                                                'nama_barang' => $product->nama_barang,
+                                                'harga_normal' => $product->harga_normal,
+                                                'gambar' => $product->gambar,
+                                                'brand' => $product->tipe->nama_tipe ?? '',
+                                                'stok' => $stok,
+                                            ]) }}">
+                                            @if ($product->gambar)
+                                                <img src="{{ asset('storage/' . $product->gambar) }}"
+                                                    class="card-img-top product-image" alt="{{ $product->nama_barang }}"
+                                                    style="{{ $isOutOfStock ? 'filter: grayscale(100%); opacity: 0.5;' : '' }}">
+                                            @else
+                                                <div
+                                                    class="product-image bg-secondary d-flex align-items-center justify-content-center {{ $isOutOfStock ? 'opacity-50' : '' }}">
+                                                    <i class="fas fa-image text-white fs-1"></i>
+                                                </div>
+                                            @endif
+                                            <div class="card-body p-3 d-flex flex-column">
+                                                <h6 class="card-title mb-2 fw-bold">{{ $product->nama_barang }}</h6>
+                                                <p class="text-muted mb-1 small">
+                                                    {{ $product->tipe->nama_tipe ?? 'No Brand' }}
+                                                </p>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="fw-bold text-primary">Rp
+                                                        {{ number_format($product->harga_normal, 0, ',', '.') }}</span>
+                                                    <small class="text-muted">Stok: {{ $stok }}</small>
+                                                </div>
+                                                <div class="mt-auto">
+                                                    <button class="btn btn-sm w-100 mt-2 add-product-btn {{ $isOutOfStock ? 'btn-secondary' : 'btn-primary' }}"
+                                                        {{ $isOutOfStock ? 'disabled' : '' }}>
+                                                        <i class="fas fa-plus me-1"></i>
+                                                        {{ $isOutOfStock ? 'Stok Habis' : 'Tambah' }}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Card Keranjang Belanja -->
+            <div class="col-lg-5">
+                <div class="card card-shadow h-100">
+                    <div class="card-header cart-header p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shopping-basket me-3 fs-4"></i>
+                                <h5 class="mb-0 fw-bold">Keranjang Belanja</h5>
+                            </div>
+                            <span id="cartCount" class="badge bg-light text-dark rounded-pill">0</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Jenis Transaksi -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Jenis Transaksi</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="transaction-type-card card text-center p-2 active" data-type="offline">
+                                        <i class="fas fa-store fs-4 text-primary mb-1"></i>
+                                        <small class="fw-bold">Offline</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="transaction-type-card card text-center p-2" data-type="marketplace">
+                                        <i class="fas fa-globe fs-4 text-success mb-1"></i>
+                                        <small class="fw-bold">Marketplace</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ID Reseller (Offline) -->
+                        <div id="resellerSection" class="mb-3">
+                            <label class="form-label">ID Reseller (Opsional)</label>
+                            <div class="input-group">
+                                <input type="text" id="resellerInput" class="form-control"
+                                    placeholder="Masukkan ID Reseller">
+                                <button class="btn btn-outline-primary" id="checkResellerBtn" type="button">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                            <div id="resellerStatus" class="mt-1"></div>
+                        </div>
+
+                        <!-- Marketplace Options -->
+                        <div id="marketplaceSection" class="mb-3" style="display: none;">
+                            <label class="form-label">Pilih Marketplace</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="marketplace-option card text-center p-2" data-marketplace="shopee">
+                                        <i class="fab fa-shopify fs-4 text-orange mb-1"></i>
+                                        <small class="fw-bold">Shopee</small>
+                                        <input type="radio" name="marketplace" value="shopee" class="d-none">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="marketplace-option card text-center p-2" data-marketplace="tokopedia">
+                                        <i class="fas fa-shopping-bag fs-4 text-success mb-1"></i>
+                                        <small class="fw-bold">Tokopedia</small>
+                                        <input type="radio" name="marketplace" value="tokopedia" class="d-none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Keterangan -->
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan</label>
+                            <textarea id="keteranganInput" class="form-control" rows="2" placeholder="Keterangan tambahan..."></textarea>
+                        </div>
+
+                        <!-- Cart Items -->
+                        <div id="cartItems" class="mb-3">
+                            <div id="emptyCart" class="text-center text-muted py-4">
+                                <i class="fas fa-shopping-cart fs-1 mb-3"></i>
+                                <p>Keranjang masih kosong</p>
+                            </div>
+                        </div>
+
+                        <!-- Total dan Actions -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold fs-5">Total:</span>
+                                <span id="totalAmount" class="fw-bold fs-5 text-primary">Rp 0</span>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button id="processTransactionBtn" class="btn btn-primary btn-lg" disabled>
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Proses Transaksi
+                                </button>
+                                <button id="clearCartBtn" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Hapus Semua
                                 </button>
                             </div>
                         </div>
-
-                        <!-- Product Grid -->
-                        <div class="row" id="productGrid">
-                            <div class="col-12 text-center py-5">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <p class="mt-2 text-muted">Memuat produk...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Panel - Cart and Transaction -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-cash-register me-2"></i>Keranjang Belanja</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Left Column - Transaction Settings -->
-                            <div class="col-lg-4 col-md-6">
-                                <!-- Transaction Type -->
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Jenis Transaksi</label>
-                                    <div class="btn-group w-100" role="group">
-                                        <input type="radio" class="btn-check" name="jenis_transaksi" id="offline"
-                                            value="offline" checked>
-                                        <label class="btn btn-outline-primary" for="offline">
-                                            <i class="fas fa-store me-1"></i>Offline
-                                        </label>
-                                        <input type="radio" class="btn-check" name="jenis_transaksi" id="marketplace"
-                                            value="marketplace">
-                                        <label class="btn btn-outline-info" for="marketplace">
-                                            <i class="fas fa-globe me-1"></i>Marketplace
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Customer Selection (Only for Reseller) -->
-                                <div class="mb-3" id="customerSection" style="display: none;">
-                                    <label class="form-label fw-bold">Pelanggan Reseller</label>
-                                    <select class="form-select" id="selectCustomer">
-                                        <option value="">Pilih Reseller...</option>
-                                        @foreach ($resellers as $reseller)
-                                            <option value="{{ $reseller->id_pelanggan }}">{{ $reseller->nama_pelanggan }} -
-                                                {{ $reseller->no_hp }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Marketplace Details -->
-                                <div id="marketplaceDetails" style="display: none;">
-                                    <div class="mb-3">
-                                        <label class="form-label">Keterangan Marketplace</label>
-                                        <textarea class="form-control" id="keteranganMarketplace" rows="2"
-                                            placeholder="Contoh: Shopee - Order #12345, Tokopedia - Atas nama John Doe"></textarea>
-                                    </div>
-
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="isDropship">
-                                        <label class="form-check-label" for="isDropship">
-                                            Dropship
-                                        </label>
-                                    </div>
-
-                                    <div id="dropshipDetails" style="display: none;">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <label class="form-label">Nama Pengirim</label>
-                                                <input type="text" class="form-control" id="namaPengirim"
-                                                    placeholder="Nama pengirim">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="form-label">No. HP Pengirim</label>
-                                                <input type="text" class="form-control" id="noHpPengirim"
-                                                    placeholder="081xxxxxxxx">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Middle Column - Cart Items -->
-                            <div class="col-lg-5 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Item Pesanan</label>
-                                    <div id="cartItems" class="border rounded p-3"
-                                        style="min-height: 250px; max-height: 400px; overflow-y: auto;">
-                                        <div class="text-center text-muted py-4">
-                                            <i class="fas fa-shopping-cart fa-3x mb-2 opacity-25"></i>
-                                            <p>Keranjang masih kosong</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Column - Total & Actions -->
-                            <div class="col-lg-3 col-md-12">
-                                <!-- Total -->
-                                <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
-                                    <span class="fw-bold fs-5">Total:</span>
-                                    <span class="fw-bold fs-4 text-success" id="totalAmount">Rp 0</span>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-success btn-lg" id="btnProcess" disabled>
-                                        <i class="fas fa-check me-2"></i>Proses Transaksi
-                                    </button>
-                                    <button class="btn btn-outline-danger" id="btnClear">
-                                        <i class="fas fa-trash me-2"></i>Hapus Semua
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Product Detail Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1">
+    <!-- Modal Varian Produk -->
+    <div class="modal fade" id="variantModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Detail Produk</h5>
+                    <h5 class="modal-title">Pilih Varian</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="productDetails"></div>
+                    <div id="variantList"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Transaksi Berhasil</h5>
-                </div>
-                <div class="modal-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
-                        <h4>Transaksi Berhasil!</h4>
-                        <p class="text-muted">Kode Transaksi: <strong id="transactionCode"></strong></p>
-                        <p class="text-muted">Total: <strong id="transactionTotal"></strong></p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="btnPrint">
-                        <i class="fas fa-print me-2"></i>Cetak Struk
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-@endsection
-
-@push('scripts')
     <script>
+        let cart = [];
+        let currentProduct = null;
+        let transactionType = 'offline';
+        let selectedMarketplace = '';
+        let resellerDiscount = 0;
+
+        // CSRF Token Setup
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
         $(document).ready(function() {
-            let cart = [];
-            let products = [];
-
-            // Load products on page load
-            loadProducts();
-
-            // Event listeners
-            $('#btnFilter, #searchProduct').on('click keyup', function(e) {
-                if (e.type === 'click' || e.keyCode === 13) {
-                    loadProducts();
-                }
+            // Search functionality
+            $('#searchInput').on('input', function() {
+                searchProducts();
             });
 
-            $('input[name="jenis_transaksi"]').change(function() {
-                if ($(this).val() === 'marketplace') {
-                    $('#marketplaceDetails').show();
-                    $('#customerSection').show();
+            // Brand filter
+            $('#brandFilter').change(function() {
+                searchProducts();
+            });
+
+            // Transaction type selection
+            $('.transaction-type-card').click(function() {
+                $('.transaction-type-card').removeClass('active');
+                $(this).addClass('active');
+                transactionType = $(this).data('type');
+
+                if (transactionType === 'offline') {
+                    $('#resellerSection').show();
+                    $('#marketplaceSection').hide();
                 } else {
-                    $('#marketplaceDetails').hide();
-                    $('#customerSection').hide();
+                    $('#resellerSection').hide();
+                    $('#marketplaceSection').show();
                 }
             });
 
-            $('#isDropship').change(function() {
-                if ($(this).is(':checked')) {
-                    $('#dropshipDetails').show();
-                } else {
-                    $('#dropshipDetails').hide();
+            // Marketplace selection
+            $('.marketplace-option').click(function() {
+                $('.marketplace-option').removeClass('bg-primary text-white');
+                $(this).addClass('bg-primary text-white');
+                selectedMarketplace = $(this).data('marketplace');
+                $('input[name="marketplace"][value="' + selectedMarketplace + '"]').prop('checked', true);
+
+                // Update keterangan
+                let currentKeterangan = $('#keteranganInput').val();
+                if (!currentKeterangan.includes(selectedMarketplace)) {
+                    $('#keteranganInput').val(selectedMarketplace.charAt(0).toUpperCase() +
+                        selectedMarketplace.slice(1));
                 }
             });
 
-            $('#btnProcess').click(function() {
+            // Check reseller
+            $('#checkResellerBtn').click(function() {
+                checkReseller();
+            });
+
+            // Add product to cart
+            $(document).on('click', '.add-product-btn', function() {
+                const productCard = $(this).closest('.product-card');
+                currentProduct = JSON.parse(productCard.attr('data-product'));
+                loadProductVariants(currentProduct.kode_barang);
+            });
+
+            // Process transaction
+            $('#processTransactionBtn').click(function() {
                 processTransaction();
             });
 
-            $('#btnClear').click(function() {
-                if (confirm('Hapus semua item dari keranjang?')) {
-                    cart = [];
-                    updateCartDisplay();
-                }
+            // Clear cart
+            $('#clearCartBtn').click(function() {
+                clearCart();
             });
 
-            function loadProducts() {
-                const search = $('#searchProduct').val();
-                const brand = $('#filterBrand').val();
+            // Remove item from cart
+            $(document).on('click', '.remove-item', function() {
+                const index = $(this).data('index');
+                removeFromCart(index);
+            });
 
-                $.ajax({
-                    url: '{{ route('kasir.barang') }}',
-                    method: 'GET',
-                    data: {
-                        search: search,
-                        brand: brand
-                    },
-                    beforeSend: function() {
-                        $('#productGrid').html(`
-                    <div class="col-12 text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-muted">Memuat produk...</p>
-                    </div>
-                `);
-                    },
-                    success: function(data) {
-                        products = data;
-                        displayProducts(data);
-                    },
-                    error: function() {
-                        $('#productGrid').html(`
-                    <div class="col-12 text-center py-5">
-                        <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
-                        <p class="text-muted">Gagal memuat produk</p>
-                    </div>
-                `);
-                    }
+            // Quantity controls
+            $(document).on('click', '.quantity-plus', function() {
+                const index = $(this).data('index');
+                updateQuantity(index, 1);
+            });
+
+            $(document).on('click', '.quantity-minus', function() {
+                const index = $(this).data('index');
+                updateQuantity(index, -1);
+            });
+        });
+
+        function searchProducts() {
+            const search = $('#searchInput').val();
+            const brand = $('#brandFilter').val();
+
+            $.get('{{ route('kasir.search') }}', {
+                    search: search,
+                    brand: brand
+                })
+                .done(function(data) {
+                    updateProductGrid(data.products);
+                })
+                .fail(function() {
+                    alert('Error searching products');
                 });
-            }
+        }
 
-            function displayProducts(products) {
-                if (products.length === 0) {
-                    $('#productGrid').html(`
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-box-open text-muted fa-3x mb-3"></i>
-                    <p class="text-muted">Tidak ada produk ditemukan</p>
-                </div>
-            `);
-                    return;
-                }
+        function updateProductGrid(products) {
+            const grid = $('#productGrid');
+            grid.empty();
 
-                let html = '';
-                products.forEach(function(product) {
-                    const hasStock = product.detail_barang && product.detail_barang.some(d => d.stok > 0);
-                    html += `
-                <div class="col-md-6 col-lg-3 col-xl-2 mb-3">
-                    <div class="card h-100 product-card ${!hasStock ? 'opacity-50' : ''}" data-kode="${product.kode_barang}">
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 120px;">
+            products.forEach(function(product) {
+                const productHtml = `
+                    <div class="col-md-6 col-lg-4 mb-3 product-item">
+                        <div class="card product-card h-100" data-product='${JSON.stringify(product)}'>
                             ${product.gambar ? 
-                                `<img src="/storage/${product.gambar}" class="img-fluid" style="max-height: 100%;">` : 
-                                `<i class="fas fa-image text-muted fa-2x"></i>`
+                                `<img src="/storage/${product.gambar}" class="card-img-top product-image" alt="${product.nama_barang}">` :
+                                `<div class="product-image bg-secondary d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-image text-white fs-1"></i>
+                                        </div>`
                             }
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-2 fw-bold">${product.nama_barang}</h6>
+                                <p class="text-muted mb-1 small">${product.brand || 'No Brand'}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary">Rp ${new Intl.NumberFormat('id-ID').format(product.harga_normal)}</span>
+                                    <small class="text-muted">Stok: ${product.stok}</small>
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100 mt-2 add-product-btn">
+                                    <i class="fas fa-plus me-1"></i> Tambah
+                                </button>
+                            </div>
                         </div>
-                        <div class="card-body p-2">
-                            <h6 class="card-title mb-1" style="font-size: 0.85rem;">${product.nama_barang}</h6>
-                            <p class="card-text text-muted mb-1" style="font-size: 0.75rem;">${product.tipe ? product.tipe.brand.nama_brand : 'No Brand'}</p>
-                            <p class="card-text fw-bold text-success mb-1" style="font-size: 0.85rem;">Rp ${Number(product.harga_normal).toLocaleString('id-ID')}</p>
-                            <small class="text-muted" style="font-size: 0.7rem;">Stok: ${product.detail_barang ? product.detail_barang.reduce((sum, d) => sum + d.stok, 0) : 0}</small>
-                        </div>
-                        ${hasStock ? 
-                            `<div class="card-footer p-2">
-                                    <button class="btn btn-primary btn-sm w-100 btn-add-product">
-                                        <i class="fas fa-plus me-1"></i>Tambah
-                                    </button>
-                                </div>` : 
-                            `<div class="card-footer p-2">
-                                    <button class="btn btn-secondary btn-sm w-100" disabled>Stok Habis</button>
-                                </div>`
-                        }
                     </div>
-                </div>
-            `;
+                `;
+                grid.append(productHtml);
+            });
+        }
+
+        function loadProductVariants(kode_barang) {
+            $.get(`{{ url('kasir/product-variants') }}/${kode_barang}`)
+                .done(function(data) {
+                    showVariantModal(data.variants);
+                })
+                .fail(function() {
+                    alert('Error loading variants');
                 });
-                $('#productGrid').html(html);
+        }
+
+        function showVariantModal(variants) {
+            const variantList = $('#variantList');
+            variantList.empty();
+
+            if (variants.length === 0) {
+                variantList.html('<p class="text-muted">Tidak ada varian tersedia</p>');
+                return;
             }
 
-            // Add product to cart
-            $(document).on('click', '.btn-add-product', function() {
-                const kodeBarang = $(this).closest('.product-card').data('kode');
-                const product = products.find(p => p.kode_barang === kodeBarang);
-
-                if (product.detail_barang.length === 1) {
-                    // Direct add if only one variant
-                    addToCart(product.detail_barang[0], product);
-                } else {
-                    // Show variant selection modal
-                    showProductModal(product);
-                }
-            });
-
-            function showProductModal(product) {
-                let html = `
-            <h5>${product.nama_barang}</h5>
-            <p class="text-muted">${product.deskripsi || 'Tidak ada deskripsi'}</p>
-            <hr>
-            <h6>Pilih Varian:</h6>
-        `;
-
-                product.detail_barang.forEach(function(detail) {
-                    if (detail.stok > 0) {
-                        html += `
-                    <div class="card mb-2">
+            variants.forEach(function(variant) {
+                const variantHtml = `
+                    <div class="card mb-2 variant-card" style="cursor: pointer;" data-variant='${JSON.stringify(variant)}'>
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>Ukuran: ${detail.ukuran}</strong>
-                                    ${detail.warna ? `<br><small>Warna: ${detail.warna.warna}</small>` : ''}
-                                    <br><small class="text-muted">Stok: ${detail.stok}</small>
+                                    <strong>Ukuran: ${variant.ukuran}</strong>
+                                    <span class="badge bg-secondary variant-badge ms-2">${variant.warna}</span>
+                                    <br>
+                                    <small class="text-muted">Stok: ${variant.stok}</small>
                                 </div>
                                 <div class="text-end">
-                                    <div class="fw-bold text-success">Rp ${Number(detail.harga_normal).toLocaleString('id-ID')}</div>
-                                    <button class="btn btn-primary btn-sm mt-1 btn-add-variant" data-detail='${JSON.stringify(detail)}' data-product='${JSON.stringify(product)}'>
-                                        <i class="fas fa-plus"></i> Tambah
-                                    </button>
+                                    <div class="fw-bold text-primary">Rp ${new Intl.NumberFormat('id-ID').format(variant.harga_normal)}</div>
+                                    <button class="btn btn-sm btn-gradient mt-1 add-variant-btn">Tambah</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-                    }
-                });
-
-                $('#productDetails').html(html);
-                $('#productModal').modal('show');
-            }
-
-            $(document).on('click', '.btn-add-variant', function() {
-                const detail = JSON.parse($(this).attr('data-detail'));
-                const product = JSON.parse($(this).attr('data-product'));
-                addToCart(detail, product);
-                $('#productModal').modal('hide');
+                variantList.append(variantHtml);
             });
 
-            function addToCart(detail, product) {
-                const existingItem = cart.find(item => item.kode_detail === detail.kode_detail);
+            // Add click handler for variant selection
+            $('.add-variant-btn').click(function(e) {
+                e.stopPropagation();
+                const variantCard = $(this).closest('.variant-card');
+                const variant = JSON.parse(variantCard.attr('data-variant'));
+                addToCart(currentProduct, variant);
+                $('#variantModal').modal('hide');
+            });
 
-                if (existingItem) {
-                    if (existingItem.qty < detail.stok) {
-                        existingItem.qty++;
-                    } else {
-                        alert('Stok tidak mencukupi!');
-                        return;
-                    }
+            $('#variantModal').modal('show');
+        }
+
+        function addToCart(product, variant) {
+            // Tentukan harga yang akan digunakan
+            let finalPrice = variant.harga_normal;
+
+            // Jika ada reseller yang valid, gunakan harga reseller
+            const resellerID = $('#resellerInput').val().trim();
+            if (resellerID && resellerDiscount > 0) {
+                // Ambil harga reseller dari server
+                $.post('{{ route('kasir.reseller-price') }}', {
+                        kode_detail: variant.kode_detail,
+                        id_reseller: resellerID,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    })
+                    .done(function(data) {
+                        if (!data.error) {
+                            finalPrice = data.harga_reseller;
+
+                            // Check if item already exists in cart
+                            const existingIndex = cart.findIndex(item =>
+                                item.kode_detail === variant.kode_detail
+                            );
+
+                            if (existingIndex !== -1) {
+                                cart[existingIndex].quantity += 1;
+                            } else {
+                                cart.push({
+                                    kode_detail: variant.kode_detail,
+                                    nama_produk: product.nama_barang,
+                                    ukuran: variant.ukuran,
+                                    warna: variant.warna,
+                                    price: finalPrice,
+                                    harga_normal: variant.harga_normal,
+                                    quantity: 1,
+                                    stok: variant.stok
+                                });
+                            }
+
+                            updateCartDisplay();
+                        }
+                    });
+            } else {
+                // Gunakan harga normal
+                const existingIndex = cart.findIndex(item =>
+                    item.kode_detail === variant.kode_detail
+                );
+
+                if (existingIndex !== -1) {
+                    cart[existingIndex].quantity += 1;
                 } else {
                     cart.push({
-                        kode_detail: detail.kode_detail,
-                        nama_barang: product.nama_barang,
-                        ukuran: detail.ukuran,
-                        warna: detail.warna ? detail.warna.warna : null,
-                        harga: detail.harga_normal,
-                        qty: 1,
-                        stok: detail.stok
+                        kode_detail: variant.kode_detail,
+                        nama_produk: product.nama_barang,
+                        ukuran: variant.ukuran,
+                        warna: variant.warna,
+                        price: finalPrice,
+                        harga_normal: variant.harga_normal,
+                        quantity: 1,
+                        stok: variant.stok
                     });
                 }
 
                 updateCartDisplay();
             }
+        }
 
-            function updateCartDisplay() {
-                if (cart.length === 0) {
-                    $('#cartItems').html(`
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-shopping-cart fa-3x mb-2 opacity-25"></i>
-                    <p>Keranjang masih kosong</p>
-                </div>
-            `);
-                    $('#btnProcess').prop('disabled', true);
-                    $('#totalAmount').text('Rp 0');
-                    return;
+        function updateCartDisplay() {
+            const cartItems = $('#cartItems');
+            const emptyCart = $('#emptyCart');
+
+            if (cart.length === 0) {
+                emptyCart.show();
+                cartItems.find('.cart-item').remove();
+                $('#cartCount').text('0');
+                $('#totalAmount').text('Rp 0');
+                $('#processTransactionBtn').prop('disabled', true);
+                return;
+            }
+
+            emptyCart.hide();
+            cartItems.find('.cart-item').remove();
+
+            let total = 0;
+            cart.forEach(function(item, index) {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+
+                // Tampilkan info diskon jika ada
+                let priceDisplay =
+                    `<span class="fw-bold">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>`;
+                if (item.harga_normal && item.price < item.harga_normal) {
+                    priceDisplay = `
+                <span class="fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>
+                <br><small class="text-muted text-decoration-line-through">Rp ${new Intl.NumberFormat('id-ID').format(item.harga_normal)}</small>
+            `;
                 }
 
-                let html = '';
-                let total = 0;
-
-                cart.forEach(function(item, index) {
-                    const subtotal = item.harga * item.qty;
-                    total += subtotal;
-
-                    html += `
-                <div class="card mb-2 cart-item">
-                    <div class="card-body p-2">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1" style="font-size: 0.9rem;">${item.nama_barang}</h6>
-                                <small class="text-muted">
-                                    Ukuran: ${item.ukuran}
-                                    ${item.warna ? ` | Warna: ${item.warna}` : ''}
-                                </small>
-                                <div class="fw-bold text-success">Rp ${Number(item.harga).toLocaleString('id-ID')}</div>
-                            </div>
-                            <div class="text-end">
-                                <div class="input-group input-group-sm mb-1" style="width: 100px;">
-                                    <button class="btn btn-outline-secondary btn-qty-minus" data-index="${index}">-</button>
-                                    <input type="number" class="form-control text-center qty-input" value="${item.qty}" min="1" max="${item.stok}" data-index="${index}">
-                                    <button class="btn btn-outline-secondary btn-qty-plus" data-index="${index}">+</button>
-                                </div>
-                                <small class="text-success fw-bold">Rp ${Number(subtotal).toLocaleString('id-ID')}</small>
-                                <button class="btn btn-outline-danger btn-sm btn-remove-item ms-1" data-index="${index}">
-                                    <i class="fas fa-trash"></i>
+                const itemHtml = `
+            <div class="cart-item card mb-2 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${item.nama_produk}</h6>
+                        <small class="text-muted">(${item.ukuran}, ${item.warna})</small>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div>${priceDisplay}</div>
+                            <div class="quantity-control">
+                                <button class="btn btn-sm btn-outline-secondary quantity-minus" data-index="${index}">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="mx-2">${item.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary quantity-plus" data-index="${index}">
+                                    <i class="fas fa-plus"></i>
                                 </button>
                             </div>
                         </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-primary fw-bold">Subtotal: Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}</small>
+                        </div>
                     </div>
+                    <button class="btn btn-sm btn-outline-danger ms-2 remove-item" data-index="${index}">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
-            `;
-                });
+            </div>
+        `;
+                cartItems.append(itemHtml);
+            });
 
-                $('#cartItems').html(html);
-                $('#totalAmount').text('Rp ' + Number(total).toLocaleString('id-ID'));
-                $('#btnProcess').prop('disabled', false);
+            $('#cartCount').text(cart.length);
+            $('#totalAmount').text('Rp ' + new Intl.NumberFormat('id-ID').format(total));
+            $('#processTransactionBtn').prop('disabled', false);
+        }
+
+        function updateQuantity(index, change) {
+            if (cart[index].quantity + change <= 0) {
+                removeFromCart(index);
+                return;
             }
 
-            // Cart item controls
-            $(document).on('click', '.btn-qty-plus', function() {
-                const index = $(this).data('index');
-                if (cart[index].qty < cart[index].stok) {
-                    cart[index].qty++;
-                    updateCartDisplay();
-                }
-            });
+            if (cart[index].quantity + change > cart[index].stok) {
+                alert('Stok tidak mencukupi!');
+                return;
+            }
 
-            $(document).on('click', '.btn-qty-minus', function() {
-                const index = $(this).data('index');
-                if (cart[index].qty > 1) {
-                    cart[index].qty--;
-                    updateCartDisplay();
-                }
-            });
+            cart[index].quantity += change;
+            updateCartDisplay();
+        }
 
-            $(document).on('change', '.qty-input', function() {
-                const index = $(this).data('index');
-                const newQty = parseInt($(this).val());
-                if (newQty >= 1 && newQty <= cart[index].stok) {
-                    cart[index].qty = newQty;
-                    updateCartDisplay();
-                } else {
-                    $(this).val(cart[index].qty);
-                }
-            });
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
 
-            $(document).on('click', '.btn-remove-item', function() {
-                const index = $(this).data('index');
-                cart.splice(index, 1);
-                updateCartDisplay();
-            });
+        // function clearCart() {
+        //     if (confirm('Yakin ingin mengosongkan keranjang?')) {
+        //         cart = [];
+        //         updateCartDisplay();
+        //     }
+        // }
+        function clearCart() {
+    cart = [];
+    updateCartDisplay();
+}
 
-            function processTransaction() {
-                if (cart.length === 0) {
-                    alert('Keranjang masih kosong!');
-                    return;
-                }
 
-                const data = {
-                    items: cart,
-                    jenis_transaksi: $('input[name="jenis_transaksi"]:checked').val(),
-                    id_pelanggan: $('#selectCustomer').val() || null,
-                    keterangan_marketplace: $('#keteranganMarketplace').val() || null,
-                    is_dropship: $('#isDropship').is(':checked'),
-                    nama_pengirim: $('#namaPengirim').val() || null,
-                    no_hp_pengirim: $('#noHpPengirim').val() || null,
-                    _token: '{{ csrf_token() }}'
-                };
+        function checkReseller() {
+            const resellerID = $('#resellerInput').val().trim();
+            const statusDiv = $('#resellerStatus');
 
-                $.ajax({
-                    url: '{{ route('kasir.store') }}',
-                    method: 'POST',
-                    data: data,
-                    beforeSend: function() {
-                        $('#btnProcess').prop('disabled', true).html(
-                            '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...');
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $('#transactionCode').text(response.kode_transaksi);
-                            $('#transactionTotal').text('Rp ' + Number(response.total).toLocaleString(
-                                'id-ID'));
-                            $('#successModal').modal('show');
-
-                            // Reset form
-                            cart = [];
-                            updateCartDisplay();
-                            $('input[name="jenis_transaksi"][value="offline"]').prop('checked', true)
-                                .trigger('change');
-                            $('#selectCustomer').val('');
-                            $('#keteranganMarketplace').val('');
-                            $('#isDropship').prop('checked', false).trigger('change');
-                            $('#namaPengirim, #noHpPengirim').val('');
-                        }
-                    },
-                    error: function(xhr) {
-                        const response = xhr.responseJSON;
-                        alert(response.message || 'Terjadi kesalahan!');
-                    },
-                    complete: function() {
-                        $('#btnProcess').prop('disabled', false).html(
-                            '<i class="fas fa-check me-2"></i>Proses Transaksi');
+            if (!resellerID) {
+                statusDiv.html('<small class="text-muted">ID reseller kosong</small>');
+                resellerDiscount = 0;
+                // Reset harga di cart ke harga normal
+                cart.forEach(item => {
+                    if (item.harga_normal) {
+                        item.price = item.harga_normal;
                     }
                 });
+                updateCartDisplay();
+                return;
             }
 
-            $('#btnPrint').click(function() {
-                const kodeTransaksi = $('#transactionCode').text();
-                window.open('{{ route('kasir.print', ':kode') }}'.replace(':kode', kodeTransaksi),
-                '_blank');
+            $.post('{{ route('kasir.check-reseller') }}', {
+                    id_reseller: resellerID,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                })
+                .done(function(data) {
+                    if (data.valid) {
+                        statusDiv.html(
+                            `<small class="text-success"><i class="fas fa-check"></i> ${data.nama} - Diskon ${data.discount}%</small>`
+                        );
+                        resellerDiscount = data.discount;
+
+                        // Update harga di cart dengan harga reseller
+                        updateCartPricesForReseller(resellerID);
+                    } else {
+                        statusDiv.html(
+                            '<small class="text-danger"><i class="fas fa-times"></i> ID reseller tidak valid</small>'
+                        );
+                        resellerDiscount = 0;
+                        // Reset ke harga normal
+                        cart.forEach(item => {
+                            if (item.harga_normal) {
+                                item.price = item.harga_normal;
+                            }
+                        });
+                        updateCartDisplay();
+                    }
+                })
+                .fail(function() {
+                    statusDiv.html('<small class="text-danger">Error checking reseller</small>');
+                    resellerDiscount = 0;
+                    updateCartDisplay();
+                });
+        }
+
+        function updateCartPricesForReseller(resellerID) {
+            if (cart.length === 0) return;
+
+            let promises = cart.map(item => {
+                return $.post('{{ route('kasir.reseller-price') }}', {
+                    kode_detail: item.kode_detail,
+                    id_reseller: resellerID,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                });
             });
-        });
+
+            Promise.all(promises).then(responses => {
+                responses.forEach((data, index) => {
+                    if (!data.error) {
+                        cart[index].price = data.harga_reseller;
+                        cart[index].harga_normal = data.harga_normal;
+                    }
+                });
+                updateCartDisplay();
+            });
+        }
+
+        function processTransaction() {
+            if (cart.length === 0) {
+                alert('Keranjang masih kosong!');
+                return;
+            }
+
+            // Validate marketplace selection if marketplace type is selected
+            if (transactionType === 'marketplace' && !selectedMarketplace) {
+                alert('Pilih marketplace terlebih dahulu!');
+                return;
+            }
+
+            const transactionData = {
+                items: cart,
+                jenis_transaksi: transactionType,
+                marketplace: selectedMarketplace,
+                id_reseller: $('#resellerInput').val().trim() || null,
+                keterangan: $('#keteranganInput').val().trim()
+            };
+
+            $('#processTransactionBtn').prop('disabled', true).html(
+                '<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+
+            $.ajax({
+                    url: '{{ route('kasir.process') }}',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(transactionData),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                })
+                .done(function(data) {
+    if (data.success) {
+        alert(`Transaksi berhasil!\nKode Transaksi: ${data.kode_transaksi}`);
+
+        // Buka jendela baru untuk cetak struk
+        window.open(`/kasir/print/${data.kode_transaksi}`, '_blank');
+
+        // Reset form
+        clearCart();
+        $('#resellerInput').val('');
+        $('#keteranganInput').val('');
+        $('#resellerStatus').empty();
+        $('.marketplace-option').removeClass('bg-primary text-white');
+        selectedMarketplace = '';
+        resellerDiscount = 0;
+
+        // Refresh products to update stock
+        searchProducts();
+    } else {
+        alert('Error: ' + data.message);
+    }
+})
+
+                .fail(function(xhr) {
+                    const response = xhr.responseJSON;
+                    alert('Error: ' + (response?.message || 'Terjadi kesalahan sistem'));
+                })
+                .always(function() {
+                    $('#processTransactionBtn').prop('disabled', false).html(
+                        '<i class="fas fa-credit-card me-2"></i>Proses Transaksi');
+                });
+        }
     </script>
-@endpush
+@endsection

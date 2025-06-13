@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pelanggan;
-use App\Models\Pendaftaran;
-use App\Models\Toko;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Midtrans\Config;
-use Midtrans\Notification;
 use Midtrans\Snap;
+use App\Models\Toko;
+use Midtrans\Config;
+use App\Models\Pelanggan;
+use Midtrans\Notification;
+use App\Models\Pendaftaran;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class RegistrasiController extends Controller
 {
@@ -129,73 +130,103 @@ class RegistrasiController extends Controller
 
     public function notifikasi(Request $request)
     {
+        // Log permintaan awal untuk debugging
+        Log::info('Midtrans Registration Raw Request', [
+            'method' => $request->method(),
+            'headers' => $request->headers->all(),
+            'body' => $request->getContent()
+        ]);
+    
         try {
-            $notif = new Notification();
+            // Ambil payload dan decode sebagai JSON
+            $payload = $request->getContent();
+            $notification = json_decode($payload, true);
     
-            $transactionStatus = $notif->transaction_status;
-            $orderId = $notif->order_id;
+            Log::info('Midtrans Registration Notification Received', ['data' => $notification]);
     
-            Log::info('Midtrans Notification Received', [
-                'order_id' => $orderId,
-                'transaction_status' => $transactionStatus,
-            ]);
+            // Validasi data penting
+            if (!isset($notification['order_id']) || !isset($notification['transaction_status'])) {
+                Log::error('Midtrans Registration Notification: Parameter tidak lengkap', ['data' => $notification]);
+                return response()->json(['status' => 'error', 'message' => 'Parameter tidak lengkap'], 400);
+            }
     
-            // Ambil ID pendaftaran dari order_id
-            $actualOrderId = $orderId;
+            $orderId = $notification['order_id'];
+            $transactionStatus = $notification['transaction_status'];
+            $fraudStatus = $notification['fraud_status'] ?? null;
+            $transactionId = $notification['transaction_id'] ?? null;
     
-            // Jika ini adalah notifikasi test, abaikan atau sesuaikan
-            if (strpos($actualOrderId, 'payment_notif_test') === 0) {
-                Log::info('Test notification received. Skipping update.');
-                return response()->json(['status' => 'ok', 'message' => 'Test notification ignored'], 200);
+            // Abaikan jika notifikasi test
+            if (strpos($orderId, 'payment_notif_test') !== false) {
+                Log::info('Detected test notification from Midtrans, responding with OK');
+                return response('OK', 200);
             }
     
             // Cari pendaftaran berdasarkan order_id
-            $pendaftaran = Pendaftaran::where('id_pendaftaran', $actualOrderId)->first();
+            $pendaftaran = Pendaftaran::where('id_pendaftaran', $orderId)->first();
     
             if (!$pendaftaran) {
-                Log::error('Pendaftaran not found for order_id', ['order_id' => $actualOrderId]);
-                return response()->json(['status' => 'error', 'message' => 'Pendaftaran tidak ditemukan'], 200);
+                Log::error('Pendaftaran tidak ditemukan', ['order_id' => $orderId]);
+                return response('OK', 200);
             }
     
-            // Update status pembayaran dan tanggal jika transaksi sukses
-            if ($transactionStatus === 'capture' || $transactionStatus === 'settlement') {
-                $pendaftaran->update([
-                    'status_pembayaran' => 'berhasil',
-                    'tanggal_pembayaran' => now(),
-                ]);
+            DB::beginTransaction();
     
-                // Update role pelanggan jika akun bertipe reseller
-                if ($pendaftaran->tipe_akun === 'reseller') {
-                    $pelanggan = Pelanggan::where('id_pelanggan', $pendaftaran->id_pelanggan)->first();
-    
-                    if ($pelanggan) {
-                        $pelanggan->update([
-                            'role' => 'reseller',
-                        ]);
-    
-                        Log::info('Role pelanggan berhasil diubah menjadi reseller', [
-                            'id_pelanggan' => $pelanggan->id_pelanggan
-                        ]);
-                    } else {
-                        Log::warning('Pelanggan tidak ditemukan untuk pendaftaran ini', [
-                            'id_pelanggan' => $pendaftaran->id_pelanggan
-                        ]);
-                    }
+            // Update status pendaftaran berdasarkan status transaksi
+            if ($transactionStatus === 'capture') {
+                if ($fraudStatus === 'challenge') {
+                    $pendaftaran->status_pembayaran = 'pending';
+                } elseif ($fraudStatus === 'accept') {
+                    $pendaftaran->status_pembayaran = 'berhasil';
+                    $pendaftaran->tanggal_pembayaran = now();
                 }
-    
-                Log::info('Pembayaran berhasil diproses', [
-                    'order_id' => $actualOrderId,
-                    'transaction_status' => $transactionStatus
-                ]);
+            } elseif ($transactionStatus === 'settlement') {
+                $pendaftaran->status_pembayaran = 'berhasil';
+                $pendaftaran->tanggal_pembayaran = now();
+            } elseif ($transactionStatus === 'pending') {
+                $pendaftaran->status_pembayaran = 'pending';
+            } elseif (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
+                $pendaftaran->status_pembayaran = 'gagal';
             }
     
-            return response()->json(['status' => 'success']);
-        } catch (\Exception $e) {
-            Log::error('Error processing Midtrans notification', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+            // Simpan perubahan pada pendaftaran
+            $pendaftaran->save();
+    
+            // Jika berhasil bayar dan akun tipe reseller, ubah role pelanggan
+            if ($pendaftaran->status_pembayaran === 'berhasil' && $pendaftaran->tipe_akun === 'reseller') {
+                $pelanggan = Pelanggan::where('id_pelanggan', $pendaftaran->id_pelanggan)->first();
+                if ($pelanggan) {
+                    $pelanggan->role = 'reseller';
+                    $pelanggan->save();
+    
+                    Log::info('Pelanggan di-upgrade menjadi reseller', [
+                        'id_pelanggan' => $pelanggan->id_pelanggan
+                    ]);
+                } else {
+                    Log::warning('Pelanggan tidak ditemukan saat mengubah role', [
+                        'id_pelanggan' => $pendaftaran->id_pelanggan
+                    ]);
+                }
+            }
+    
+            DB::commit();
+    
+            Log::info('Midtrans Registration Notification Processed Successfully', [
+                'order_id' => $orderId,
+                'transaction_status' => $transactionStatus,
+                'id_pendaftaran' => $pendaftaran->id_pendaftaran
             ]);
-            return response()->json(['status' => 'error', 'message' => 'Internal Server Error'], 500);
+    
+            return response('OK', 200);
+    
+        } catch (\Exception $e) {
+            DB::rollBack();
+    
+            Log::error('Error processing Midtrans registration notification: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+    
+            return response('OK', 200); // Tetap OK agar Midtrans tidak retry
         }
     }
     

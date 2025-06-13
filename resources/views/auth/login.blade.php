@@ -11,7 +11,7 @@
     <script
         src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1">
     </script>
-    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#FE5900"
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#4300FF"
         data-border-radius='medium'></script>
 </head>
 
@@ -68,9 +68,8 @@
                             class="h-4 w-4 text-custom focus:ring-custom border-gray-300 rounded">
                         <label for="remember" class="ml-2 block text-sm text-gray-700">Ingat saya</label>
                     </div>
-                    <a href="{{ route('forgot.password') }}"
-                        class="text-sm font-medium text-custom hover:text-custom-dark">
-                        Lupa kata sandi?
+                    <a href="{{ route('password.request') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Lupa password?
                     </a>
                 </div>
 

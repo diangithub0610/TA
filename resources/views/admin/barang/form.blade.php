@@ -131,27 +131,25 @@
 
                                     <!-- Modal untuk Cropper -->
                                     <div class="modal fade" id="cropperModal" tabindex="-1">
-                                        <div class="modal-dialog modal-lg">
+                                        <div class="modal-dialog modal-md"> <!-- Ubah dari modal-lg ke modal-md -->
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title">Crop Gambar</h5>
-                                                    <button type="button" class="btn-close"
-                                                        data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <div class="modal-body">
-                                                    <div class="img-container">
-                                                        <img id="crop-image" src="" alt="Crop Image">
+                                                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                                    <div class="img-container text-center">
+                                                        <img id="crop-image" src="" alt="Crop Image" style="max-width: 100%; height: auto;">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Batal</button>
-                                                    <button type="button" class="btn btn-primary"
-                                                        id="crop-button">Crop</button>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="button" class="btn btn-primary" id="crop-button">Crop</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
                                 </div>
                             </div>
 
@@ -194,7 +192,7 @@
                                             <div class="col-md-3">
                                                 <input type="number" class="form-control stok-input"
                                                     name="detail_warnas[{{ $index }}][stok]" placeholder="Stok"
-                                                    value="{{ $detail->stok }}" min="0">
+                                                    value="{{ $detail->stok }}" min="0" readonly>
                                             </div>
                                             <div class="col-md-3 d-flex align-items-end">
                                                 <button type="button" class="btn btn-danger remove-detail-btn">

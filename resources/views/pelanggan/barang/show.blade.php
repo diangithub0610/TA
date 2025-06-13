@@ -24,7 +24,7 @@
                     </div>
                 @endif --}}
             </div>
-
+{{-- {{ dd( auth()->guard('pelanggan')->user()->id_pelanggan) }} --}}
             <div class="mt-10 lg:mt-0">
                 <h1 class="text-3xl font-bold text-gray-900">{{ $barang->nama_barang }}</h1>
                 <p class="mt-2 text-sm text-gray-500">{{ $barang->tipe->brand->nama_brand }} {{ $barang->tipe->nama_tipe }}
@@ -35,9 +35,9 @@
                     @auth('pelanggan')
                         @if (auth()->guard('pelanggan')->user()->role == 'pelanggan')
                             <span class="text-sm text-gray-500 line-through">Rp
-                                {{ number_format($barang->harga_normal * 1.1, 0, ',', '.') }}</span>
+                                {{ number_format($barang->harga_normal, 0, ',', '.') }}</span>
                             <h2 class="text-2xl font-bold text-primary">Rp
-                                {{ number_format($barang->harga_normal * 1.1 - $barang->tipe->potongan_harga, 0, ',', '.') }}
+                                {{ number_format($barang->harga_normal  - $barang->tipe->potongan_harga, 0, ',', '.') }}
                             </h2>
                         @else
                             <span class="text-sm text-gray-500 line-through">Rp
@@ -49,9 +49,9 @@
                     @else
                         <!-- Harga untuk pengunjung (belum login) -->
                         <span class="text-sm text-gray-500 line-through">Rp
-                            {{ number_format($barang->harga_normal * 1.1, 0, ',', '.') }}</span>
+                            {{ number_format($barang->harga_normal , 0, ',', '.') }}</span>
                         <h2 class="text-2xl font-bold text-primary">Rp
-                            {{ number_format($barang->harga_normal * 1.1 - $barang->tipe->potongan_harga, 0, ',', '.') }}
+                            {{ number_format($barang->harga_normal  - $barang->tipe->potongan_harga, 0, ',', '.') }}
                         </h2>
                     @endauth
 

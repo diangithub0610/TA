@@ -108,7 +108,7 @@
             autoplay: 5000
         }).mount();
     </script> --}}
-    @if (session('success'))
+    {{-- @if (session('success'))
         <script>
             Swal.fire({
                 title: 'Berhasil!',
@@ -132,7 +132,7 @@
                 showConfirmButton: false
             });
         </script>
-    @endif
+    @endif --}}
 
 
     @if (session('success'))

@@ -15,7 +15,10 @@
     </div>
 
     @php
-        $dropdownActive = Request::routeIs('profil.index') || Request::routeIs('profil.alamat') || Request::routeIs('change-password');
+        $dropdownActive =
+            Request::routeIs('profil.index') ||
+            Request::routeIs('profil.alamat') ||
+            Request::routeIs('change-password');
     @endphp
 
     <nav class="p-4">
@@ -36,8 +39,7 @@
                 </button>
 
                 <!-- Dropdown Menu (inline, bukan absolute) -->
-                <div id="dropdownMenu"
-                    class="mt-1 pl-8 space-y-1 {{ $dropdownActive ? 'flex' : 'hidden' }} flex-col">
+                <div id="dropdownMenu" class="mt-1 pl-8 space-y-1 {{ $dropdownActive ? 'flex' : 'hidden' }} flex-col">
                     <a href="{{ route('profil.index') }}"
                         class="block px-4 py-2 text-sm {{ Request::routeIs('profil.index') ? 'text-gray-900 font-medium' : 'text-gray-700' }} hover:bg-gray-100 rounded-lg transition-colors duration-200">
                         Profil
@@ -62,6 +64,24 @@
                 <span>Pesanan Saya</span>
             </a>
 
+            <!-- Upgrade Reseller Button (tampilkan hanya jika pelanggan biasa) -->
+            @auth('pelanggan')
+                @php
+                    $user = auth('pelanggan')->user();
+                    $isReseller = $user->role === 'reseller';
+                @endphp
+
+                @if (!$isReseller)
+                    <div class="px-4">
+                        <a href="{{ route('register.store', $user->id_pelanggan) }}"
+                            class="block w-full text-center bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                            Upgrade Reseller
+                        </a>
+                    </div>
+                @endif
+            @endauth
+
+
             <!-- Logout -->
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -78,24 +98,24 @@
 </aside>
 
 @push('scripts')
-<script>
-    const dropdownButton = document.getElementById('dropdownButton');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    const dropdownIcon = document.getElementById('dropdownIcon');
+    <script>
+        const dropdownButton = document.getElementById('dropdownButton');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const dropdownIcon = document.getElementById('dropdownIcon');
 
-    dropdownButton.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('hidden');
-        dropdownMenu.classList.toggle('flex');
-        dropdownIcon.classList.toggle('rotate-180');
-    });
+        dropdownButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+            dropdownMenu.classList.toggle('flex');
+            dropdownIcon.classList.toggle('rotate-180');
+        });
 
-    document.addEventListener('click', function(e) {
-        if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
-            dropdownMenu.classList.add('hidden');
-            dropdownMenu.classList.remove('flex');
-            dropdownIcon.classList.remove('rotate-180');
-        }
-    });
-</script>
+        document.addEventListener('click', function(e) {
+            if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+                dropdownMenu.classList.remove('flex');
+                dropdownIcon.classList.remove('rotate-180');
+            }
+        });
+    </script>
 @endpush

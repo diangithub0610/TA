@@ -309,42 +309,42 @@
                     </div>
 
                     <!-- Tombol Aksi -->
-                    <div class="space-y-3">
-                        <a href="{{ route('customer.orders.invoice', $transaksi->kode_transaksi) }}"
+                    {{-- <div class="space-y-3">
+                        <a href="{{ route('customer.orders.invoice', $transaksi->kode_transaksi) }}" --}}
+                    @if ($transaksi->pembayaran->status === 'pending' && $transaksi->pembayaran->snap_token)
+                        <button id="pay-button" type="button"
                             class="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <span class="font-medium">Download Invoice</span>
-                        </a>
-
-                        @if (in_array($transaksi->status, ['selesai']))
-                            <a href="{{ route('ulasan.create', $transaksi->kode_transaksi) }}"
-                                class="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
-                                    </path>
-                                </svg>
-                                <span class="font-medium">Beri Ulasan</span>
-                            </a>
-                        @endif
-
-                        <button onclick="window.print()"
-                            class="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200 transition-all duration-200 border border-gray-200 hover:border-gray-300">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                                </path>
-                            </svg>
-                            <span class="font-medium">Print</span>
+                            Bayar Sekarang
                         </button>
-                    </div>
+                    @endif
+
+                    <a href="{{ route('customer.invoice', $transaksi->kode_transaksi) }}"
+                        class="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Download Invoice</span>
+                    </a>
+                    
+
+                    @if (in_array($transaksi->status, ['selesai']))
+                        <a href="{{ route('ulasan.create', $transaksi->kode_transaksi) }}"
+                            class="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
+                                </path>
+                            </svg>
+                            <span class="font-medium">Beri Ulasan</span>
+                        </a>
+                    @endif
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Print Styles -->
@@ -364,3 +364,51 @@
         }
     </style>
 @endsection
+
+
+@push('scripts')
+    @if ($transaksi->pembayaran->status === 'pending' && $transaksi->pembayaran->snap_token)
+        <script src="https://app.sandbox.midtrans.com/snap/snap.js"
+            data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Payment page loaded successfully');
+
+                const payButton = document.getElementById('pay-button');
+
+                if (payButton) {
+                    payButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Initiating payment...');
+
+                        snap.pay('{{ $transaksi->pembayaran->snap_token }}', {
+                            onSuccess: function(result) {
+                                console.log('Payment success:', result);
+                                window.location.href =
+                                    '{{ route('transaksi.index', [], false) }}?status=menunggu_konfirmasi';
+                            },
+                            onPending: function(result) {
+                                console.log('Payment pending:', result);
+                                window.location.href =
+                                    '{{ route('transaksi.index', [], false) }}?status=belum_dibayar';
+                            },
+                            onError: function(result) {
+                                console.log('Payment error:', result);
+                                window.location.href =
+                                    '{{ route('transaksi.index', [], false) }}?status=dibatalkan';
+                            },
+                            onClose: function() {
+                                console.log('Payment popup closed');
+                                alert(
+                                    'Anda menutup popup pembayaran sebelum menyelesaikan transaksi!');
+                            }
+web
+                        });
+                    });
+                } else {
+                    console.error('Pay button not found!');
+                }
+            });
+        </script>
+    @endif
+@endpush

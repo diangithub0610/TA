@@ -173,10 +173,12 @@
                     </button>
                 @endif
                 
-                <button type="button" class="btn btn-outline-secondary"
-                        onclick="cetakInvoice('{{ $transaksi->kode_transaksi }}')">
-                    Cetak Invoice
-                </button>
+                <form action="{{ route('customer.invoice', $transaksi->kode_transaksi) }}" method="GET" style="display: inline;">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        Cetak Invoice
+                    </button>
+                </form>
+                
             </div>
         </div>
     </div>

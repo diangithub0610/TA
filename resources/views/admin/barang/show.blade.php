@@ -161,7 +161,7 @@
             </div>
         </div>
 
-        <div class="mt-3 text-center">
+        <div class="mt-3 d-flex justify-content-end">
             <a href="{{ route('barang.index') }}" class="btn btn-secondary">Kembali</a>
         </div>
     </div>

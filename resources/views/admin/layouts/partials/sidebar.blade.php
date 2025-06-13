@@ -39,15 +39,53 @@
                             <p>Pemusnahan</p>
                         </a>
                     </li>
-                    <div class="collapse {{ Route::is('laporan.*') ? 'show' : '' }}" id="laporanMenu">
+                    {{-- <div class="collapse {{ Route::is('laporan.*') ? 'show' : '' }}" id="laporanMenu">
                         <ul class="nav nav-collapse">
                             <li class="{{ Route::is('laporan.*') ? 'active' : '' }}">
-                                {{-- <a href="{{ route('laporan.index') }}"> --}}
+                                <a href="{{ route('laporan.index') }}">
                                     <span class="sub-item">Laporan</span>
                                 </a>
                             </li>
                         </ul>
-                    </div>                    
+                    </div>                     --}}
+
+                    @php
+                        $laporanActive = Route::is('barang-masuk') || Route::is('barang-terjual');
+                    @endphp
+
+                    <li class="nav-item {{ $laporanActive ? 'active' : '' }}">
+                        <a data-bs-toggle="collapse" href="#laporanMenu"
+                            {{ $laporanActive ? 'aria-expanded=true' : '' }}>
+                            <i class="fas fa-file-alt"></i>
+                            <p>Laporan</p>
+                            <span class="caret"></span>
+                        </a>
+                        <div class="collapse {{ $laporanActive ? 'show' : '' }}" id="laporanMenu">
+                            <ul class="nav nav-collapse">
+                                <li class="{{ Route::is('barang-masuk') ? 'active' : '' }}">
+                                    <a href="{{ route('laporan.barang-masuk') }}">
+                                        <span class="sub-item">Laporan Barang Masuk</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Route::is('transaksi') ? 'active' : '' }}">
+                                    <a href="{{ route('laporan.transaksi') }}">
+                                        <span class="sub-item">Laporan transaksi</span>
+                                    </a>
+                                </li>
+                                <li class="{{ Route::is('barang-terjual') ? 'active' : '' }}">
+                                    <a href="{{ route('laporan.barang-terjual') }}">
+                                        <span class="sub-item">Laporan barang</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item {{ Route::is('management-user.*') ? 'active' : '' }}">
+                        <a href="{{ route('management-user.index') }}">
+                            <i class="fas fa-users-cog"></i>
+                            <p>Management User</p>
+                        </a>
+                    </li>
                 @endif
 
                 {{-- Role: SHOPKEEPER --}}

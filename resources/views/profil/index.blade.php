@@ -32,7 +32,7 @@
                                 </label>
                             </form>
                         </div>
-                        <h2 class="text-xl font-medium">{{ '@' . $pelanggan->username }}</h2>
+                        <h2 class="text-xl font-medium">{{ '(' . $pelanggan->id_pelanggan . ')'}}</h2>
                     </div>
 
                     <form method="POST" action="{{ route('profil.update') }}" class="space-y-6">

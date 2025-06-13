@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!-- Tambahkan meta token untuk CSRF -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <title>@yield('title') - Warrior Footwear</title>
     <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
     <link rel="icon" href="{{ asset('img/logo/favicon-wf-circle.png') }}" type="image/x-icon" />

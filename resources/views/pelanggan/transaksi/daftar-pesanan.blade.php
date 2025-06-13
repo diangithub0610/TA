@@ -75,10 +75,12 @@
                                 class="bg-secondary text-white text-sm font-medium px-4 py-2 rounded-button hover:bg-primary-dark transition-colors">
                                 Lihat Detail
                             </a>
+                            @if($item->status == 'selesai')
                             <a href="{{ route('ulasan.create', $item->kode_transaksi) }}"
                                 class="bg-primary text-white text-sm font-medium px-4 py-2 rounded-button hover:bg-primary-dark transition-colors">
                                 Beri Ulasan
                             </a>
+                            @endif
                         </div>
                     </div>
                 @empty

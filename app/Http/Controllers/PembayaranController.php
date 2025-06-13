@@ -26,37 +26,69 @@ class PembayaranController extends Controller
 
     public function __construct(MidtransService $midtransService)
     {
-        $this->middleware('auth:pelanggan')->except(['notification']);
         $this->midtransService = $midtransService;
     }
 
     public function show($kodeTransaksi)
     {
+        // Tambahkan debug ini
+        Log::info('Accessing payment page for: ' . $kodeTransaksi);
+        
+        $pelanggan = auth()->guard('pelanggan')->user();
+        if (!$pelanggan) {
+            Log::info('User not authenticated, redirecting to login');
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu');
+        }
+        
         $transaksi = Transaksi::with(['detailTransaksi.detailBarang.barang', 'pelanggan', 'alamat', 'pembayaran'])
-            ->where('id_pelanggan', auth()->guard('pelanggan')->id())
+            ->where('id_pelanggan', $pelanggan->id_pelanggan)
             ->where('kode_transaksi', $kodeTransaksi)
             ->firstOrFail();
-
+    
+        // Debug transaksi dan pembayaran
+        Log::info('Transaction found', ['transaksi' => $transaksi->kode_transaksi]);
+        Log::info('Payment status', ['status' => $transaksi->pembayaran->status ?? 'no payment']);
+        Log::info('Snap token', ['token' => $transaksi->pembayaran->snap_token ?? 'no token']);
+    
+        if (!$transaksi->pembayaran || !$transaksi->pembayaran->snap_token) {
+            Log::info('Invalid payment token, redirecting to home');
+            return redirect()->route('home')->with('error', 'Token pembayaran tidak valid');
+        }
+    
+        Log::info('Rendering payment view');
         return view('pelanggan.transaksi.pembayaran', compact('transaksi'));
     }
 
     public function notificationCallback(Request $request)
     {
-        // Konfigurasi Midtrans
-        Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
+        // Log raw request untuk debugging
+        Log::info('Midtrans Raw Request', [
+            'method' => $request->method(),
+            'headers' => $request->headers->all(),
+            'body' => $request->getContent()
+        ]);
 
         try {
-            // Buat instance notifikasi
-            $notification = new Notification();
+            // Ambil payload dan decode sebagai JSON
+            $payload = $request->getContent();
+            $notification = json_decode($payload, true);
 
-            // Ambil data notifikasi
-            $orderId = $notification->order_id;
-            $statusCode = $notification->status_code;
-            $transactionStatus = $notification->transaction_status;
-            $fraudStatus = $notification->fraud_status;
-            $paymentType = $notification->payment_type;
-            $transactionId = $notification->transaction_id;
+            // Log untuk debugging
+            Log::info('Midtrans Notification Received', ['data' => $notification]);
+
+            // Validasi parameter yang diperlukan
+            if (!isset($notification['order_id']) || !isset($notification['transaction_status'])) {
+                Log::error('Midtrans Notification: Parameter tidak lengkap', ['data' => $notification]);
+                return response()->json(['status' => 'error', 'message' => 'Parameter tidak lengkap'], 400);
+            }
+
+            // Ambil data dari notifikasi
+            $orderId = $notification['order_id'];
+            $statusCode = $notification['status_code'] ?? null;
+            $transactionStatus = $notification['transaction_status'];
+            $fraudStatus = $notification['fraud_status'] ?? null;
+            $paymentType = $notification['payment_type'] ?? null;
+            $transactionId = $notification['transaction_id'] ?? null;
 
             Log::info('Midtrans Notification', [
                 'order_id' => $orderId,
@@ -69,8 +101,27 @@ class PembayaranController extends Controller
             $pembayaran = Pembayaran::where('midtrans_order_id', $orderId)->first();
 
             if (!$pembayaran) {
-                Log::error('Pembayaran tidak ditemukan', ['order_id' => $orderId]);
-                return response()->json(['status' => 'error', 'message' => 'Order ID tidak ditemukan'], 404);
+                // Coba cari menggunakan substring dari order_id jika mengandung format tertentu
+                $uuidPattern = '/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i';
+                if (preg_match($uuidPattern, $orderId, $matches)) {
+                    $uuid = $matches[1];
+                    $pembayaran = Pembayaran::where('midtrans_order_id', 'LIKE', "%{$uuid}%")->first();
+                }
+
+                if (!$pembayaran) {
+                    Log::error('Pembayaran tidak ditemukan', [
+                        'order_id' => $orderId,
+                        'attempted_uuid_match' => $matches[1] ?? null
+                    ]);
+
+                    // Cek apakah ini notifikasi testing dari Midtrans
+                    if (strpos($orderId, 'payment_notif_test') !== false) {
+                        Log::info('Detected test notification from Midtrans, responding with OK');
+                        return response('OK', 200);
+                    }
+
+                    return response('OK', 200); // Tetap mengembalikan OK agar Midtrans tidak retry terus-menerus
+                }
             }
 
             // Cari transaksi
@@ -78,7 +129,7 @@ class PembayaranController extends Controller
 
             if (!$transaksi) {
                 Log::error('Transaksi tidak ditemukan', ['kode_transaksi' => $pembayaran->kode_transaksi]);
-                return response()->json(['status' => 'error', 'message' => 'Transaksi tidak ditemukan'], 404);
+                return response('OK', 200);
             }
 
             DB::beginTransaction();
@@ -91,24 +142,18 @@ class PembayaranController extends Controller
                 if ($fraudStatus == 'challenge') {
                     // Pembayaran challenge, perlu pengecekan manual
                     $pembayaran->status = 'pending';
-                    $transaksi->status = 'menunggu_konfirmasi';
+                    $transaksi->status = 'belum_dibayar';
                 } else if ($fraudStatus == 'accept') {
                     // Pembayaran sukses
                     $pembayaran->status = 'sukses';
                     $pembayaran->tanggal_pembayaran = now();
-                    $transaksi->status = 'diproses';
-
-                    // Buat pengiriman jika belum ada
-                    // $this->createPengiriman($transaksi);
+                    $transaksi->status = 'menunggu_konfirmasi';
                 }
             } else if ($transactionStatus == 'settlement') {
                 // Pembayaran sukses (metode transfer bank, dll)
                 $pembayaran->status = 'sukses';
                 $pembayaran->tanggal_pembayaran = now();
-                $transaksi->status = 'diproses';
-
-                // Buat pengiriman jika belum ada
-                // $this->createPengiriman($transaksi);
+                $transaksi->status = 'menunggu_konfirmasi';
             } else if ($transactionStatus == 'pending') {
                 // Pembayaran pending
                 $pembayaran->status = 'pending';
@@ -130,32 +175,32 @@ class PembayaranController extends Controller
             // Simpan detail VA atau link PDF jika ada
             if ($paymentType == 'bank_transfer') {
                 // Menyimpan nomor VA
-                if (isset($notification->va_numbers) && !empty($notification->va_numbers)) {
-                    $vaNumber = $notification->va_numbers[0]->va_number;
+                if (isset($notification['va_numbers']) && !empty($notification['va_numbers'])) {
+                    $vaNumber = $notification['va_numbers'][0]['va_number'];
                     $pembayaran->virtual_account = $vaNumber;
                 }
             } elseif ($paymentType == 'echannel') {
                 // Untuk Mandiri Bill Payment
-                if (isset($notification->bill_key)) {
-                    $pembayaran->virtual_account = $notification->bill_key;
+                if (isset($notification['bill_key'])) {
+                    $pembayaran->virtual_account = $notification['bill_key'];
                 }
             } elseif ($paymentType == 'gopay' || $paymentType == 'shopeepay') {
                 // Untuk e-wallet seperti GoPay atau ShopeePay
-                if (isset($notification->actions) && !empty($notification->actions)) {
-                    foreach ($notification->actions as $action) {
-                        if ($action->name === 'generate-qr-code') {
-                            $pembayaran->pdf_url = $action->url;
+                if (isset($notification['actions']) && !empty($notification['actions'])) {
+                    foreach ($notification['actions'] as $action) {
+                        if ($action['name'] === 'generate-qr-code') {
+                            $pembayaran->pdf_url = $action['url'];
                             break;
                         }
                     }
                 }
             } elseif ($paymentType == 'cstore') {
                 // Untuk convenience store seperti Indomaret atau Alfamart
-                if (isset($notification->payment_code)) {
-                    $pembayaran->virtual_account = $notification->payment_code;
+                if (isset($notification['payment_code'])) {
+                    $pembayaran->virtual_account = $notification['payment_code'];
                 }
-                if (isset($notification->pdf_url)) {
-                    $pembayaran->pdf_url = $notification->pdf_url;
+                if (isset($notification['pdf_url'])) {
+                    $pembayaran->pdf_url = $notification['pdf_url'];
                 }
             }
 
@@ -165,18 +210,22 @@ class PembayaranController extends Controller
 
             DB::commit();
 
-            return response()->json(['status' => 'success', 'message' => 'Notification processed']);
+            Log::info('Midtrans Notification Processed Successfully', [
+                'order_id' => $orderId,
+                'transaction_status' => $transactionStatus,
+                'payment_id' => $pembayaran->id_pembayaran
+            ]);
+
+            return response('OK', 200); // Midtrans mengharapkan "OK" dengan status 200
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error processing Midtrans notification: ' . $e->getMessage(), [
                 'exception' => $e,
-                'request' => $request->all()
+                'trace' => $e->getTraceAsString()
             ]);
 
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error processing notification: ' . $e->getMessage()
-            ], 500);
+            return response('OK', 200); // Tetap mengembalikan OK agar Midtrans tidak retry terus-menerus
         }
     }
 
@@ -231,7 +280,7 @@ class PembayaranController extends Controller
             ->with('error', 'Terjadi kesalahan dalam proses pembayaran, silakan coba lagi.');
     }
 
-    
+
 
     // public function notification(Request $request)
     // {

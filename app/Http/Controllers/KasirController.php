@@ -9,8 +9,10 @@ use App\Models\Barang;
 use Barryvdh\DomPDF\PDF;
 use App\Models\Pelanggan;
 use App\Models\Transaksi;
+use App\Helpers\GenerateId;
 use App\Models\DetailBarang;
 use Illuminate\Http\Request;
+use App\Models\DetailTransaksi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,134 +20,223 @@ class KasirController extends Controller
 {
     public function index()
     {
-        $resellers = Pelanggan::where('role', 'reseller')->get();
-        $brands = Brand::all();
-        $warnas = Warna::all();
-        
-        return view('admin.shopkeeper.kasir', compact('resellers', 'brands', 'warnas'));
+        // Ambil semua produk dengan detail dan brand
+        $products = Barang::with(['detailBarang.warna', 'tipe'])
+            ->where('is_active', 1)
+            ->get();
+
+        // Ambil semua brand/tipe untuk filter
+        $brands = Tipe::all();
+
+        return view('admin.shopkeeper.kasir', compact('products', 'brands'));
     }
 
-    public function getBarang(Request $request)
+    public function searchProducts(Request $request)
     {
-        $query = Barang::with(['tipe.brand', 'detailBarang.warna'])
-                      ->where('is_active', 1);
+        $query = $request->get('search', '');
+        $brand = $request->get('brand', '');
 
-        if ($request->has('brand') && $request->brand != '') {
-            $query->whereHas('tipe', function($q) use ($request) {
-                $q->where('kode_brand', $request->brand);
-            });
-        }
+        $products = Barang::with(['detailBarang.warna', 'tipe'])
+            ->where('is_active', 1)
+            ->when($query, function ($q) use ($query) {
+                $q->where('nama_barang', 'LIKE', '%' . $query . '%');
+            })
+            ->when($brand, function ($q) use ($brand) {
+                $q->where('kode_tipe', $brand);
+            })
+            ->get();
 
-        if ($request->has('search') && $request->search != '') {
-            $query->where('nama_barang', 'like', '%' . $request->search . '%');
-        }
-
-        $barang = $query->get();
-
-        return response()->json($barang);
-    }
-
-    public function getDetailBarang($kode_barang)
-    {
-        $details = DetailBarang::with('warna')
-                              ->where('kode_barang', $kode_barang)
-                              ->where('stok', '>', 0)
-                              ->get();
-
-        return response()->json($details);
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.kode_detail' => 'required|exists:detail_barang,kode_detail',
-            'items.*.qty' => 'required|integer|min:1',
-            'jenis_transaksi' => 'required|in:offline,marketplace',
-            'id_pelanggan' => 'nullable|exists:pelanggan,id_pelanggan',
-            'keterangan_marketplace' => 'nullable|string',
-            'nama_pengirim' => 'nullable|string|max:50',
-            'no_hp_pengirim' => 'nullable|string|max:15',
+        return response()->json([
+            'products' => $products->map(function ($product) {
+                return [
+                    'kode_barang' => $product->kode_barang,
+                    'nama_barang' => $product->nama_barang,
+                    'harga_normal' => $product->harga_normal,
+                    'gambar' => $product->gambar,
+                    'brand' => $product->tipe->nama_tipe ?? '',
+                    'stok' => $product->detailBarang->sum('stok'),
+                    'variants' => $product->detailBarang->map(function ($detail) {
+                        return [
+                            'kode_detail' => $detail->kode_detail,
+                            'ukuran' => $detail->ukuran,
+                            'warna' => $detail->warna->nama_warna ?? '',
+                            'stok' => $detail->stok,
+                            'harga_normal' => $detail->harga_normal ?? $detail->barang->harga_normal
+                        ];
+                    })
+                ];
+            })
         ]);
+    }
 
-        DB::beginTransaction();
-        
+    public function getProductVariants($kode_barang)
+    {
+        $variants = DetailBarang::with('warna')
+            ->where('kode_barang', $kode_barang)
+            ->where('stok', '>', 0)
+            ->get();
+
+        return response()->json([
+            'variants' => $variants->map(function ($variant) {
+                return [
+                    'kode_detail' => $variant->kode_detail,
+                    'ukuran' => $variant->ukuran,
+                    'warna' => $variant->warna->nama_warna ?? '',
+                    'stok' => $variant->stok,
+                    'harga_normal' => $variant->harga_normal
+                ];
+            })
+        ]);
+    }
+
+    public function checkReseller(Request $request)
+    {
+
+        $id_reseller = $request->get('id_reseller');
+
+        $reseller = Pelanggan::where('id_pelanggan', $id_reseller)
+            ->where('role', 'reseller')
+            ->first();
+
+        if ($reseller) {
+            return response()->json([
+                'valid' => true,
+                'nama' => $reseller->nama_pelanggan,
+                'discount' => 10 // Anda bisa adjust persentase diskon sesuai kebutuhan
+            ]);
+        }
+
+        return response()->json(['valid' => false]);
+    }
+
+    public function processTransaction(Request $request)
+    {
         try {
+            DB::beginTransaction();
+
+            $request->validate([
+                'items' => 'required|array',
+                'jenis_transaksi' => 'required|in:offline,marketplace',
+                'marketplace' => 'nullable|in:shopee,tokopedia',
+                'id_reseller' => 'nullable|string',
+                'keterangan' => 'nullable|string'
+            ]);
+
             // Generate kode transaksi
-            $kode_transaksi = 'TR' . date('YmdHis') . rand(100, 999);
-            
-            // Hitung total
-            $total = 0;
-            foreach ($request->items as $item) {
-                $detail = DetailBarang::find($item['kode_detail']);
-                if ($detail->stok < $item['qty']) {
-                    throw new \Exception("Stok tidak mencukupi untuk " . $detail->barang->nama_barang);
+            // $kode_transaksi = 'TRX' . date('YmdHis') . rand(100, 999);
+
+            $kodeTransaksi = GenerateId::transaksi();
+
+            // Determine customer
+            // $id_pelanggan = 'GUEST001'; // Default guest customer
+            if ($request->id_reseller) {
+                $reseller = Pelanggan::where('id_pelanggan', $request->id_reseller)
+                    ->where('role', 'reseller')
+                    ->first();
+                if ($reseller) {
+                    $id_pelanggan = $reseller->id_pelanggan;
                 }
-                $total += $detail->harga_normal * $item['qty'];
             }
 
-            // Buat transaksi
-            $transaksi = new Transaksi();
-            $transaksi->kode_transaksi = $kode_transaksi;
-            $transaksi->id_pelanggan = $request->id_pelanggan ?: 'GUEST001'; // Default guest
-            $transaksi->id_pengguna = Auth::user()->id_admin ?? null;
-            $transaksi->id_alamat = 'DEFAULT001'; // Default alamat toko
-            $transaksi->ongkir = 0;
-            $transaksi->ekspedisi = $request->jenis_transaksi == 'marketplace' ? 'Marketplace' : 'Toko';
-            $transaksi->layanan_ekspedisi = $request->jenis_transaksi == 'marketplace' ? 'Pickup' : 'Langsung';
-            $transaksi->status = 'selesai';
-            $transaksi->jenis = 'offline';
-            $transaksi->is_dropship = $request->has('is_dropship') ? 1 : 0;
-            $transaksi->nama_pengirim = $request->nama_pengirim;
-            $transaksi->no_hp_pengirim = $request->no_hp_pengirim;
-            
-            if ($request->jenis_transaksi == 'marketplace' && $request->keterangan_marketplace) {
-                $transaksi->keterangan = $request->keterangan_marketplace;
+            // Prepare keterangan
+            $keterangan = $request->keterangan ?? '';
+            if ($request->jenis_transaksi == 'marketplace' && $request->marketplace) {
+                $keterangan = ucfirst($request->marketplace) . ($keterangan ? ' - ' . $keterangan : '');
             }
-            
-            $transaksi->save();
 
-            // Buat detail transaksi dan kurangi stok
+            $id_pelanggan = $request->input('id_pelanggan');
+            // Create transaction
+            $transaksi = Transaksi::create([
+                'kode_transaksi' => $kodeTransaksi,
+                'id_pelanggan' => $id_pelanggan,
+                'id_pengguna' => auth()->user()->id ?? null,
+                'tanggal_transaksi' => now(),
+                // 'id_alamat' => 'DEFAULT01', // You might need to adjust this
+                'ongkir' => 0,
+                'keterangan' => $keterangan,
+                'ekspedisi' => 'PICKUP',
+                'layanan_ekspedisi' => 'PICKUP',
+                'status' => 'selesai',
+                'jenis' => 'offline'
+            ]);
+
+            // Add transaction details
             foreach ($request->items as $item) {
-                $detail = DetailBarang::find($item['kode_detail']);
-                
-                // Kurangi stok
-                $detail->stok -= $item['qty'];
-                $detail->save();
-
-                // Simpan detail transaksi (asumsi ada tabel detail_transaksi)
-                DB::table('detail_transaksi')->insert([
-                    'kode_transaksi' => $kode_transaksi,
+                DetailTransaksi::create([
+                    'kode_transaksi' => $kodeTransaksi,
                     'kode_detail' => $item['kode_detail'],
-                    'qty' => $item['qty'],
-                    'harga' => $detail->harga_normal,
-                    'subtotal' => $detail->harga_normal * $item['qty']
+                    'kuantitas' => $item['quantity'],
+                    'harga' => $item['price']
                 ]);
+
+                // Update stock
+                $detailBarang = DetailBarang::where('kode_detail', $item['kode_detail'])->first();
+                if ($detailBarang) {
+                    $detailBarang->stok -= $item['quantity'];
+                    $detailBarang->save();
+                }
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaksi berhasil disimpan',
-                'kode_transaksi' => $kode_transaksi,
-                'total' => $total
+                'message' => 'Transaksi berhasil diproses',
+                'kode_transaksi' => $kodeTransaksi
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+    public function getResellerPrice(Request $request)
+    {
+        $kode_detail = $request->get('kode_detail');
+        $id_reseller = $request->get('id_reseller');
+        
+        if (!$id_reseller) {
+            return response()->json(['error' => 'ID reseller required']);
+        }
+        
+        // Validasi reseller
+        $reseller = Pelanggan::where('id_pelanggan', $id_reseller)
+            ->where('role', 'reseller')
+            ->first();
+            
+        if (!$reseller) {
+            return response()->json(['error' => 'Invalid reseller']);
+        }
+        
+        // Get detail barang dengan join ke barang dan tipe
+        $detail = DB::table('detail_barang')
+            ->join('barang', 'detail_barang.kode_barang', '=', 'barang.kode_barang')
+            ->join('tipe', 'barang.kode_tipe', '=', 'tipe.kode_tipe')
+            ->where('detail_barang.kode_detail', $kode_detail)
+            ->select('detail_barang.harga_normal', 'tipe.potongan_harga')
+            ->first();
+        
+        if (!$detail) {
+            return response()->json(['error' => 'Product not found']);
+        }
+        
+        $harga_reseller = $detail->harga_normal - $detail->potongan_harga;
+        
+        return response()->json([
+            'harga_normal' => $detail->harga_normal,
+            'potongan_harga' => $detail->potongan_harga,
+            'harga_reseller' => $harga_reseller
+        ]);
     }
 
     public function print($kode_transaksi)
     {
         $transaksi = Transaksi::with(['pelanggan', 'detailTransaksi.detailBarang.barang'])
-                             ->find($kode_transaksi);
-        
+            ->find($kode_transaksi);
+
         if (!$transaksi) {
             return redirect()->back()->with('error', 'Transaksi tidak ditemukan');
         }
@@ -162,7 +253,7 @@ class KasirController extends Controller
         // Mapping status untuk tab
         $statusMap = [
             'pesanan_baru' => 'menunggu_konfirmasi',
-            'dalam_proses' => 'diproses', 
+            'dalam_proses' => 'diproses',
             'dikirim' => 'dikirim',
             'selesai' => 'selesai',
             'dibatalkan' => 'dibatalkan'
@@ -178,7 +269,7 @@ class KasirController extends Controller
             ->leftJoin('barang as b', 'db.kode_barang', '=', 'b.kode_barang')
             ->select(
                 't.kode_transaksi',
-                't.tanggal_transaksi', 
+                't.tanggal_transaksi',
                 't.keterangan',
                 't.status',
                 'p.nama_pelanggan',
@@ -222,10 +313,10 @@ class KasirController extends Controller
     public function exportPdf(Request $request)
     {
         $status = $request->get('status', 'menunggu_konfirmasi');
-        
+
         $statusMap = [
             'pesanan_baru' => 'menunggu_konfirmasi',
-            'dalam_proses' => 'diproses', 
+            'dalam_proses' => 'diproses',
             'dikirim' => 'dikirim',
             'selesai' => 'selesai',
             'dibatalkan' => 'dibatalkan'
@@ -240,7 +331,7 @@ class KasirController extends Controller
             ->leftJoin('barang as b', 'db.kode_barang', '=', 'b.kode_barang')
             ->select(
                 't.kode_transaksi',
-                't.tanggal_transaksi', 
+                't.tanggal_transaksi',
                 't.keterangan',
                 't.status',
                 'p.nama_pelanggan',
@@ -253,7 +344,7 @@ class KasirController extends Controller
             ->get();
 
         $pdf = PDF::loadView('admin.transaksi.pdf', compact('transaksi', 'status'));
-        
+
         return $pdf->download('riwayat-transaksi-' . $status . '-' . date('Y-m-d') . '.pdf');
     }
 }

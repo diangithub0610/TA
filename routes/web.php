@@ -14,6 +14,7 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\OngkirController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\UlasanController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\RegistrasiController;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\AdminPesananController;
 use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\ManagementUserController;
 use App\Http\Controllers\PemusnahanBarangController;
 
 
@@ -96,6 +98,9 @@ Route::post('/register', [AuthController::class, 'doRegister'])->name('do.regist
 
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard/customer-growth', [DashboardController::class, 'getCustomerGrowth'])->name('dashboard.customer-growth');
+Route::get('/dashboard/reseller-growth', [DashboardController::class, 'getResellerGrowth'])->name('dashboard.reseller-growth');
+Route::get('/dashboard/role-distribution', [DashboardController::class, 'getRoleDistribution'])->name('dashboard.role-distribution');
 
 //barang masuk -- jika belum ada 
 Route::get('/barang-masuk/get-produk-by-brand', [BarangMasukController::class, 'getProdukByBrand'])
@@ -128,17 +133,12 @@ Route::middleware(['auth:admin', 'role:shopkeeper'])->prefix('admin')->name('adm
 });
 
 Route::prefix('kasir')->name('kasir.')->group(function () {
-    // Main kasir page
     Route::get('/', [KasirController::class, 'index'])->name('index');
+    Route::get('/search-products', [KasirController::class, 'searchProducts'])->name('search');
+    Route::get('/product-variants/{kode_barang}', [KasirController::class, 'getProductVariants'])->name('variants');
+    Route::post('/check-reseller', [KasirController::class, 'checkReseller'])->name('check-reseller');
+    Route::post('/process-transaction', [KasirController::class, 'processTransaction'])->name('process');
 
-    // Get products with filters
-    Route::get('/barang', [KasirController::class, 'getBarang'])->name('barang');
-
-    // Get product details/variants
-    Route::get('/barang/{kode_barang}/detail', [KasirController::class, 'getDetailBarang'])->name('barang.detail');
-
-    // Store transaction
-    Route::post('/transaksi', [KasirController::class, 'store'])->name('store');
 
     // Print receipt
     Route::get('/print/{kode_transaksi}', [KasirController::class, 'print'])->name('print');
@@ -190,7 +190,15 @@ Route::prefix('pelanggan')->group(function () {
     Route::get('/barang/{id}', [PelangganController::class, 'detailBarang'])->name('pelanggan.detailBarang');
 });
 
+
+// Rute untuk fitur lupa password
+Route::get('/forgot-password', [App\Http\Controllers\PasswordResetController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('/forgot-password', [App\Http\Controllers\PasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [App\Http\Controllers\PasswordResetController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::post('/reset-password', [App\Http\Controllers\PasswordResetController::class, 'resetPassword'])->name('password.update');
+
 Route::middleware(['auth:pelanggan'])->group(function () {
+    Route::get('/pembayaran/{kodeTransaksi}', [PembayaranController::class, 'show'])->name('pembayaran.show');
     // Keranjang
     Route::get('/keranjang', [KeranjangController::class, 'index'])->name('keranjang.index');
     Route::post('/keranjang/tambah', [KeranjangController::class, 'tambah'])->name('keranjang.tambah');
@@ -227,10 +235,8 @@ Route::middleware(['auth:pelanggan'])->group(function () {
 
 
     // Pembayaran
-    Route::get('/pembayaran/{kodeTransaksi}', [PembayaranController::class, 'show'])->name('pembayaran.show');
 
     // Di routes/api.php
-    Route::post('midtrans/notification', [PembayaranController::class, 'notificationCallback']);
 
     // Di routes/web.php
     Route::get('pembayaran/finish', [PembayaranController::class, 'finish'])->name('pembayaran.finish');
@@ -289,6 +295,9 @@ Route::prefix('admin/persediaan')->group(function () {
     Route::get('/', [PersediaanController::class, 'index'])->name('persediaan.index');
     Route::get('/export-pdf', [PersediaanController::class, 'exportPdf'])->name('persediaan.export.pdf');
 });
+Route::get('/kasir/riwayat/export', [LaporanController::class, 'exportPdf'])->name('kasir.riwayat.export');
+
+
 
 //produk-pelanggan
 Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
@@ -321,4 +330,42 @@ Route::get('/ulasan/{kode_barang}', [UlasanController::class, 'index'])->name('u
 
 Route::get('/pesanan', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
 Route::get('/pesanan-ku/{kode_transaksi}', [CustomerOrderController::class, 'show'])->name('customer.orders.show');
-Route::get('/pesanan/{kode_transaksi}/invoice', [CustomerOrderController::class, 'downloadInvoice'])->name('customer.orders.invoice');
+
+//informasi
+Route::get('/admin/reseller-ranking', [PelangganController::class, 'resellerLoyal'])->name('admin.reseller-ranking');
+
+///
+Route::post('/kasir/reseller-price', [KasirController::class, 'getResellerPrice'])->name('kasir.reseller-price');
+
+Route::post('midtrans/notification', [PembayaranController::class, 'notificationCallback']);
+
+// Routes untuk Laporan
+Route::prefix('laporan')->name('laporan.')->group(function () {
+    // Laporan Barang Masuk
+    Route::get('/barang-masuk', [LaporanController::class, 'barangMasuk'])->name('barang-masuk');
+    Route::get('/barang-masuk/export-pdf', [LaporanController::class, 'exportBarangMasukPdf'])->name('barang-masuk.export-pdf');
+    Route::get('/barang-masuk/export-excel', [LaporanController::class, 'exportBarangMasukExcel'])->name('barang-masuk.export-excel');
+
+    // Laporan Barang Terjual
+    Route::get('/transaksi', [LaporanController::class, 'transaksi'])->name('transaksi');
+    // Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportBarangTerjualPdf'])->name('barang-terjual.export-pdf');
+    // Route::get('/barang-terjual/export-excel', [LaporanController::class, 'exportBarangTerjualExcel'])->name('barang-terjual.export-excel');
+    Route::get('/barang-terjual', [LaporanController::class, 'laporanBarangTerjual'])->name('barang-terjual');
+
+    Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportPdfBarangTerjual'])->name('barang-terjual.export.pdf');
+
+
+    // Laporan Pemusnahan Barang
+    Route::get('/pemusnahan-barang', [LaporanController::class, 'pemusnahanBarang'])->name('pemusnahan-barang');
+    Route::get('/pemusnahan-barang/export-pdf', [LaporanController::class, 'exportPemusnahanBarangPdf'])->name('pemusnahan-barang.export-pdf');
+    Route::get('/pemusnahan-barang/export-excel', [LaporanController::class, 'exportPemusnahanBarangExcel'])->name('pemusnahan-barang.export-excel');
+});
+
+
+Route::get('/pesanan-inv/{kode_transaksi}/invoice', [CustomerOrderController::class, 'downloadInvoice'])->name('customer.invoice');
+
+Route::middleware(['auth', 'role:owner'])->group(function () {
+    Route::resource('management-user', ManagementUserController::class);
+    Route::patch('management-user/{id}/toggle-status', [ManagementUserController::class, 'toggleStatus'])->name('management-user.toggle-status');
+    Route::patch('management-user/{id}/reset-password', [ManagementUserController::class, 'resetPassword'])->name('management-user.reset-password');
+});

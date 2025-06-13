@@ -31,8 +31,8 @@
 
                                 <div class="text-center mb-6">
                                     <p class="text-gray-700 mb-4">Klik tombol di bawah ini untuk melakukan pembayaran:</p>
-                                    <button id="pay-button"
-                                        class="bg-custom text-white py-3 px-6 rounded-lg hover:bg-custom/90 font-medium">
+                                    <button id="pay-button" type="button"
+                                        class="bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 font-medium">
                                         Bayar Sekarang
                                     </button>
                                 </div>
@@ -101,7 +101,7 @@
 
                                 <div class="text-center mt-6">
                                     <a href="{{ route('transaksi.detail', $transaksi->kode_transaksi) }}"
-                                        class="inline-block bg-custom text-white py-2 px-6 rounded-lg hover:bg-custom/90">
+                                        class="inline-block bg-primary text-white py-2 px-6 rounded-lg hover:bg-primary/90">
                                         Lihat Detail Pesanan
                                     </a>
                                 </div>
@@ -145,7 +145,7 @@
 
                                 <div class="text-center mt-6">
                                     <a href="{{ route('produk') }}"
-                                        class="inline-block bg-custom text-white py-2 px-6 rounded-lg hover:bg-custom/90">
+                                        class="inline-block bg-primary text-white py-2 px-6 rounded-lg hover:bg-primary/90">
                                         Lihat Produk Lainnya
                                     </a>
                                 </div>
@@ -258,28 +258,42 @@
             data-client-key="{{ config('services.midtrans.client_key') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                console.log('Payment page loaded successfully');
+
                 const payButton = document.getElementById('pay-button');
 
-                payButton.addEventListener('click', function() {
-                    // Memanggil snap untuk menampilkan popup pembayaran
-                    snap.pay('{{ $transaksi->pembayaran->snap_token }}', {
-                        onSuccess: function(result) {
-                            window.location.href =
-                                '{{ route('pembayaran.finish') }}?order_id={{ $transaksi->kode_transaksi }}';
-                        },
-                        onPending: function(result) {
-                            window.location.href =
-                                '{{ route('pembayaran.unfinish') }}?order_id={{ $transaksi->kode_transaksi }}';
-                        },
-                        onError: function(result) {
-                            window.location.href =
-                                '{{ route('pembayaran.error') }}?order_id={{ $transaksi->kode_transaksi }}';
-                        },
-                        onClose: function() {
-                            alert('Anda menutup popup pembayaran sebelum menyelesaikan transaksi!');
-                        }
+                if (payButton) {
+                    payButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('Initiating payment...');
+
+                        snap.pay('{{ $transaksi->pembayaran->snap_token }}', {
+                            onSuccess: function(result) {
+                                console.log('Payment success:', result);
+                                window.location.href =
+                                    '{{ route('transaksi.index', [], false) }}?status=menunggu_konfirmasi';
+                            },
+                            onPending: function(result) {
+                                console.log('Payment pending:', result);
+                                window.location.href =
+                                    '{{ route('transaksi.index', [], false) }}?status=belum_dibayar';
+                            },
+                            onError: function(result) {
+                                console.log('Payment error:', result);
+                                window.location.href =
+                                    '{{ route('transaksi.index', [], false) }}?status=dibatalkan';
+                            },
+                            onClose: function() {
+                                console.log('Payment popup closed');
+                                alert(
+                                    'Anda menutup popup pembayaran sebelum menyelesaikan transaksi!');
+                            }
+
+                        });
                     });
-                });
+                } else {
+                    console.error('Pay button not found!');
+                }
             });
         </script>
     @endif

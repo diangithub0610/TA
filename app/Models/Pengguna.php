@@ -23,7 +23,8 @@ class Pengguna extends Authenticatable
         'username',
         'role',
         'foto_profil',
-        'kata_sandi'
+        'kata_sandi',
+        'status'
     ];
 
     protected $hidden = [

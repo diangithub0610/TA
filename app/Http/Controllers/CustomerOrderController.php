@@ -48,6 +48,9 @@ class CustomerOrderController extends Controller
 
     public function downloadInvoice($kode_transaksi)
     {
+        $pelanggan = auth()->guard('pelanggan')->user();
+        $id_pelanggan = $pelanggan ? $pelanggan->id_pelanggan : null;
+
         // Ambil data transaksi
         $transaksi = Transaksi::with([
             'pelanggan',
@@ -56,17 +59,17 @@ class CustomerOrderController extends Controller
             'detailTransaksi.detailBarang.warna'
         ])
         ->where('kode_transaksi', $kode_transaksi)
-        ->where('id_pelanggan', Auth::id())
+        ->where('id_pelanggan', $id_pelanggan)
         ->firstOrFail();
-
+    
         // Hitung subtotal
         $subtotal = $transaksi->detailTransaksi->sum(function($detail) {
             return $detail->kuantitas * $detail->harga;
         });
-
+    
         // Hitung total
         $total = $subtotal + $transaksi->ongkir - ($transaksi->diskon ?? 0);
-
+    
         // Data untuk PDF
         $data = [
             'transaksi' => $transaksi,
@@ -74,23 +77,29 @@ class CustomerOrderController extends Controller
             'total' => $total,
             'title' => 'Invoice - ' . $kode_transaksi
         ];
-
+      
+      
         // Generate PDF menggunakan DomPDF
-        $pdf = Pdf::loadView('customer.orders.invoice', $data);
+        $pdf = Pdf::loadView('pelanggan.transaksi.invoice', $data);
         
         // Set paper size dan orientation
         $pdf->setPaper('A4', 'portrait');
         
         // Set options untuk PDF
         $pdf->setOptions([
-            'defaultFont' => 'sans-serif',
+            'defaultFont' => 'sans-serif', 
             'isRemoteEnabled' => true,
             'isHtml5ParserEnabled' => true,
+            'defaultPaperSize' => 'A4',
+            'dpi' => 150,
+            'fontHeightRatio' => 1.1,
+            'isPhpEnabled' => true
         ]);
 
+    
         // Nama file PDF
         $filename = 'invoice-' . $kode_transaksi . '-' . date('Y-m-d') . '.pdf';
-
+    
         // Download PDF
         return $pdf->download($filename);
     }

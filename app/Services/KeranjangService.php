@@ -215,4 +215,11 @@ class KeranjangService
             'keranjang' => $keranjang
         ];
     }
+    public function getJumlahKeranjang()
+{
+    $keranjang = $this->getKeranjang();
+    return collect($keranjang)->sum('jumlah');
 }
+
+}
+
