@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class ManagementUserController extends Controller
 {
@@ -216,5 +217,110 @@ class ManagementUserController extends Controller
             'success' => true,
             'message' => 'Password berhasil direset'
         ]);
+    }
+
+    public function showProfile()
+    {
+        $pengguna = Auth::user(); // Atau sesuaikan dengan cara authentication Anda
+        return view('profil-pengguna.index', compact('pengguna'));
+    }
+
+    /**
+     * Menampilkan form edit profil
+     */
+    public function editProfile()
+    {
+        $pengguna = Auth::user();
+        return view('pengguna.edit-profile', compact('pengguna'));
+    }
+
+    /**
+     * Update profil pengguna
+     */
+    public function updateProfile(Request $request)
+    {
+        $pengguna = Auth::user();
+        
+        $request->validate([
+            'nama_admin' => 'required|string|max:100',
+            'no_hp' => 'required|string|max:15',
+            'email' => [
+                'required',
+                'email',
+                'max:100',
+                Rule::unique('pengguna', 'email')->ignore($pengguna->id_admin, 'id_admin')
+            ],
+            'username' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('pengguna', 'username')->ignore($pengguna->id_admin, 'id_admin')
+            ],
+            'foto_profil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $data = $request->only(['nama_admin', 'no_hp', 'email', 'username']);
+
+        // Handle upload foto profil
+        if ($request->hasFile('foto_profil')) {
+            // Hapus foto lama jika ada
+            if ($pengguna->foto_profil && Storage::exists('public/profil/' . $pengguna->foto_profil)) {
+                Storage::delete('public/profil/' . $pengguna->foto_profil);
+            }
+
+            $file = $request->file('foto_profil');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('public/profil', $filename);
+            $data['foto_profil'] = $filename;
+        }
+
+        $pengguna->update($data);
+
+        return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui');
+    }
+
+    /**
+     * Update password
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'kata_sandi_lama' => 'required',
+            'kata_sandi_baru' => 'required|min:6|confirmed',
+        ]);
+
+        $pengguna = Auth::user();
+
+        // Verifikasi password lama
+        if (!Hash::check($request->kata_sandi_lama, $pengguna->kata_sandi)) {
+            return back()->withErrors(['kata_sandi_lama' => 'Password lama tidak sesuai']);
+        }
+
+        $pengguna->update([
+            'kata_sandi' => Hash::make($request->kata_sandi_baru)
+        ]);
+
+        return back()->with('success', 'Password berhasil diperbarui');
+    }
+
+    /**
+     * Hapus foto profil
+     */
+    public function deleteFotoProfil()
+    {
+        $pengguna = Auth::user();
+        
+        if ($pengguna->foto_profil && Storage::exists('public/profil/' . $pengguna->foto_profil)) {
+            Storage::delete('public/profil/' . $pengguna->foto_profil);
+        }
+
+        $pengguna->update(['foto_profil' => null]);
+
+        return back()->with('success', 'Foto profil berhasil dihapus');
+    }
+    public function profil()
+    {
+        $pengguna = Auth::user(); // atau Auth::guard('admin')->user(); jika pakai guard custom
+        return view('admin.profile.index', compact('pengguna'));
     }
 }

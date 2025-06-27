@@ -151,6 +151,7 @@ Route::prefix('kasir')->name('kasir.')->group(function () {
 });
 
 
+Route::delete('barang/delete-gambar/{kode_gambar}', [BarangController::class, 'deleteGambarPendukung'])->name('barang.delete-gambar');
 
 Route::middleware(['auth:admin', 'role:gudang,owner'])->group(function () {
 
@@ -364,8 +365,24 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
 
 Route::get('/pesanan-inv/{kode_transaksi}/invoice', [CustomerOrderController::class, 'downloadInvoice'])->name('customer.invoice');
 
-Route::middleware(['auth', 'role:owner'])->group(function () {
-    Route::resource('management-user', ManagementUserController::class);
-    Route::patch('management-user/{id}/toggle-status', [ManagementUserController::class, 'toggleStatus'])->name('management-user.toggle-status');
-    Route::patch('management-user/{id}/reset-password', [ManagementUserController::class, 'resetPassword'])->name('management-user.reset-password');
+
+Route::resource('management-user', ManagementUserController::class);
+Route::patch('management-user/{id}/toggle-status', [ManagementUserController::class, 'toggleStatus'])->name('management-user.toggle-status');
+   
+Route::patch('management-user/{id}/reset-password', [ManagementUserController::class, 'resetPassword'])->name('management-user.reset-password');
+
+
+
+
+Route::prefix('barang-masuk')->name('barang-masuk.')->group(function () {
+
+    Route::get('/ajax/get-detail-by-barang', [BarangMasukController::class, 'getDetailByBarang'])->name('get-detail-by-barang');
+   
 });
+    
+    // Profile routes
+    Route::get('/profile', [ManagementUserController::class, 'profil'])->name('profile.show');
+    Route::get('/profile/edit', [ManagementUserController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile/update', [ManagementUserController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/update-password', [ManagementUserController::class, 'updatePassword'])->name('profile.update-password');
+    Route::delete('/profile/delete-foto', [ManagementUserController::class, 'deleteFotoProfil'])->name('profile.delete-foto');

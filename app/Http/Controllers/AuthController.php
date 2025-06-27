@@ -57,21 +57,24 @@ class AuthController extends Controller
                 ->orWhere('username', $login);
         })->first();
 
+        if ($admin) {
+            if ($admin->status !== 'aktif') {
+                return redirect()->back()
+                    ->withErrors(['login' => 'Akun Anda nonaktif. Silakan hubungi administrator.'])
+                    ->withInput($request->except('password'));
+            }
+        
+            if (Hash::check($password, $admin->kata_sandi)) {
+                // Login admin
+                Auth::guard('admin')->login($admin, $remember);
+                return redirect()->route('dashboard');
+            }
+        }
+
         // Verify credentials
         if ($admin && Hash::check($password, $admin->kata_sandi)) {
             // Login admin
             Auth::guard('admin')->login($admin, $remember);
-
-            // Redirect based on role
-            // switch ($admin->role) {
-            //     case 'gudang':
-            //         return redirect()->route('gudang.dashboard');
-            //     case 'pemesanan':
-            //         return redirect()->route('pemesanan.dashboard');
-            //     case 'owner':
-            //         return redirect()->route('dashboard');
-            //     default:
-            //         return redirect()->route('dashboard');
 
             return redirect()->route('dashboard');
             

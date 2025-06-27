@@ -89,74 +89,7 @@ class BarangMasukController extends Controller
             }
         }
 
-        return view('admin.barang-masuk.edit', compact('barangMasuk', 'brands', 'barangs', 'warnas', 'selectedBrand'));
-    }
-    public function update(Request $request, $kode_pembelian)
-    {
-        $request->validate([
-            'kode_brand' => 'required|string|exists:brand,kode_brand',
-            'nama_produk' => 'required|string',
-            'tanggal_masuk' => 'required|date',
-            'bukti_pembelian' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048',
-            'detail_barang' => 'required|array|min:1',
-            'detail_barang.*.kode_barang' => 'required|string|exists:barang,kode_barang',
-            'detail_barang.*.jumlah' => 'required|integer|min:1',
-            'detail_barang.*.harga_barang_masuk' => 'required|integer|min:1000'
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            $barangMasuk = BarangMasuk::where('kode_pembelian', $kode_pembelian)->firstOrFail();
-
-            // Update data barang masuk
-            $dataUpdate = [
-                'tanggal_masuk' => $request->tanggal_masuk
-            ];
-
-            // Handle file upload
-            if ($request->hasFile('bukti_pembelian')) {
-                // Delete old file if exists
-                if ($barangMasuk->bukti_pembelian && Storage::exists($barangMasuk->bukti_pembelian)) {
-                    Storage::delete($barangMasuk->bukti_pembelian);
-                }
-
-                $buktiPath = $request->file('bukti_pembelian')->store('bukti_pembelian', 'public');
-                $dataUpdate['bukti_pembelian'] = $buktiPath;
-            }
-
-            $barangMasuk->update($dataUpdate);
-
-            // Delete existing detail barang masuk
-            DetailBarangMasuk::where('kode_pembelian', $kode_pembelian)->delete();
-
-            // Insert new detail barang masuk
-            foreach ($request->detail_barang as $detail) {
-                DetailBarangMasuk::create([
-                    'kode_pembelian' => $kode_pembelian,
-                    'kode_barang' => $detail['kode_barang'],
-                    'jumlah' => $detail['jumlah'],
-                    'harga_barang_masuk' => $detail['harga_barang_masuk']
-                ]);
-
-                // Update harga beli di tabel barang
-                DB::table('barang')
-                    ->where('kode_barang', $detail['kode_barang'])
-                    ->update(['harga_beli' => $detail['harga_barang_masuk']]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('barang-masuk.index')->with('success', 'Barang masuk berhasil diupdate');
-        } catch (Exception $e) {
-            DB::rollback();
-
-            if (isset($buktiPath) && Storage::exists($buktiPath)) {
-                Storage::delete($buktiPath);
-            }
-
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat mengupdate data: ' . $e->getMessage());
-        }
+        return view('admin.barang-masuk.form', compact('barangMasuk', 'brands', 'barangs', 'warnas', 'selectedBrand'));
     }
 
     public function getProdukByBrand(Request $request)
@@ -187,102 +120,353 @@ $barangs = DB::table('barang')
         return response()->json($barangs);
     }
 
-    // Method baru untuk mengambil detail barang berdasarkan nama produk
-    public function getDetailByProduk(Request $request)
+    public function getDetailByBarang(Request $request)
     {
-        $namaBarang = $request->nama_barang;
-        $kodeBrand = $request->kode_brand;
-
-        $detailBarangs = DB::table('detail_barang')
-            ->join('barang', 'detail_barang.kode_barang', '=', 'barang.kode_barang')
-            ->join('tipe', 'barang.kode_tipe', '=', 'tipe.kode_tipe')
-            ->join('warna', 'detail_barang.kode_warna', '=', 'warna.kode_warna')
-            ->where('barang.nama_barang', $namaBarang)
-            ->where('tipe.kode_brand', $kodeBrand)
-            ->select(
-                'detail_barang.kode_detail',
-                'detail_barang.kode_barang',
-                'detail_barang.ukuran',
-                'warna.warna',
-                'barang.nama_barang'
-            )
-            ->get();
-
-        return response()->json($detailBarangs);
-    }
-
-    // Method store yang diubah
-    public function store(Request $request)
-    {
-        $request->validate([
-            'kode_pembelian' => 'required|string|max:10|unique:barang_masuk,kode_pembelian',
-            'kode_brand' => 'required|string|exists:brand,kode_brand',
-            'tanggal_masuk' => 'required|date',
-            'bukti_pembelian' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048',
-            'detail_barang' => 'required|array|min:1',
-            'detail_barang.*.kode_detail' => 'required|string|exists:detail_barang,kode_detail',
-            'detail_barang.*.jumlah' => 'required|integer|min:1',
-            'detail_barang.*.harga_barang_masuk' => 'required|integer|min:1000'
-        ]);
-
         try {
-            DB::beginTransaction();
-
-            $dataBarangMasuk = [
-                'kode_pembelian' => $request->kode_pembelian,
-                'id_admin' => Auth::guard('admin')->user()->id_admin,
-                'tanggal_masuk' => $request->tanggal_masuk
-            ];
-
-            if ($request->hasFile('bukti_pembelian')) {
-                $buktiPath = $request->file('bukti_pembelian')->store('bukti_pembelian', 'public');
-                $dataBarangMasuk['bukti_pembelian'] = $buktiPath;
+            $kodeBarang = $request->get('kode_barang');
+            
+            if (!$kodeBarang) {
+                return response()->json([]);
             }
 
-            $barangMasuk = BarangMasuk::create($dataBarangMasuk);
+            // Query untuk mendapatkan detail barang berdasarkan kode_barang
+            $detailBarang = DB::table('detail_barang')
+                ->join('warna', 'detail_barang.kode_warna', '=', 'warna.kode_warna')
+                ->where('detail_barang.kode_barang', $kodeBarang)
+                ->select(
+                    'detail_barang.kode_detail',
+                    'detail_barang.ukuran',
+                    'detail_barang.kode_warna',
+                    'warna.warna',
+                    'detail_barang.stok'
+                )
+                ->orderBy('warna.warna')
+                ->orderBy('detail_barang.ukuran')
+                ->get();
 
-            foreach ($request->detail_barang as $detail) {
-                // Ambil data detail barang
-                $detailBarang = DB::table('detail_barang')
-                    ->where('kode_detail', $detail['kode_detail'])
-                    ->first();
-
-                // Simpan detail barang masuk
-                DetailBarangMasuk::create([
-                    'kode_pembelian' => $request->kode_pembelian,
-                    'kode_barang' => $detailBarang->kode_barang,
-                    'jumlah' => $detail['jumlah'],
-                    'harga_barang_masuk' => $detail['harga_barang_masuk']
-                ]);
-
-                // Update stok dan harga di detail_barang yang spesifik
-                DB::table('detail_barang')
-                    ->where('kode_detail', $detail['kode_detail'])
-                    ->update([
-                        'stok' => $detailBarang->stok + $detail['jumlah'],
-                        'harga_beli' => $detail['harga_barang_masuk'],
-                        'harga_normal' => $detail['harga_barang_masuk'] // atau sesuai logic bisnis
-                    ]);
-
-                // Update harga beli di tabel barang utama
-                DB::table('barang')
-                    ->where('kode_barang', $detailBarang->kode_barang)
-                    ->update(['harga_beli' => $detail['harga_barang_masuk']]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('barang-masuk.index')->with('success', 'Barang masuk berhasil disimpan');
-        } catch (Exception $e) {
-            DB::rollback();
-
-            if (isset($buktiPath) && Storage::exists($buktiPath)) {
-                Storage::delete($buktiPath);
-            }
-
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+            return response()->json($detailBarang);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat mengambil detail barang',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
+    
+
+    // Method store yang diubah
+// Method store yang diubah
+public function store(Request $request)
+{
+    try {
+        // Validasi input
+        $request->validate([
+            'tanggal_masuk' => 'required|date',
+            'bukti_pembelian' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048',
+            'produk' => 'required|array|min:1',
+            'produk.*.kode_barang' => 'required|exists:barang,kode_barang',
+            'produk.*.detail' => 'required|array|min:1',
+            'produk.*.detail.*.kode_detail' => 'required|exists:detail_barang,kode_detail',
+            'produk.*.detail.*.jumlah' => 'required|integer|min:1',
+            'produk.*.detail.*.harga_barang_masuk' => 'required|integer|min:1000',
+            'produk.*.detail.*.stok_minimum' => 'required|integer|min:0',
+            'produk.*.detail.*.potongan_harga' => 'nullable|integer|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        // Generate kode barang masuk
+        // $kodeBarangMasuk = $this->generateKodeBarangMasuk();
+
+        // Insert barang masuk
+        DB::table('barang_masuk')->insert([
+            'kode_pembelian' => $request->kode_pembelian,
+            'tanggal_masuk' => $request->tanggal_masuk,
+            'id_admin' => Auth::user()->id_admin,
+            'bukti_pembelian' => $request->bukti_pembelian,
+        ]);
+
+        // Insert detail barang masuk dan update stok
+        foreach ($request->produk as $produk) {
+            foreach ($produk['detail'] as $detail) {
+                // Insert ke tabel detail_barang_masuk (transaksi pembelian)
+                DB::table('detail_barang_masuk')->insert([
+                    'kode_pembelian' => $request->kode_pembelian,
+                    'kode_barang' => $produk['kode_barang'], // Menggunakan kode_barang dari level produk
+                    'jumlah' => $detail['jumlah'],
+                    'harga_barang_masuk' => $detail['harga_barang_masuk'],
+                ]);
+
+                // Update stok di detail_barang (menambah stok)
+                DB::table('detail_barang')
+                    ->where('kode_detail', $detail['kode_detail'])
+                    ->increment('stok', $detail['jumlah']);
+
+                // Update harga beli dan stok minimum di detail_barang
+                $updateData = [
+                    'harga_beli' => $detail['harga_barang_masuk'],
+                    'stok_minimum' => $detail['stok_minimum'],
+                ];
+
+                // Jika ada potongan harga, update juga
+                if (isset($detail['potongan_harga']) && $detail['potongan_harga'] > 0) {
+                    $updateData['potongan_harga'] = $detail['potongan_harga'];
+                }
+
+                DB::table('detail_barang')
+                    ->where('kode_detail', $detail['kode_detail'])
+                    ->update($updateData);
+            }
+        }
+
+        DB::commit();
+
+        return redirect()->route('barang-masuk.index')->with('success', 'Barang masuk berhasil diupdate');
+    } catch (Exception $e) {
+        DB::rollback();
+
+        if (isset($buktiPath) && Storage::exists($buktiPath)) {
+            Storage::delete($buktiPath);
+        }
+
+        return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat mengupdate data: ' . $e->getMessage());
+    }
+
+    //     DB::commit();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Barang masuk berhasil disimpan',
+    //         'redirect' => route('barang-masuk.index')
+    //     ]);
+
+    // } catch (\Exception $e) {
+    //     DB::rollback();
+    //     return response()->json([
+    //         'success' => false,
+    //         'message' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
+    //     ], 500);
+    // }
+}
+
+    // private function generateKodeBarangMasuk()
+    // {
+    //     $today = date('Ymd');
+    //     $lastBarangMasuk = DB::table('barang_masuk')
+    //         ->where('kode_pembelian', 'LIKE', 'BM' . $today . '%')
+    //         ->orderBy('kode_pembelian', 'desc')
+    //         ->first();
+
+    //     if ($lastBarangMasuk) {
+    //         $lastNumber = (int) substr($lastBarangMasuk->kode_barang_masuk, -3);
+    //         $newNumber = $lastNumber + 1;
+    //     } else {
+    //         $newNumber = 1;
+    //     }
+
+    //     return 'BM' . $today . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+    // }
+
+
+// Method untuk menyimpan barang baru dari form barang masuk
+public function storeBarangBaru(Request $request)
+{
+    $validatedData = $request->validate([
+        'nama_barang' => 'required|max:100',
+        'berat' => 'required|integer|min:1',
+        'harga_normal' => 'required|integer|min:1000',
+        'deskripsi' => 'nullable',
+        'kode_tipe' => 'required|exists:tipe,kode_tipe',
+        'detail_warnas' => 'required|array|min:1',
+        'detail_warnas.*.ukuran' => 'required',
+        'detail_warnas.*.kode_warna' => 'required|exists:warna,kode_warna',
+        'detail_warnas.*.stok_minimum' => 'nullable|integer|min:0',
+        'detail_warnas.*.potongan_harga' => 'nullable|integer|min:0'
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        // Generate kode barang
+        $kode_barang = Barang::generateKodeBarang($validatedData['kode_tipe']);
+
+        // Simpan barang
+        $barang = Barang::create([
+            'kode_barang' => $kode_barang,
+            'nama_barang' => $validatedData['nama_barang'],
+            'berat' => $validatedData['berat'],
+            'harga_normal' => $validatedData['harga_normal'],
+            'deskripsi' => $validatedData['deskripsi'],
+            'kode_tipe' => $validatedData['kode_tipe']
+        ]);
+
+        // Simpan detail barang
+        $detailBarangs = [];
+        foreach ($validatedData['detail_warnas'] as $index => $detail) {
+            $kode_detail = DetailBarang::generateKodeDetail($kode_barang, $detail['kode_warna'], $index + 1);
+
+            $detailData = [
+                'kode_detail' => $kode_detail,
+                'kode_barang' => $kode_barang,
+                'kode_warna' => $detail['kode_warna'],
+                'ukuran' => $detail['ukuran'],
+                'stok' => 0, // Stok akan diupdate saat barang masuk
+                'harga_normal' => $validatedData['harga_normal']
+            ];
+
+            // Tambahkan stok_minimum jika ada
+            if (isset($detail['stok_minimum']) && $detail['stok_minimum'] !== null) {
+                $detailData['stok_minimum'] = $detail['stok_minimum'];
+            }
+
+            // Tambahkan potongan_harga jika ada
+            if (isset($detail['potongan_harga']) && $detail['potongan_harga'] !== null) {
+                $detailData['potongan_harga'] = $detail['potongan_harga'];
+            }
+
+            $detailBarang = DetailBarang::create($detailData);
+            $detailBarangs[] = $detailBarang;
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'barang' => [
+                'kode_barang' => $barang->kode_barang,
+                'nama_barang' => $barang->nama_barang
+            ],
+            'detail_barangs' => $detailBarangs->map(function($detail) {
+                return [
+                    'kode_detail' => $detail->kode_detail,
+                    'warna' => $detail->warna->warna ?? '',
+                    'ukuran' => $detail->ukuran
+                ];
+            }),
+            'message' => 'Barang berhasil ditambahkan'
+        ]);
+    } catch (Exception $e) {
+        DB::rollback();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+public function update(Request $request, $kode_pembelian)
+{
+    $request->validate([
+        'kode_brand' => 'required|string|exists:brand,kode_brand',
+        'nama_produk' => 'required|string',
+        'tanggal_masuk' => 'required|date',
+        'bukti_pembelian' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048',
+        'detail_barang' => 'required|array|min:1',
+        'detail_barang.*.kode_detail' => 'required|string|exists:detail_barang,kode_detail',
+        'detail_barang.*.jumlah' => 'required|integer|min:1',
+        'detail_barang.*.harga_barang_masuk' => 'required|integer|min:1000',
+        'detail_barang.*.stok_minimum' => 'nullable|integer|min:0',
+        'detail_barang.*.potongan_harga' => 'nullable|integer|min:0'
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $barangMasuk = BarangMasuk::where('kode_pembelian', $kode_pembelian)->firstOrFail();
+
+        // Update data barang masuk
+        $dataUpdate = [
+            'tanggal_masuk' => $request->tanggal_masuk
+        ];
+
+        // Handle file upload
+        if ($request->hasFile('bukti_pembelian')) {
+            // Delete old file if exists
+            if ($barangMasuk->bukti_pembelian && Storage::exists($barangMasuk->bukti_pembelian)) {
+                Storage::delete($barangMasuk->bukti_pembelian);
+            }
+
+            $buktiPath = $request->file('bukti_pembelian')->store('bukti_pembelian', 'public');
+            $dataUpdate['bukti_pembelian'] = $buktiPath;
+        }
+
+        $barangMasuk->update($dataUpdate);
+
+        // Get existing detail to calculate stock difference
+        $existingDetails = DetailBarangMasuk::where('kode_pembelian', $kode_pembelian)->get();
+
+        // Restore stock from existing details
+        foreach ($existingDetails as $existingDetail) {
+            $detailBarang = DB::table('detail_barang')
+                ->where('kode_detail', $existingDetail->kode_detail)
+                ->first();
+
+            if ($detailBarang) {
+                DB::table('detail_barang')
+                    ->where('kode_detail', $existingDetail->kode_detail)
+                    ->update(['stok' => $detailBarang->stok - $existingDetail->jumlah]);
+            }
+        }
+
+        // Delete existing detail barang masuk
+        DetailBarangMasuk::where('kode_pembelian', $kode_pembelian)->delete();
+
+        // Insert new detail barang masuk
+        foreach ($request->detail_barang as $detail) {
+            // Ambil data detail barang
+            $detailBarang = DB::table('detail_barang')
+                ->where('kode_detail', $detail['kode_detail'])
+                ->first();
+
+            DetailBarangMasuk::create([
+                'kode_pembelian' => $kode_pembelian,
+                'kode_barang' => $detailBarang->kode_barang,
+                'jumlah' => $detail['jumlah'],
+                'harga_barang_masuk' => $detail['harga_barang_masuk']
+            ]);
+
+            // Update stok, harga, stok minimum, dan potongan harga
+            $updateData = [
+                'stok' => $detailBarang->stok + $detail['jumlah'],
+                'harga_beli' => $detail['harga_barang_masuk']
+            ];
+
+            // Tambahkan stok_minimum jika ada
+            if (isset($detail['stok_minimum']) && $detail['stok_minimum'] !== null) {
+                $updateData['stok_minimum'] = $detail['stok_minimum'];
+            }
+
+            // Tambahkan potongan_harga jika ada
+            if (isset($detail['potongan_harga']) && $detail['potongan_harga'] !== null) {
+                $updateData['potongan_harga'] = $detail['potongan_harga'];
+            }
+
+            DB::table('detail_barang')
+                ->where('kode_detail', $detail['kode_detail'])
+                ->update($updateData);
+
+            // Update harga beli di tabel barang
+            DB::table('barang')
+                ->where('kode_barang', $detailBarang->kode_barang)
+                ->update(['harga_beli' => $detail['harga_barang_masuk']]);
+        }
+
+        DB::commit();
+
+        return redirect()->route('barang-masuk.index')->with('success', 'Barang masuk berhasil diupdate');
+    } catch (Exception $e) {
+        DB::rollback();
+
+        if (isset($buktiPath) && Storage::exists($buktiPath)) {
+            Storage::delete($buktiPath);
+        }
+
+        return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat mengupdate data: ' . $e->getMessage());
+    }
+}
+
 
     /**
      * Remove the specified resource from storage.
@@ -324,63 +508,5 @@ $barangs = DB::table('barang')
         return response()->json($tipes);
     }
     // Method untuk menyimpan barang baru dari form barang masuk
-    public function storeBarangBaru(Request $request)
-    {
-        $validatedData = $request->validate([
-            'nama_barang' => 'required|max:100',
-            'berat' => 'required|integer|min:1',
-            'harga_normal' => 'required|integer|min:1000',
-            'deskripsi' => 'nullable',
-            'kode_tipe' => 'required|exists:tipe,kode_tipe',
-            'ukuran' => 'required',
-            'kode_warna' => 'required|exists:warna,kode_warna'
-        ]);
 
-        try {
-            DB::beginTransaction();
-
-            // Generate kode barang
-            $kode_barang = Barang::generateKodeBarang($validatedData['kode_tipe']);
-
-            // Simpan barang
-            $barang = Barang::create([
-                'kode_barang' => $kode_barang,
-                'nama_barang' => $validatedData['nama_barang'],
-                'berat' => $validatedData['berat'],
-                'harga_normal' => $validatedData['harga_normal'],
-                'deskripsi' => $validatedData['deskripsi'],
-                'kode_tipe' => $validatedData['kode_tipe']
-            ]);
-
-            // Simpan detail barang
-            $kode_detail = DetailBarang::generateKodeDetail($kode_barang, $validatedData['kode_warna'], 1);
-
-            DetailBarang::create([
-                'kode_detail' => $kode_detail,
-                'kode_barang' => $kode_barang,
-                'kode_warna' => $validatedData['kode_warna'],
-                'ukuran' => $validatedData['ukuran'],
-                'stok' => 0, // Stok akan diupdate saat barang masuk
-                'harga_normal' => $validatedData['harga_normal']
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'barang' => [
-                    'kode_barang' => $barang->kode_barang,
-                    'nama_barang' => $barang->nama_barang
-                ],
-                'message' => 'Barang berhasil ditambahkan'
-            ]);
-        } catch (Exception $e) {
-            DB::rollback();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 }

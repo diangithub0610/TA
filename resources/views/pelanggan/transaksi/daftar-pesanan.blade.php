@@ -59,7 +59,7 @@
                                     {{ $item->detailTransaksi[0]->detailBarang->barang->nama_barang ?? '-' }}
                                 </h3>
                                 <div class="mt-1 text-sm text-gray-600">
-                                    <span>Jumlah: {{ $item->detailTransaksi[0]->kuantitas }}</span>
+                                    <span>Jumlah: {{ $item->detailTransaksi->sum('kuantitas') }}</span>
                                     <span class="mx-2">•</span>
                                     {{-- <span>Status: {{ ucfirst(str_replace('_', ' ', $item->status)) }}</span> --}}
                                 </div>

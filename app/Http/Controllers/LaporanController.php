@@ -273,7 +273,7 @@ class LaporanController extends Controller
                 'bm.kode_pembelian',
                 'bm.tanggal_masuk',
                 'bm.bukti_pembelian',
-                'p.nama_pengguna as admin',
+                'p.nama_admin as admin',
                 'b.kode_barang',
                 'b.nama_barang',
                 'br.nama_brand',

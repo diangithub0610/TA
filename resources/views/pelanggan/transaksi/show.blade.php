@@ -144,7 +144,8 @@
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Alamat</span>
                                         <span
-                                            class="font-medium text-gray-900 text-right max-w-48">{{ $transaksi->pelanggan->alamat_pengguna ?? 'N/A' }}</span>
+                                            class="font-medium text-gray-900 text-right max-w-48">{{ $transaksi->alamat->full_address }}
+                                        </span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Kurir</span>
@@ -311,12 +312,13 @@
                     <!-- Tombol Aksi -->
                     {{-- <div class="space-y-3">
                         <a href="{{ route('customer.orders.invoice', $transaksi->kode_transaksi) }}" --}}
-                    @if ($transaksi->pembayaran->status === 'pending' && $transaksi->pembayaran->snap_token)
-                        <button id="pay-button" type="button"
-                            class="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                            Bayar Sekarang
-                        </button>
-                    @endif
+                            @if ($transaksi->pembayaran->status === 'pending' && $transaksi->pembayaran->snap_token)
+                            <a href="{{ route('pembayaran.show', $transaksi->kode_transaksi) }}"
+                                class="w-full block text-center bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                Bayar Sekarang
+                            </a>
+                        @endif
+                        
 
                     <a href="{{ route('customer.invoice', $transaksi->kode_transaksi) }}"
                         class="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">

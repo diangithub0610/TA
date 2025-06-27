@@ -197,14 +197,12 @@ function resetPassword(userId) {
 $('#resetPasswordForm').on('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
+    const formData = $(this).serialize(); // GANTI DI SINI
     
     $.ajax({
         url: `/management-user/${currentUserId}/reset-password`,
         type: 'PATCH',
         data: formData,
-        processData: false,
-        contentType: false,
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
@@ -216,15 +214,30 @@ $('#resetPasswordForm').on('submit', function(e) {
             }
         },
         error: function(xhr) {
-            const errors = xhr.responseJSON.errors;
-            let errorMessage = '';
-            for (let field in errors) {
-                errorMessage += errors[field].join('\n') + '\n';
+    console.log(xhr.responseText); // Tampilkan isi error dari server
+    let errorMessage = 'Terjadi kesalahan saat reset password';
+
+    try {
+        const json = JSON.parse(xhr.responseText);
+        if (json.errors) {
+            errorMessage = '';
+            for (let field in json.errors) {
+                errorMessage += json.errors[field].join('\n') + '\n';
             }
-            alert(errorMessage || 'Terjadi kesalahan saat reset password');
+        } else if (json.message) {
+            errorMessage = json.message;
         }
+    } catch (e) {
+        // Gagal parse JSON
+        console.error('Error parsing response:', e);
+    }
+
+    alert(errorMessage);
+}
+
     });
 });
+
 
 function deleteUser(userId) {
     if (confirm('Apakah Anda yakin ingin menghapus user ini? Data yang sudah dihapus tidak dapat dikembalikan.')) {

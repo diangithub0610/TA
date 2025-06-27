@@ -352,7 +352,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Top 10 Reseller Paling Loyal</div>
+                        <div class="card-title">Top 10 Reseller</div>
                         <div class="card-category">
                             <ul class="nav nav-pills nav-secondary" role="tablist">
                                 <li class="nav-item">
@@ -511,7 +511,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 10 Rating Barang Terbaik</div>
+                    <div class="card-title">Top 10 Rating Barang</div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

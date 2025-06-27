@@ -234,7 +234,7 @@
                                     <input type="checkbox" id="is_dropship" name="is_dropship"
                                         class="h-4 w-4 text-custom focus:ring-custom"
                                         {{ auth()->guard('pelanggan')->user()->role === 'reseller' ? 'checked' : '' }}
-                                        {{ auth()->guard('pelanggan')->user()->role === 'reseller' ? 'disabled' : '' }}>
+                                        {{ auth()->guard('pelanggan')->user()->role === 'pelanggan' ? 'disabled' : '' }}>
                                     <label for="is_dropship" class="ml-2 text-sm text-gray-700">
                                         Kirim sebagai dropship
                                     </label>

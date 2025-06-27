@@ -39,18 +39,6 @@
                                 class="img-fluid rounded mb-3">
                         @endif
 
-                        @if ($barang->galeriGambar->count() > 0)
-                            {{-- <h6>Gambar Pendukung:</h6> --}}
-                            <div class="row">
-                                @foreach ($barang->galeriGambar as $gambar)
-                                    <div class="col-6 col-md-3-custom mb-3">
-                                        <img src="{{ asset('storage/barang/' . $gambar->gambar) }}" alt="Gambar Pendukung"
-                                            class="img-thumbnail-square">
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-
                         <h4 class="card-title">{{ $barang->nama_barang }}</h4>
                         <table class="table">
                             <tr>
@@ -110,68 +98,51 @@
                                             <td>{{ $detail->stok }}</td>
                                             @if (Route::currentRouteName() == 'pemusnahan-barang.detail-barang')
                                                 <td>
-                                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                        data-bs-target="#hapusModal{{ $detail->kode_detail }}">
+                                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapusModal{{ $detail->kode_detail }}">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
-
+                            
                                                     {{-- Modal --}}
-                                                    <div class="modal fade" id="hapusModal{{ $detail->kode_detail }}"
-                                                        tabindex="-1" aria-labelledby="hapusModalLabel" aria-hidden="true">
+                                                    <div class="modal fade" id="hapusModal{{ $detail->kode_detail }}" tabindex="-1" aria-labelledby="hapusModalLabel" aria-hidden="true">
                                                         <div class="modal-dialog">
-                                                            <form action="{{ route('pemusnahan-barang.store') }}"
-                                                                method="POST" enctype="multipart/form-data">
+                                                            <form action="{{ route('pemusnahan-barang.store') }}" method="POST" enctype="multipart/form-data">
                                                                 @csrf
                                                                 <div class="modal-content">
                                                                     <div class="modal-header">
-                                                                        <h5 class="modal-title" id="hapusModalLabel">
-                                                                            Pemusnahan Barang</h5>
-                                                                        <button type="button" class="btn-close"
-                                                                            data-bs-dismiss="modal"
-                                                                            aria-label="Close"></button>
+                                                                        <h5 class="modal-title" id="hapusModalLabel">Pemusnahan Barang</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                                     </div>
                                                                     <div class="modal-body">
-                                                                        <input type="hidden" name="kode_detail"
-                                                                            value="{{ $detail->kode_detail }}">
-
+                                                                        <input type="hidden" name="kode_detail" value="{{ $detail->kode_detail }}">
+                            
                                                                         <div class="mb-3">
                                                                             <label>Nama Barang</label>
-                                                                            <input type="text" class="form-control"
-                                                                                value="{{ $barang->nama_barang }}"
-                                                                                readonly>
+                                                                            <input type="text" class="form-control" value="{{ $barang->nama_barang }}" readonly>
                                                                         </div>
-
+                            
                                                                         <div class="mb-3">
                                                                             <label>Detail Barang</label>
-                                                                            <input type="text" class="form-control"
-                                                                                value="Warna: {{ $detail->warna->warna }}, Ukuran: {{ $detail->ukuran }}"
-                                                                                readonly>
+                                                                            <input type="text" class="form-control" value="Warna: {{ $detail->warna->warna }}, Ukuran: {{ $detail->ukuran }}" readonly>
                                                                         </div>
-
+                            
                                                                         <div class="mb-3">
                                                                             <label>Jumlah</label>
-                                                                            <input type="number" name="jumlah"
-                                                                                class="form-control" required min="1"
-                                                                                max="{{ $detail->stok }}">
+                                                                            <input type="number" name="jumlah" class="form-control" required min="1" max="{{ $detail->stok }}">
                                                                         </div>
-
+                            
                                                                         <div class="mb-3">
                                                                             <label>Upload Gambar / Kamera</label>
-                                                                            <input type="file" name="bukti_gambar"
-                                                                                accept="image/*" capture="environment"
-                                                                                class="form-control" required>
+                                                                            <input type="file" name="bukti_gambar" accept="image/*" capture="environment" class="form-control" required>
                                                                         </div>
-
+                            
                                                                         <div class="mb-3">
                                                                             <label>Alasan Pemusnahan</label>
                                                                             <textarea name="alasan" class="form-control" required></textarea>
                                                                         </div>
                                                                     </div>
                                                                     <div class="modal-footer">
-                                                                        <button type="button" class="btn btn-secondary"
-                                                                            data-bs-dismiss="modal">Tutup</button>
-                                                                        <button type="submit" class="btn btn-danger">Ajukan
-                                                                            Pemusnahan</button>
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                                                        <button type="submit" class="btn btn-danger">Ajukan Pemusnahan</button>
                                                                     </div>
                                                                 </div>
                                                             </form>
@@ -183,7 +154,7 @@
                                     @endforeach
                                 </tbody>
                             </table>
-
+                            
                         </div>
                     </div>
                 </div>
@@ -195,26 +166,3 @@
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        .img-thumbnail-square {
-            width: 50%;
-            aspect-ratio: 1 / 1;
-            /* Menjaga rasio 1:1 */
-            object-fit: cover;
-            /* Gambar menutupi area tanpa distorsi */
-            border-radius: 8px;
-            /* Membuat sudut membulat */
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            /* Sedikit bayangan */
-        }
-
-        @media (min-width: 768px) {
-            .col-md-3-custom {
-                flex: 0 0 auto;
-                width: 25%;
-            }
-        }
-    </style>
-@endpush

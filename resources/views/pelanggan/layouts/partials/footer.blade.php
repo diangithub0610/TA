@@ -94,7 +94,7 @@
         </div>
         
         <div class="border-t border-gray-700 mt-8 pt-6">
-            <p class="text-center text-gray-400 text-sm">© 2025 Sneakers Shop. Hak Cipta Dilindungi.</p>
+            <p class="text-center text-gray-400 text-sm">© 2025 Sneakers golden.</p>
         </div>
     </div>
 </footer>

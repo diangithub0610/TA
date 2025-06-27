@@ -47,7 +47,7 @@
         <form method="GET" id="filterForm" style="display: none;">
             <input type="hidden" name="status" id="statusFilter" value="{{ request('status') }}">
         </form>
-
+{{-- {{ dd('asa') }} --}}
         <!-- Orders List -->
         <div class="row g-3">
             @forelse($transaksi as $item)
@@ -360,21 +360,21 @@
             document.getElementById('filterForm').submit();
         }
 
-        // Maintain other JavaScript functions from original code
-        function lihatDetail(kodeTransaksi) {
-            // Your existing detail view function
-        }
+        // // Maintain other JavaScript functions from original code
+        // function lihatDetail(kodeTransaksi) {
+        //     // Your existing detail view function
+        // }
 
-        function terimaTransaksi(kodeTransaksi) {
-            // Your existing accept transaction function
-        }
+        // function terimaTransaksi(kodeTransaksi) {
+        //     // Your existing accept transaction function
+        // }
 
-        function tolakTransaksi(kodeTransaksi) {
-            // Your existing reject transaction function
-        }
+        // function tolakTransaksi(kodeTransaksi) {
+        //     // Your existing reject transaction function
+        // }
 
-        function updateStatus(kodeTransaksi, status) {
-            // Your existing update status function
-        }
+        // function updateStatus(kodeTransaksi, status) {
+        //     // Your existing update status function
+        // }
     </script>
 @endpush

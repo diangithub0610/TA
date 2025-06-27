@@ -70,40 +70,6 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="kode_brand" class="form-label">Brand</label>
-                                        <select class="form-select @error('kode_brand') is-invalid @enderror"
-                                            id="kode_brand" name="kode_brand" required>
-                                            <option value="">Pilih Brand</option>
-                                            @foreach ($brands as $brand)
-                                                <option value="{{ $brand->kode_brand }}"
-                                                    {{ old('kode_brand', isset($barang_masuk) ? $selectedBrand : '') == $brand->kode_brand ? 'selected' : '' }}>
-                                                    {{ $brand->nama_brand }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('kode_brand')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="nama_barang" class="form-label">Nama Produk</label>
-                                        <select class="form-select @error('nama_barang') is-invalid @enderror"
-                                            id="nama_barang" name="nama_barang" required disabled>
-                                            <option value="">Pilih Brand terlebih dahulu</option>
-                                        </select>
-                                        @error('nama_barang')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label for="bukti_pembelian" class="form-label">Bukti Pembelian</label>
@@ -149,75 +115,177 @@
                                     </div>
                                 </div>
                             </div>
-
                             <hr>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <h5>Detail Barang Masuk
-                                        <button type="button" class="btn btn-success btn-sm ms-2" id="tambah-detail-btn"
-                                            disabled>
-                                            <i class="fas fa-plus"></i> Tambah Detail
-                                        </button>
-                                        <button type="button" class="btn btn-info btn-sm ms-2" id="tambah-barang-baru-btn">
-                                            <i class="fas fa-plus-circle"></i> Tambah Barang Baru
-                                        </button>
 
-                                    </h5>
-                                </div>
-                            </div>
+                            <div class="container">
+                                <h4>Form Barang Masuk</h4>
+                                <form action="{{ route('barang-masuk.store') }}" method="POST"
+                                    enctype="multipart/form-data" id="barangMasukForm">
+                                    @csrf
 
-                            <!-- Update bagian detail-container -->
-                            <div id="detail-container">
-                                @if (isset($barang_masuk) && $barang_masuk->detailBarangMasuk->count() > 0)
-                                    @foreach ($barang_masuk->detailBarangMasuk as $index => $detail)
-                                        <div class="detail-row row mb-3">
-                                            <div class="col-md-4">
-                                                <select class="form-select detail-barang-select"
-                                                    name="detail_barang[{{ $index }}][kode_detail]" required>
-                                                    <option value="">Pilih Detail Barang</option>
-                                                    @foreach ($detailBarangs as $detailBarang)
-                                                        <option value="{{ $detailBarang->kode_detail }}"
-                                                            {{ $detail->kode_detail == $detailBarang->kode_detail ? 'selected' : '' }}>
-                                                            {{ $detailBarang->warna }} - {{ $detailBarang->ukuran }}
+                                    <!-- Pilih Brand -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="kode_brand" class="form-label">Brand</label>
+                                                <select class="form-select @error('kode_brand') is-invalid @enderror" 
+                                                        id="kode_brand" name="kode_brand" required>
+                                                    <option value="">Pilih Brand</option>
+                                                    @foreach ($brands as $brand)
+                                                        <option value="{{ $brand->kode_brand }}" 
+                                                                {{ old('kode_brand', $selectedBrand ?? '') == $brand->kode_brand ? 'selected' : '' }}>
+                                                            {{ $brand->nama_brand }}
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                                @error('kode_brand')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
-                                            <div class="col-md-2">
-                                                <input type="number" class="form-control jumlah-input"
-                                                    name="detail_barang[{{ $index }}][jumlah]"
-                                                    placeholder="Jumlah" value="{{ $detail->jumlah }}" min="1"
-                                                    required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rp</span>
-                                                    <input type="number" class="form-control harga-input"
-                                                        name="detail_barang[{{ $index }}][harga_barang_masuk]"
-                                                        placeholder="Harga Satuan"
-                                                        value="{{ $detail->harga_barang_masuk }}" min="1000"
-                                                        required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rp</span>
-                                                    <input type="text" class="form-control total-input"
-                                                        placeholder="Total" readonly>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-1 d-flex align-items-end">
-                                                <button type="button" class="btn btn-danger remove-detail-btn">
-                                                    <i class="fas fa-trash"></i>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Dinamis Produk -->
+                                    <div class="d-flex justify-content-between align-items-center my-3">
+                                        <h5>Daftar Produk</h5>
+                                        <button type="button" class="btn btn-success btn-sm" id="tambah-produk-btn">
+                                            <i class="fas fa-plus"></i> Tambah Produk
+                                        </button>
+                                    </div>
+
+                                    <div id="produk-container">
+                                        <!-- Produk akan ditambahkan via JavaScript -->
+                                    </div>
+
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Simpan Barang Masuk
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+
+                            <hr>
+
+
+                            <!-- Update bagian detail-container -->
+                            <div id="produk-container">
+                                @if (isset($barangMasuk) && $barangMasuk->detailBarangMasuk->count() > 0)
+                                    @foreach ($barangMasuk->detailBarangMasuk->groupBy('kode_barang') as $kodeBarang => $details)
+                                        @php
+                                            $firstDetail = $details->first();
+                                            $barangData = DB::table('barang')
+                                                ->where('kode_barang', $kodeBarang)
+                                                ->first();
+                                        @endphp
+                                        <div class="produk-item border rounded p-3 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="mb-0">Produk</h6>
+                                                <button type="button"
+                                                    class="btn btn-outline-danger btn-sm hapus-produk-btn">
+                                                    <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Pilih Produk</label>
+                                                    <select class="form-select produk-select" name="produk[]" required>
+                                                        <option value="">Pilih Produk</option>
+                                                        @foreach ($barangs as $barang)
+                                                            <option value="{{ $barang->kode_barang }}"
+                                                                {{ $kodeBarang == $barang->kode_barang ? 'selected' : '' }}>
+                                                                {{ $barang->nama_barang }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Nama Produk</label>
+                                                    <input type="text" class="form-control nama-produk-input"
+                                                        name="nama_produk[]" value="{{ $barangData->nama_barang ?? '' }}"
+                                                        placeholder="Nama akan terisi otomatis" readonly>
+                                                </div>
+                                            </div>
+
+                                            <div class="detail-barang-container">
+                                                @foreach ($details as $index => $detail)
+                                                    @php
+                                                        $detailBarangData = DB::table('detail_barang')
+                                                            ->join(
+                                                                'warna',
+                                                                'detail_barang.kode_warna',
+                                                                '=',
+                                                                'warna.kode_warna',
+                                                            )
+                                                            ->where('detail_barang.kode_detail', $detail->kode_detail)
+                                                            ->select('detail_barang.*', 'warna.warna')
+                                                            ->first();
+                                                    @endphp
+                                                    <div class="detail-item row mb-2">
+                                                        <div class="col-md-3">
+                                                            <select class="form-select detail-select"
+                                                                name="detail_barang[{{ $kodeBarang }}][]" required>
+                                                                <option value="">Pilih Detail</option>
+                                                                <option value="{{ $detail->kode_detail }}" selected>
+                                                                    {{ $detailBarangData->warna ?? '' }} -
+                                                                    {{ $detailBarangData->ukuran ?? '' }}
+                                                                </option>
+                                                            </select>
+                                                            <input type="hidden"
+                                                                name="kode_detail[{{ $kodeBarang }}][]"
+                                                                value="{{ $detail->kode_detail }}">
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <input type="number" class="form-control"
+                                                                name="jumlah[{{ $kodeBarang }}][]"
+                                                                value="{{ $detail->jumlah }}" placeholder="Jumlah"
+                                                                min="1" required>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="input-group">
+                                                                <span class="input-group-text">Rp</span>
+                                                                <input type="number" class="form-control"
+                                                                    name="harga_barang_masuk[{{ $kodeBarang }}][]"
+                                                                    value="{{ $detail->harga_barang_masuk }}"
+                                                                    placeholder="Harga" min="1000" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <input type="number" class="form-control"
+                                                                name="stok_minimum[{{ $kodeBarang }}][]"
+                                                                value="{{ $detailBarangData->stok_minimum ?? '' }}"
+                                                                placeholder="Stok Min" min="0">
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <div class="d-flex">
+                                                                <input type="number" class="form-control me-1"
+                                                                    name="potongan_harga[{{ $kodeBarang }}][]"
+                                                                    value="{{ $detailBarangData->potongan_harga ?? '' }}"
+                                                                    placeholder="Diskon" min="0">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-danger btn-sm hapus-detail-btn">
+                                                                    <i class="fas fa-minus"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+
+                                            <button type="button"
+                                                class="btn btn-outline-success btn-sm tambah-detail-btn mt-2">
+                                                <i class="fas fa-plus"></i> Tambah Detail
+                                            </button>
                                         </div>
                                     @endforeach
                                 @endif
                             </div>
 
-                            <div class="row mt-3">
+                            {{-- <div class="row mt-3">
                                 <div class="col-md-8"></div>
                                 <div class="col-md-4">
                                     <div class="card bg-light">
@@ -227,13 +295,13 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="d-flex justify-content-between mt-3">
                                 <a href="{{ route('barang-masuk.index') }}" class="btn btn-secondary">Kembali</a>
-                                <button type="submit" class="btn btn-primary">
+                                {{-- <button type="submit" class="btn btn-primary">
                                     {{ isset($barang_masuk) ? 'Update' : 'Simpan' }}
-                                </button>
+                                </button> --}}
                             </div>
                         </form>
 
@@ -369,109 +437,6 @@
                             </div>
                         </div>
 
-                        <!-- Modal Tambah Barang Baru -->
-                        {{-- <div class="modal fade" id="tambahBarangModal" tabindex="-1"
-                            aria-labelledby="tambahBarangModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="tambahBarangModalLabel">Tambah Barang Baru</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form id="tambahBarangForm">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="new_nama_barang" class="form-label">Nama
-                                                            Barang</label>
-                                                        <input type="text" class="form-control" id="new_nama_barang"
-                                                            name="nama_barang" required maxlength="100">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="new_berat" class="form-label">Berat (gram)</label>
-                                                        <input type="number" class="form-control" id="new_berat"
-                                                            name="berat" required min="1">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="new_harga_normal" class="form-label">Harga
-                                                            Normal</label>
-                                                        <input type="number" class="form-control" id="new_harga_normal"
-                                                            name="harga_normal" required min="1000">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="new_kode_tipe" class="form-label">Tipe</label>
-                                                        <select class="form-select" id="new_kode_tipe" name="kode_tipe"
-                                                            required>
-                                                            <option value="">Pilih Tipe</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="new_deskripsi" class="form-label">Deskripsi</label>
-                                                <textarea class="form-control" id="new_deskripsi" name="deskripsi" rows="3"></textarea>
-                                            </div>
-
-                                            <hr>
-                                            <h6>Detail Varian Barang</h6>
-                                            <div id="varian-container">
-                                                <div class="varian-row row mb-3">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Warna</label>
-                                                        <select class="form-select warna-select"
-                                                            name="varian[0][kode_warna]" required>
-                                                            <option value="">Pilih Warna</option>
-                                                            @foreach ($warnas as $warna)
-                                                                <option value="{{ $warna->warna }}">
-                                                                    {{ $warna->warna }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Ukuran</label>
-                                                        <input type="number" class="form-control ukuran-input"
-                                                            name="varian[0][ukuran]" step="0.1" min="0.1"
-                                                            placeholder="Ukuran" required>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Jumlah</label>
-                                                        <input type="number" class="form-control jumlah-varian-input"
-                                                            name="varian[0][jumlah]" min="1" placeholder="Jumlah"
-                                                            required>
-                                                    </div>
-                                                    <div class="col-md-1 d-flex align-items-end">
-                                                        <button type="button" class="btn btn-danger remove-varian-btn"
-                                                            disabled>
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <button type="button" class="btn btn-success btn-sm" id="tambah-varian-btn">
-                                                <i class="fas fa-plus"></i> Tambah Varian
-                                            </button>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Batal</button>
-                                        <button type="button" class="btn btn-primary" id="simpan-barang-btn">Simpan
-                                            Barang</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> --}}
                         <div class="row mt-4" id="barang-baru-section" style="display: none;">
                             <div class="col-md-12">
                                 <div class="card border-info">
@@ -569,13 +534,209 @@
 
 @push('scripts')
     <script>
+        let produkIndex = 0;
+        const warnas = @json($warnas);
+
+        // Event listener untuk tombol tambah produk
+        document.getElementById('tambah-produk-btn').addEventListener('click', function() {
+            const container = document.getElementById('produk-container');
+
+            let warnaOptions = warnas.map(w => `<option value="${w.kode_warna}">${w.warna}</option>`).join('');
+
+            let html = `
+    <div class="produk-section border rounded p-3 mb-4" data-produk-index="${produkIndex}">
+        <div class="mb-3">
+            <label class="form-label">Brand</label>
+            <select class="form-select brand-select" name="produk[${produkIndex}][kode_brand]" required>
+                <option value="">Pilih Brand</option>
+                @foreach ($brands as $brand)
+                    <option value="{{ $brand->kode_brand }}">{{ $brand->nama_brand }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Nama Produk</label>
+            <select class="form-select nama-barang-select" name="produk[${produkIndex}][kode_barang]" required disabled>
+                <option value="">Pilih Brand terlebih dahulu</option>
+            </select>
+        </div>
+
+        <div class="detail-produk-container">
+            <!-- Detail produk akan ditambahkan di sini -->
+        </div>
+
+        <button type="button" class="btn btn-outline-primary btn-sm tambah-detail-btn" disabled>
+            <i class="fas fa-plus"></i> Tambah Detail
+        </button>
+
+        <button type="button" class="btn btn-outline-danger btn-sm hapus-produk-btn ms-2">
+            <i class="fas fa-trash"></i> Hapus Produk
+        </button>
+
+        <hr>
+    </div>`;
+
+            container.insertAdjacentHTML('beforeend', html);
+            produkIndex++;
+        });
+
+        // Event listener untuk perubahan brand dalam produk section
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('brand-select')) {
+                const kodeBrand = e.target.value;
+                const produkSection = e.target.closest('.produk-section');
+                const namaBarangSelect = produkSection.querySelector('.nama-barang-select');
+                const tambahDetailBtn = produkSection.querySelector('.tambah-detail-btn');
+                const detailContainer = produkSection.querySelector('.detail-produk-container');
+
+                // Reset nama barang select
+                namaBarangSelect.innerHTML = '<option value="">Loading...</option>';
+                namaBarangSelect.disabled = true;
+                tambahDetailBtn.disabled = true;
+                detailContainer.innerHTML = '';
+
+                if (kodeBrand) {
+                    // Load produk berdasarkan brand
+                    fetch(`{{ route('barang-masuk.get-produk-by-brand') }}?kode_brand=${kodeBrand}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            namaBarangSelect.innerHTML = '<option value="">Pilih Nama Produk</option>';
+
+                            // Get unique product names
+                            const uniqueProducts = [...new Set(data.map(item => ({
+                                kode_barang: item.kode_barang,
+                                nama_barang: item.nama_barang
+                            })))];
+
+                            uniqueProducts.forEach(produk => {
+                                namaBarangSelect.innerHTML +=
+                                    `<option value="${produk.kode_barang}">${produk.nama_barang}</option>`;
+                            });
+
+                            namaBarangSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            namaBarangSelect.innerHTML = '<option value="">Error loading data</option>';
+                        });
+                } else {
+                    namaBarangSelect.innerHTML = '<option value="">Pilih Brand terlebih dahulu</option>';
+                }
+            }
+        });
+
+        // Event listener untuk perubahan nama produk
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('nama-barang-select')) {
+                const kodeBarang = e.target.value;
+                const produkSection = e.target.closest('.produk-section');
+                const tambahDetailBtn = produkSection.querySelector('.tambah-detail-btn');
+                const detailContainer = produkSection.querySelector('.detail-produk-container');
+
+                // Reset detail container
+                detailContainer.innerHTML = '';
+
+                if (kodeBarang) {
+                    // Enable tambah detail button
+                    tambahDetailBtn.disabled = false;
+
+                    // Store kode_barang in produk section for later use
+                    produkSection.dataset.kodeBarang = kodeBarang;
+                } else {
+                    tambahDetailBtn.disabled = true;
+                    delete produkSection.dataset.kodeBarang;
+                }
+            }
+        });
+
+        // Event listener untuk tombol tambah detail
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tambah-detail-btn')) {
+                const produkSection = e.target.closest('.produk-section');
+                const kodeBarang = produkSection.dataset.kodeBarang;
+                const produkIndex = produkSection.dataset.produkIndex;
+                const detailContainer = produkSection.querySelector('.detail-produk-container');
+                const detailIndex = detailContainer.querySelectorAll('.detail-row').length;
+
+                if (!kodeBarang) {
+                    alert('Pilih nama produk terlebih dahulu');
+                    return;
+                }
+
+                // Load detail barang (warna dan ukuran) berdasarkan kode_barang
+                fetch(`{{ route('barang-masuk.get-detail-by-barang') }}?kode_barang=${kodeBarang}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            alert('Tidak ada detail barang untuk produk ini');
+                            return;
+                        }
+
+                        // Create options for warna-ukuran combination
+                        let detailOptions = data.map(detail =>
+                            `<option value="${detail.kode_detail}" data-warna="${detail.warna}" data-ukuran="${detail.ukuran}">
+                        ${detail.warna} - ${detail.ukuran}
+                    </option>`
+                        ).join('');
+
+                        let detailHtml = `
+                    <div class="row detail-row mb-2">
+                        <div class="col-md-3">
+                            <select class="form-select detail-select" name="produk[${produkIndex}][detail][${detailIndex}][kode_detail]" required>
+                                <option value="">Pilih Warna - Ukuran</option>
+                                ${detailOptions}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" name="produk[${produkIndex}][detail][${detailIndex}][jumlah]" placeholder="Jumlah" min="1" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" name="produk[${produkIndex}][detail][${detailIndex}][harga_barang_masuk]" placeholder="Harga" min="1000" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" name="produk[${produkIndex}][detail][${detailIndex}][stok_minimum]" placeholder="Stok Minimum" min="0" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" name="produk[${produkIndex}][detail][${detailIndex}][potongan_harga]" placeholder="Potongan Harga" min="0">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm hapus-detail-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+
+                        detailContainer.insertAdjacentHTML('beforeend', detailHtml);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error loading detail barang');
+                    });
+            }
+        });
+
+        // Event listener untuk hapus detail
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('hapus-detail-btn')) {
+                e.target.closest('.detail-row').remove();
+            }
+        });
+
+        // Event listener untuk hapus produk
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('hapus-produk-btn')) {
+                if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                    e.target.closest('.produk-section').remove();
+                }
+            }
+        });
+
+        // jQuery code untuk bagian lainnya
         $(document).ready(function() {
             let detailIndex = {{ isset($barang_masuk) ? $barang_masuk->detailBarangMasuk->count() : 0 }};
             let varianIndex = 1;
             let availableBarangs = [];
-
-            // Tambahkan di dalam $(document).ready(function() {})
-
             let detailModalIndex = 1;
 
             // Preview gambar untuk modal
@@ -606,14 +767,12 @@
                 <input type="text" class="form-control ukuran-modal-input" name="detail_warnas[${detailModalIndex}][ukuran]" 
                    placeholder="Ukuran (mis: 42, 41.5)" pattern="^\\d+(\\.\\d+)?$" required>
             </div>
-          
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-danger remove-detail-modal-btn">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
-        </div>
-    `;
+        </div>`;
 
                 $('#detail-modal-container').append(detailHtml);
                 detailModalIndex++;
@@ -632,79 +791,7 @@
                 $('.remove-detail-modal-btn').prop('disabled', modalRowCount <= 1);
             }
 
-            // Simpan barang baru
-            $('#simpan-barang-btn').click(function() {
-                const formData = new FormData($('#tambahBarangForm')[0]);
-
-                $.ajax({
-                    url: '{{ route('barang.store') }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Barang berhasil ditambahkan');
-                            $('#tambahBarangModal').modal('hide');
-
-                            // Reset form
-                            $('#tambahBarangForm')[0].reset();
-                            $('#new-image-preview').hide();
-
-                            // Reset detail container ke kondisi awal
-                            $('#detail-modal-container').html(`
-                    <div class="detail-modal-row row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Warna</label>
-                            <select class="form-select warna-modal-select" name="detail_warnas[0][kode_warna]" required>
-                                <option value="">Pilih Warna</option>
-                                @foreach ($warnas as $warna)
-                                    <option value="{{ $warna->kode_warna }}">{{ $warna->warna }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Ukuran</label>
-                            <input type="text" class="form-control ukuran-modal-input" name="detail_warnas[0][ukuran]" 
-                                   placeholder="Ukuran (mis: 42, 41.5)" pattern="^\\d+(\\.\\d+)?$" required>
-                        </div>
-                    
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger remove-detail-modal-btn" disabled>
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `);
-                            detailModalIndex = 1;
-
-                            // Refresh data barang jika brand sudah dipilih
-                            if ($('#kode_brand').val()) {
-                                $('#kode_brand').trigger('change');
-                            }
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
-                    },
-                    error: function(xhr) {
-                        const errors = xhr.responseJSON?.errors;
-                        if (errors) {
-                            let errorMessage = 'Validation errors:\n';
-                            Object.keys(errors).forEach(key => {
-                                errorMessage += `- ${errors[key][0]}\n`;
-                            });
-                            alert(errorMessage);
-                        } else {
-                            alert('Terjadi kesalahan saat menyimpan data');
-                        }
-                    }
-                });
-            });
-
-            // Event listener untuk perubahan brand
+            // Event listener untuk perubahan brand (untuk form utama jika ada)
             $('#kode_brand').change(function() {
                 const kodeBrand = $(this).val();
                 const namaProdukSelect = $('#nama_barang');
@@ -713,7 +800,6 @@
                     true);
 
                 if (kodeBrand) {
-                    // Get unique product names by brand
                     $.ajax({
                         url: '{{ route('barang-masuk.get-produk-by-brand') }}',
                         type: 'GET',
@@ -724,11 +810,15 @@
                             namaProdukSelect.empty().append(
                                 '<option value="">Pilih Nama Produk</option>');
 
-                            const uniqueProducts = [...new Set(response.map(item => item
-                                .nama_barang))];
-                            uniqueProducts.forEach(function(nama) {
+                            const uniqueProducts = [...new Set(response.map(item => ({
+                                kode_barang: item.kode_barang,
+                                nama_barang: item.nama_barang
+                            })))];
+
+                            uniqueProducts.forEach(function(produk) {
                                 namaProdukSelect.append(
-                                    `<option value="${nama}">${nama}</option>`);
+                                    `<option value="${produk.kode_barang}">${produk.nama_barang}</option>`
+                                    );
                             });
 
                             namaProdukSelect.prop('disabled', false);
@@ -740,32 +830,28 @@
                         }
                     });
 
-                    // Load tipe untuk modal tambah barang
                     loadTipeByBrand(kodeBrand);
                 } else {
                     namaProdukSelect.empty().append(
-                        '<option value="">Pilih Brand terlebih dahulu</option>');
+                    '<option value="">Pilih Brand terlebih dahulu</option>');
                     resetDetailSection();
                 }
             });
 
-            // Event listener untuk perubahan nama produk
+            // Event listener untuk perubahan nama produk (untuk form utama jika ada)
             $('#nama_barang').change(function() {
-                const namaProduk = $(this).val();
+                const kodeBarang = $(this).val();
                 const kodeBrand = $('#kode_brand').val();
 
-                if (namaProduk && kodeBrand) {
-                    // Load detail barang berdasarkan nama produk
+                if (kodeBarang && kodeBrand) {
                     $.ajax({
-                        url: '{{ route('barang-masuk.get-detail-by-produk') }}',
+                        url: '{{ route('barang-masuk.get-detail-by-barang') }}',
                         type: 'GET',
                         data: {
-                            nama_barang: namaProduk,
-                            kode_brand: kodeBrand
+                            kode_barang: kodeBarang
                         },
                         success: function(response) {
-                            availableBarangs =
-                                response; // Update available barangs dengan detail barang
+                            availableBarangs = response;
                             $('#tambah-detail-btn, #tambah-barang-baru-btn').prop('disabled',
                                 false);
                         },
@@ -781,7 +867,6 @@
                 }
             });
 
-
             // Fungsi untuk load tipe berdasarkan brand
             function loadTipeByBrand(kodeBrand) {
                 $.ajax({
@@ -795,7 +880,7 @@
                         tipes.forEach(function(tipe) {
                             $('#new_kode_tipe').append(
                                 `<option value="${tipe.kode_tipe}">${tipe.nama_tipe}</option>`
-                            );
+                                );
                         });
                     }
                 });
@@ -807,9 +892,10 @@
                 updateGrandTotal();
             }
 
+            // Tambah detail untuk form utama
             $('#tambah-detail-btn').click(function() {
-                const namaProduk = $('#nama_barang').val();
-                if (!namaProduk) {
+                const kodeBarang = $('#nama_barang').val();
+                if (!kodeBarang) {
                     alert('Pilih nama produk terlebih dahulu');
                     return;
                 }
@@ -847,12 +933,12 @@
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
-        </div>
-    `;
+        </div>`;
 
                 $('#detail-container').append(detailHtml);
                 detailIndex++;
             });
+
             // Remove detail barang
             $(document).on('click', '.remove-detail-btn', function() {
                 $(this).closest('.detail-row').remove();
@@ -886,68 +972,12 @@
                 $('#tambahBarangModal').modal('show');
             });
 
-            // Tambah varian dalam modal
-            $('#tambah-varian-btn').click(function() {
-                const varianHtml = `
-            <div class="varian-row row mb-3">
-                <div class="col-md-4">
-                    <select class="form-select warna-select" name="varian[${varianIndex}][kode_warna]" required>
-                        <option value="">Pilih Warna</option>
-                        @foreach ($warnas as $warna)
-                            <option value="{{ $warna->kode_warna }}">{{ $warna->warna }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <input type="number" class="form-control ukuran-input" name="varian[${varianIndex}][ukuran]" 
-                           step="0.1" min="0.1" placeholder="Ukuran" required>
-                </div>
-                <div class="col-md-3">
-                    <input type="number" class="form-control jumlah-varian-input" name="varian[${varianIndex}][jumlah]" 
-                           min="1" placeholder="Jumlah" required>
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger remove-varian-btn">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-
-                $('#varian-container').append(varianHtml);
-                varianIndex++;
-                updateRemoveVarianButtons();
-            });
-
-            // Remove varian
-            $(document).on('click', '.remove-varian-btn', function() {
-                $(this).closest('.varian-row').remove();
-                updateRemoveVarianButtons();
-            });
-
-            // Update status tombol remove varian
-            function updateRemoveVarianButtons() {
-                const varianCount = $('.varian-row').length;
-                $('.remove-varian-btn').prop('disabled', varianCount <= 1);
-            }
-
             // Simpan barang baru
             $('#simpan-barang-btn').click(function() {
                 const formData = new FormData($('#tambahBarangForm')[0]);
 
-                // Tambahkan data varian
-                $('.varian-row').each(function(index) {
-                    const kodeWarna = $(this).find('.warna-select').val();
-                    const ukuran = $(this).find('.ukuran-input').val();
-                    const jumlah = $(this).find('.jumlah-varian-input').val();
-
-                    formData.append(`varian[${index}][kode_warna]`, kodeWarna);
-                    formData.append(`varian[${index}][ukuran]`, ukuran);
-                    formData.append(`varian[${index}][jumlah]`, jumlah);
-                });
-
                 $.ajax({
-                    url: '{{ route('barang-masuk.store-barang-baru') }}',
+                    url: '{{ route('barang.store') }}',
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -960,38 +990,37 @@
                             alert('Barang berhasil ditambahkan');
                             $('#tambahBarangModal').modal('hide');
                             $('#tambahBarangForm')[0].reset();
-                            $('#varian-container').html(`
-                        <div class="varian-row row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Warna</label>
-                                <select class="form-select warna-select" name="varian[0][kode_warna]" required>
-                                    <option value="">Pilih Warna</option>
-                                    @foreach ($warnas as $warna)
-                                        <option value="{{ $warna->kode_warna }}">{{ $warna->warna }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Ukuran</label>
-                                <input type="number" class="form-control ukuran-input" name="varian[0][ukuran]" 
-                                       step="0.1" min="0.1" placeholder="Ukuran" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Jumlah</label>
-                                <input type="number" class="form-control jumlah-varian-input" name="varian[0][jumlah]" 
-                                       min="1" placeholder="Jumlah" required>
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger remove-varian-btn" disabled>
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `);
-                            varianIndex = 1;
+                            $('#new-image-preview').hide();
 
-                            // Refresh data barang
-                            $('#kode_brand').trigger('change');
+                            // Reset detail container ke kondisi awal
+                            $('#detail-modal-container').html(`
+                    <div class="detail-modal-row row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Warna</label>
+                            <select class="form-select warna-modal-select" name="detail_warnas[0][kode_warna]" required>
+                                <option value="">Pilih Warna</option>
+                                @foreach ($warnas as $warna)
+                                    <option value="{{ $warna->kode_warna }}">{{ $warna->warna }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Ukuran</label>
+                            <input type="text" class="form-control ukuran-modal-input" name="detail_warnas[0][ukuran]" 
+                                   placeholder="Ukuran (mis: 42, 41.5)" pattern="^\\d+(\\.\\d+)?$" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger remove-detail-modal-btn" disabled>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`);
+                            detailModalIndex = 1;
+
+                            // Refresh data barang jika brand sudah dipilih
+                            if ($('#kode_brand').val()) {
+                                $('#kode_brand').trigger('change');
+                            }
                         } else {
                             alert('Error: ' + response.message);
                         }
@@ -1014,5 +1043,82 @@
             // Initialize calculations for existing data
             $('.jumlah-input, .harga-input').trigger('input');
         });
+        document.getElementById('kode_brand').addEventListener('change', function() {
+    const kodeBrand = this.value;
+    const produkSelects = document.querySelectorAll('.produk-select');
+    
+    // Clear semua produk select
+    produkSelects.forEach(select => {
+        select.innerHTML = '<option value="">Pilih Produk</option>';
+    });
+    
+    if (kodeBrand) {
+        fetch(`{{ route('barang-masuk.get-produk-by-brand') }}?kode_brand=${kodeBrand}`)
+            .then(response => response.json())
+            .then(data => {
+                produkSelects.forEach(select => {
+                    data.forEach(produk => {
+                        const option = document.createElement('option');
+                        option.value = produk.kode_barang;
+                        option.textContent = produk.nama_barang;
+                        select.appendChild(option);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengambil data produk');
+            });
+    }
+});
+
+// JavaScript untuk handle produk selection dan load detail
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('produk-select')) {
+        const kodeBarang = e.target.value;
+        const produkItem = e.target.closest('.produk-item');
+        const namaProdukInput = produkItem.querySelector('.nama-produk-input');
+        const detailSelects = produkItem.querySelectorAll('.detail-select');
+        
+        // Set nama produk
+        if (kodeBarang) {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            namaProdukInput.value = selectedOption.textContent;
+        } else {
+            namaProdukInput.value = '';
+        }
+        
+        // Clear dan load detail
+        detailSelects.forEach(select => {
+            select.innerHTML = '<option value="">Pilih Detail</option>';
+        });
+        
+        if (kodeBarang) {
+            fetch(`{{ route('barang-masuk.get-produk-by-brand') }}?kode_barang=${kodeBarang}`)
+                .then(response => response.json())
+                .then(data => {
+                    detailSelects.forEach(select => {
+                        data.forEach(detail => {
+                            const option = document.createElement('option');
+                            option.value = detail.kode_detail;
+                            option.textContent = `${detail.warna} - ${detail.ukuran}`;
+                            select.appendChild(option);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat mengambil detail barang');
+                });
+        }
+    }
+});
+
+// Auto-trigger brand change jika sudah ada selectedBrand
+@if(isset($selectedBrand) && $selectedBrand)
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('kode_brand').dispatchEvent(new Event('change'));
+});
+@endif
     </script>
 @endpush

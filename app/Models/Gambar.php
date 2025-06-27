@@ -2,10 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Gambar extends Model
 {
-    use HasFactory;
+    protected $table = 'gambar';
+    protected $primaryKey = 'kode_gambar';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'kode_barang', 'gambar'
+    ];
+
+    public function barang()
+    {
+        return $this->belongsTo(Barang::class, 'kode_barang');
+    }
 }

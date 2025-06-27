@@ -17,7 +17,11 @@ class DetailBarang extends Model
         'kode_barang',
         'stok',
         'ukuran',
-        'kode_warna'
+        'kode_warna',
+        'harga_beli',
+        'harga_normal',
+        'stok_minimum',
+        'potongan_harga',
     ];
 
     // Relasi dengan Barang
@@ -31,14 +35,6 @@ class DetailBarang extends Model
     {
         return $this->belongsTo(Warna::class, 'kode_warna', 'kode_warna');
     }
-
-    // Method untuk generate kode detail barang
-    // public static function generateKodeDetail($kode_barang, $kode_warna, $nextNumber = 1)
-    // {
-    //     $prefix = "{$kode_barang}-{$kode_warna}";
-    //     $formattedNumber = str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
-    //     return "{$prefix}-{$formattedNumber}";
-    // }
 
     public static function generateKodeDetail($kode_barang, $kode_warna, $nextNumber = 1)
 {
