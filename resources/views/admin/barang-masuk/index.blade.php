@@ -49,13 +49,15 @@
                                             <td>{{ \Carbon\Carbon::parse($item->tanggal_masuk)->format('d/m/Y') }}</td>
                                             <td>{{ $item->admin->nama_admin ?? 'Unknown' }}</td>
                                             <td>
-                                                @if($item->bukti_pembelian)
-                                                    <a href="{{ Storage::url($item->bukti_pembelian) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                @if (!empty($item->bukti_pembelian) && Storage::disk('public')->exists($item->bukti_pembelian))
+                                                    <a href="{{ asset('storage/' . $item->bukti_pembelian) }}"
+                                                        target="_blank" class="btn btn-sm btn-outline-primary">
                                                         <i class="fas fa-file-alt"></i> Lihat
                                                     </a>
                                                 @else
                                                     <span class="badge badge-secondary">Tidak Ada</span>
                                                 @endif
+
                                             </td>
                                             {{-- <td>
                                                 <span class="badge badge-primary">
@@ -72,11 +74,13 @@
                                                         class="btn btn-sm btn-warning me-2" title="Edit">
                                                         <i class="fas fa-edit text-white"></i>
                                                     </a>
-                                                    <form action="{{ route('barang-masuk.destroy', $item->kode_pembelian) }}"
+                                                    <form
+                                                        action="{{ route('barang-masuk.destroy', $item->kode_pembelian) }}"
                                                         method="POST" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger delete-btn" title="Hapus">
+                                                        <button type="submit" class="btn btn-sm btn-danger delete-btn"
+                                                            title="Hapus">
                                                             <i class="fas fa-trash-alt"></i>
                                                         </button>
                                                     </form>
@@ -115,42 +119,42 @@
 @endsection
 
 @push('scripts')
-<script>
-    $(document).ready(function() {
-    
+    <script>
+        $(document).ready(function() {
 
-        // Delete confirmation
-        $('.delete-btn').on('click', function(e) {
-            e.preventDefault();
-            const form = $(this).closest('form');
-            
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
+
+            // Delete confirmation
+            $('.delete-btn').on('click', function(e) {
+                e.preventDefault();
+                const form = $(this).closest('form');
+
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: "Data yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+
+            // Optional: Quick view detail in modal
+            $('.quick-detail').on('click', function(e) {
+                e.preventDefault();
+                const kodePembelian = $(this).data('kode');
+
+                // Load detail via AJAX (optional)
+                $.get(`/barang-masuk/${kodePembelian}/quick-detail`, function(data) {
+                    $('#modalContent').html(data);
+                    $('#detailModal').modal('show');
+                });
             });
         });
-
-        // Optional: Quick view detail in modal
-        $('.quick-detail').on('click', function(e) {
-            e.preventDefault();
-            const kodePembelian = $(this).data('kode');
-            
-            // Load detail via AJAX (optional)
-            $.get(`/barang-masuk/${kodePembelian}/quick-detail`, function(data) {
-                $('#modalContent').html(data);
-                $('#detailModal').modal('show');
-            });
-        });
-    });
-</script>
+    </script>
 @endpush
