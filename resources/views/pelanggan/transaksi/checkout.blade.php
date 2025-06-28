@@ -115,7 +115,7 @@
                             @else
                                 <div class="text-center py-4">
                                     <p class="text-gray-500 mb-4">Anda belum memiliki alamat pengiriman</p>
-                                    <button type="button" id="btnTambahAlamat"
+                                    <button type="button" id="btnTambahAlamatIcon"
                                         class="btn-tambah-alamat bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90">
                                         Tambah Alamat Baru
                                     </button>
@@ -917,11 +917,16 @@
             // Modal Alamat
             const modalAlamat = document.getElementById('modalAlamat');
             const btnTambahAlamat = document.getElementById('btnTambahAlamat');
+            const btnTambahAlamatIcon = document.getElementById('btnTambahAlamatIcon');
             const btnBatalAlamat = document.getElementById('btnBatalAlamat');
             const closeModal = document.getElementById('closeModal');
             const formAlamat = document.getElementById('formAlamat');
 
             btnTambahAlamat.addEventListener('click', function() {
+                modalAlamat.classList.remove('hidden');
+            });
+
+            btnTambahAlamatIcon.addEventListener('click', function () {
                 modalAlamat.classList.remove('hidden');
             });
 
