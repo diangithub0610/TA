@@ -20,7 +20,7 @@ class DetailBarang extends Model
         'stok',
         'ukuran',
         'kode_warna',
-        'harga_beli',
+        // 'harga_beli',
         'harga_normal',
         'stok_minimum',
         'potongan_harga',
