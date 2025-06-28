@@ -9,7 +9,7 @@ class Pelanggan extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'Pelanggan';
+    protected $table = 'pelanggan';
     protected $primaryKey = 'id_pelanggan';
     public $incrementing = false;
     public $timestamps = false;
