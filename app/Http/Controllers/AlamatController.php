@@ -74,7 +74,8 @@ class AlamatController extends Controller
 
     public function create()
     {
-        return view('pelanggan.alamat.create');
+        $pelanggan = auth()->guard('pelanggan')->user();
+        return view('pelanggan.alamat.create', compact('pelanggan'));
     }
 
     public function store(AlamatRequest $request)
@@ -98,7 +99,7 @@ class AlamatController extends Controller
             $alamat->kecamatan_id = $validatedData['rajaongkir_id']; // Simpan kecamatan_id
             $alamat->save();
 
-            return redirect()->route('alamat.index')
+            return redirect()->route('profil.alamat')
                 ->with('success', 'Alamat berhasil ditambahkan');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal menyimpan alamat: ' . $e->getMessage()]);
@@ -133,7 +134,7 @@ class AlamatController extends Controller
             $alamat->kecamatan_id = $validatedData['rajaongkir_id']; // Simpan kecamatan_id
             $alamat->save();
 
-            return redirect()->route('alamat.index')
+            return redirect()->route('profil.alamat')
                 ->with('success', 'Alamat berhasil diperbarui');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal memperbarui alamat: ' . $e->getMessage()]);
@@ -145,7 +146,7 @@ class AlamatController extends Controller
         $this->authorize('delete', $alamat);
         $alamat->delete();
 
-        return redirect()->route('alamat.index')
+        return redirect()->route('profil.alamat')
             ->with('success', 'Alamat berhasil dihapus');
     }
 

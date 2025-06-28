@@ -1,6 +1,7 @@
 @extends('pelanggan.layouts.app')
 @section('content')
     <div class="container mx-auto p-6">
+        
         <h1 class="text-2xl font-bold mb-4">Tambah Alamat Baru</h1>
         <form id="alamatForm" action="{{ route('alamat.store') }}" method="POST"
             class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">

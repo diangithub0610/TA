@@ -66,7 +66,7 @@ class PemusnahanBarangController extends Controller
             'kode_detail' => $request->kode_detail,
             'id_admin' => Auth::user()->id_admin,
             'tanggal_pemusnahan' => now(),
-            'jumlah' => $request->jumlah,
+            'jumlah_diajukan' => $request->jumlah,
             'alasan' => $request->alasan,
             'bukti_gambar' => $path,
             'status' => 'diajukan',

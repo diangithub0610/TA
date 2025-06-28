@@ -105,7 +105,7 @@
                     
                     <!-- Export Buttons -->
                     <div class="d-flex gap-2">
-                        <form method="GET" action="{{ route('laporan.barang-terjual.export.pdf') }}"
+                        <form method="GET" action="{{ route('laporan.barang-terjual.export-pdf') }}"
                             style="display: inline;">
                             <input type="hidden" name="brand" value="{{ $request->brand }}">
                             <input type="hidden" name="tipe" value="{{ $request->tipe }}">

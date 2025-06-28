@@ -124,7 +124,9 @@
 
             <div class="mb-4">
                 <label class="inline-flex items-center">
-                    <input type="checkbox" name="is_utama" class="form-checkbox" 
+                    <!-- hidden input to ensure 0 is sent when unchecked -->
+                    <input type="hidden" name="is_utama" value="0">
+                    <input type="checkbox" name="is_utama" value="1" class="form-checkbox"
                         {{ $alamat->is_utama ? 'checked' : '' }}>
                     <span class="ml-2">Jadikan Alamat Utama</span>
                 </label>

@@ -160,7 +160,7 @@
                                             <td>{{ $item->nama_barang }}</td>
                                             <td>{{ $item->nama_brand }}</td>
                                             <td>{{ $item->nama_tipe }}</td>
-                                            <td>{{ number_format($item->jumlah) }}</td>
+                                            <td>{{ number_format($item->jumlah_masuk) }}</td>
                                             <td>Rp {{ number_format($item->harga_barang_masuk, 0, ',', '.') }}</td>
                                             <td>Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
                                             <td>

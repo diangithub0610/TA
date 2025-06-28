@@ -118,13 +118,13 @@
                             <hr>
 
 
-                            <div class="container">
+                            {{-- <div class="container">
                                 <h4>Form Barang Masuk</h4>
                                 <form action="{{ route('barang-masuk.store') }}" method="POST"
                                     enctype="multipart/form-data" id="barangMasukForm">
-                                    @csrf
+                                    @csrf --}}
 
-                                    <!-- Pilih Brand -->
+                                    {{-- <!-- Pilih Brand -->
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
@@ -144,7 +144,7 @@
                                                 @enderror
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
 
 
                                     <!-- Dinamis Produk -->
@@ -262,14 +262,14 @@
                                                         </div>
                                                         <div class="col-md-2">
                                                             <div class="d-flex">
-                                                                <input type="number" class="form-control me-1"
+                                                                {{-- <input type="number" class="form-control me-1"
                                                                     name="potongan_harga[{{ $kodeBarang }}][]"
                                                                     value="{{ $detailBarangData->potongan_harga ?? '' }}"
                                                                     placeholder="Diskon" min="0">
                                                                 <button type="button"
                                                                     class="btn btn-outline-danger btn-sm hapus-detail-btn">
                                                                     <i class="fas fa-minus"></i>
-                                                                </button>
+                                                                </button> --}}
                                                             </div>
                                                         </div>
                                                     </div>

@@ -76,17 +76,17 @@ class ManagementUserController extends Controller
             ->with('success', 'User berhasil ditambahkan');
     }
 
-    public function show($id)
-    {
-        $user = DB::table('pengguna')->where('id_admin', $id)->first();
+    // public function show($id)
+    // {
+    //     $user = DB::table('pengguna')->where('id_admin', $id)->first();
         
-        if (!$user) {
-            return redirect()->route('management-user.index')
-                ->with('error', 'User tidak ditemukan');
-        }
+    //     if (!$user) {
+    //         return redirect()->route('management-user.index')
+    //             ->with('error', 'User tidak ditemukan');
+    //     }
         
-        return view('management-user.show', compact('user'));
-    }
+    //     return view('management-user.show', compact('user'));
+    // }
 
     public function edit($id)
     {
@@ -221,7 +221,7 @@ class ManagementUserController extends Controller
 
     public function showProfile()
     {
-        $pengguna = Auth::user(); // Atau sesuaikan dengan cara authentication Anda
+        $pengguna = Auth::guard('admin')->user();// Atau sesuaikan dengan cara authentication Anda
         return view('profil-pengguna.index', compact('pengguna'));
     }
 
@@ -239,8 +239,7 @@ class ManagementUserController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $pengguna = Auth::user();
-        
+        $pengguna = Auth::guard('admin')->user();
         $request->validate([
             'nama_admin' => 'required|string|max:100',
             'no_hp' => 'required|string|max:15',
@@ -284,12 +283,13 @@ class ManagementUserController extends Controller
      */
     public function updatePassword(Request $request)
     {
+     
         $request->validate([
             'kata_sandi_lama' => 'required',
             'kata_sandi_baru' => 'required|min:6|confirmed',
         ]);
 
-        $pengguna = Auth::user();
+        $pengguna = Auth::guard('admin')->user();
 
         // Verifikasi password lama
         if (!Hash::check($request->kata_sandi_lama, $pengguna->kata_sandi)) {
@@ -308,7 +308,7 @@ class ManagementUserController extends Controller
      */
     public function deleteFotoProfil()
     {
-        $pengguna = Auth::user();
+        $pengguna = Auth::guard('admin')->user();
         
         if ($pengguna->foto_profil && Storage::exists('public/profil/' . $pengguna->foto_profil)) {
             Storage::delete('public/profil/' . $pengguna->foto_profil);
@@ -320,7 +320,7 @@ class ManagementUserController extends Controller
     }
     public function profil()
     {
-        $pengguna = Auth::user(); // atau Auth::guard('admin')->user(); jika pakai guard custom
-        return view('admin.profile.index', compact('pengguna'));
+        $pengguna = Auth::guard('admin')->user();// atau Auth::guard('admin')->user(); jika pakai guard custom
+        return view('profil-pengguna.index', compact('pengguna'));
     }
 }
