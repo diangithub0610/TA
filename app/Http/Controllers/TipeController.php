@@ -26,7 +26,7 @@ class TipeController extends Controller
         $validatedData = $request->validate([
             'nama_tipe' => 'required|max:50',
             'kode_brand' => 'required|exists:brand,kode_brand',
-            'potongan_harga' => 'nullable|numeric|min:0|max:100000000'
+            // 'potongan_harga' => 'nullable|numeric|min:0|max:100000000'
         ]);
     
         // Cek apakah tipe dengan nama dan brand yang sama sudah ada (case insensitive)
@@ -92,10 +92,10 @@ class TipeController extends Controller
         $validatedData = $request->validate([
             'nama_tipe' => 'required|max:50',
             'kode_brand' => 'required|exists:brand,kode_brand',
-            'potongan_harga' => 'nullable|numeric|min:0|max:100000000'
+            // 'potongan_harga' => 'nullable|numeric|min:0|max:100000000'
         ], [
             'kode_brand.exists' => 'Brand tidak valid.',
-            'potongan_harga.max' => 'Potongan harga terlalu besar.'
+            // 'potongan_harga.max' => 'Potongan harga terlalu besar.'
         ]);
 
         $tipe->update($validatedData);

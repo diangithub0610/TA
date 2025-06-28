@@ -36,7 +36,7 @@
                                         <th>Kode Tipe</th>
                                         <th>Nama Tipe</th>
                                         <th>Brand</th>
-                                        <th>Potongan Harga</th>
+                                        {{-- <th>Potongan Harga</th> --}}
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -47,9 +47,9 @@
                                             <td>{{ $tipe->kode_tipe }}</td>
                                             <td>{{ $tipe->nama_tipe }}</td>
                                             <td>{{ $tipe->brand->nama_brand }}</td>
-                                            <td>
+                                            {{-- <td>
                                                 {{ $tipe->formatted_potongan_harga }}
-                                            </td>
+                                            </td> --}}
                                             <td class="text-center">
                                                 <div class="d-flex">
                                                     <a href="{{ route('tipe.edit', $tipe->kode_tipe) }}"

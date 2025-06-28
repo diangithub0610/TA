@@ -17,7 +17,7 @@ class Tipe extends Model
         'kode_tipe',
         'nama_tipe',
         'kode_brand',
-        'potongan_harga'
+        // 'potongan_harga'
     ];
 
     // Relasi dengan Brand
@@ -27,10 +27,10 @@ class Tipe extends Model
     }
 
     // Formatting potongan harga
-    public function getFormattedPotonganHargaAttribute()
-    {
-        return 'Rp ' . number_format($this->potongan_harga, 0, ',', '.');
-    }
+    // public function getFormattedPotonganHargaAttribute()
+    // {
+    //     return 'Rp ' . number_format($this->potongan_harga, 0, ',', '.');
+    // }
 
     public static function generateKodeTipe($nama_tipe, $kode_brand)
     {

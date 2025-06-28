@@ -78,7 +78,7 @@
 
 
                             <div class="col-md-6">
-                                <div class="mb-3">
+                                {{-- <div class="mb-3">
                                     <label for="potongan_harga" class="form-label">Potongan Harga</label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
@@ -93,7 +93,7 @@
                                             {{ $message }}
                                         </div>
                                     @enderror
-                                </div>
+                                </div> --}}
                             </div>
 
                             <div class="d-flex justify-content-between">
