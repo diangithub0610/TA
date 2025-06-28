@@ -99,7 +99,7 @@ Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register', [AuthController::class, 'doRegister'])->name('do.register');
 
 
-Route::get('/', [PelangganController::class, 'beranda'])->name('pelanggan.beranda');
+Route::get('/', [PelangganController::class, 'beranda']);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/dashboard/customer-growth', [DashboardController::class, 'getCustomerGrowth'])->name('dashboard.customer-growth');
