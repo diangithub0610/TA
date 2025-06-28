@@ -14,8 +14,29 @@ class PelangganController extends Controller
 {
     public function beranda()
     {
+        $userRole = Auth::guard('pelanggan')->check()
+            ? Auth::guard('pelanggan')->user()->role
+            : 'guest';
+
         $brands = Brand::all();
-        $barang = Barang::all()->where('is_active', 1);;
+
+        $barang = Barang::with('detailbarang') // ambil relasi
+            ->where('is_active', 1)
+            ->get()
+            ->map(function ($item) use ($userRole) {
+                // Ambil harga termurah berdasarkan role
+                $termurah = $item->detailbarang->min(fn($d) => $d->getHargaByRole($userRole));
+
+                $normal = $item->detailbarang->min(fn($d) => $d->harga_normal);
+
+                // Tambahkan properti baru ke koleksi barang
+                $item->harga_termurah = 'Rp ' . number_format($termurah, 0, ',', '.');
+
+                $item->harganormal = 'Rp ' . number_format($normal, 0, ',', '.');
+
+                return $item;
+            });
+
         return view('pelanggan.beranda.index', compact('barang', 'brands'));
     }
     public function barang(Request $request)
@@ -64,7 +85,6 @@ class PelangganController extends Controller
 
     public function detailBarang($kode_barang)
     {
-        // dd('halo');
         $barang = Barang::with([
             'tipe.brand',
             'detailBarangs.warna',
@@ -72,6 +92,26 @@ class PelangganController extends Controller
         ])->where('kode_barang', $kode_barang)
             ->where('is_active', 1)
             ->firstOrFail();
+
+        $detailByUkuranWarna = [];
+        foreach ($barang->detailBarangs as $detail) {
+            $detailByUkuranWarna[$detail->ukuran][$detail->kode_warna] = [
+                'kode_detail' => $detail->kode_detail,
+                'stok' => (int)$detail->stok,
+                'warna' => $detail->warna->warna,
+                'kode_hex' => $detail->warna->kode_hex,
+                'harga_normal' => (int)$detail->harga_normal,
+                'potongan_harga' => (int)$detail->potongan_harga,
+                'harga_by_role' => (int)$detail->harga_by_role,
+                'formatted_harga_by_role' => $detail->formatted_harga_by_role,
+            ];
+        }
+
+        // Tambahkan informasi role user untuk JavaScript
+        $userRole = 'guest';
+        if (Auth::guard('pelanggan')->check()) {
+            $userRole = Auth::guard('pelanggan')->user()->role;
+        }
 
         $barangTerkait = Barang::with(['tipe.brand'])
             ->where('kode_tipe', $barang->kode_tipe)
@@ -150,7 +190,8 @@ class PelangganController extends Controller
             'averageRating',
             'totalUlasan',
             'canReview',
-            'hasPurchased'
+            'hasPurchased',
+            'userRole' // Tambahkan ini
         ));
     }
     public function resellerLoyal()

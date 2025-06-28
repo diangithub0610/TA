@@ -30,39 +30,47 @@
             <h2 class="text-2xl font-bold mb-8">Produk Terlaris</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Product Card 1 -->
                 @foreach ($barang as $item)
                     <div
-                        class="bg-white rounded shadow-sm border border-gray-100 overflow-hidden transition-transform hover:shadow-md">
+                        class="bg-white rounded shadow-sm border border-gray-100 overflow-hidden transition-transform hover:shadow-md flex flex-col h-full">
                         <div class="relative h-64 overflow-hidden">
                             <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->nama_barang }}"
                                 class="w-full h-full object-cover object-top">
-                            <div class="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded">Terlaris
+                            @if(function_exists('isReseller') && isReseller())
+                                <div class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">Harga Reseller</div>
+                            @else
+                                <div class="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded">Terlaris</div>
+                            @endif
                             </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-bold text-gray-800 mb-1">{{ $item->nama_barang }}</h3>
+                        <div class="p-4 flex flex-col flex-grow">
+                            <h3 class="font-bold text-gray-800 mb-1 min-h-[2.5rem] line-clamp-2">{{ $item->nama_barang }}</h3>
                             <p class="text-sm text-gray-500 mb-1">Ukuran: 40-45</p>
                             <div class="flex star-rating mb-2">
-                                <i class="ri-star-fill"></i>
-                                <i class="ri-star-fill"></i>
-                                <i class="ri-star-fill"></i>
-                                <i class="ri-star-fill"></i>
-                                <i class="ri-star-half-fill"></i>
+                                <i class="ri-star-fill text-yellow-400"></i>
+                                <i class="ri-star-fill text-yellow-400"></i>
+                                <i class="ri-star-fill text-yellow-400"></i>
+                                <i class="ri-star-fill text-yellow-400"></i>
+                                <i class="ri-star-half-fill text-yellow-400"></i>
                                 <span class="text-xs text-gray-500 ml-1">(128)</span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500 line-through">{{ $item->formatted_harga }}</p>
-                                    <p class="text-lg font-bold text-primary">{{ $item->harga_diskon }}</p>
+                            <div class="flex items-center justify-between mt-auto">
+                                <div class="flex flex-col">
+                                    @if(function_exists('isReseller') && isReseller())
+                                        <p class="text-sm text-gray-500 line-through">{{ $item->harganormal }}</p>
+                                        <p class="text-lg font-bold text-green-600">{{ $item->harga_termurah }}</p>
+                                    @elseif(function_exists('isPelanggan') && isPelanggan())
+                                        <p class="text-lg font-bold text-primary">{{ $item->harga_termurah }}</p>
+                                    @else
+                                        <p class="text-lg font-bold text-primary">{{ $item->harga_termurah }}</p>
+                                    @endif
                                 </div>
                                 <a href="{{ route('pelanggan.detailBarang', $item->kode_barang) }}"
-                                    class="bg-primary text-white px-3 py-2 rounded-button flex items-center whitespace-nowrap">
+                                    class="bg-primary text-white px-3 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-primary-dark transition-colors">
                                     <i class="ri-shopping-cart-2-line mr-1"></i> Beli
                                 </a>
                             </div>
                         </div>
-                    </div>
+                </div> 
                 @endforeach
             </div>
         </div>
@@ -75,14 +83,14 @@
 
             <div class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-6">
                 @foreach ($brands as $brand)
-                    <a href="{{ route('pelanggan.produk.byBrand', $brand->kode_brand) }}"
-                        class="bg-white rounded shadow-sm p-4 flex items-center justify-center h-24 hover:shadow-md transition-shadow group">
-                        <div class="w-10 h-10 flex items-center justify-center mr-2">
-                            <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->nama_brand }}"
-                                class="h-12 object-contain group-hover:scale-105 transition-transform">
-                        </div>
-                        <span class="font-medium group-hover:text-primary transition-colors">{{ $brand->nama_brand }}</span>
-                    </a>
+                <a href="{{ route('pelanggan.produk.byBrand', $brand->kode_brand) }}"
+                    class="bg-white rounded shadow-sm p-4 flex items-center justify-center h-24 hover:shadow-md transition-shadow group">
+                    <div class="w-10 h-10 flex items-center justify-center mr-2">
+                        <img src="{{ asset('storage/' . $brand->logo) }}" alt="{{ $brand->nama_brand }}"
+                            class="h-12 object-contain group-hover:scale-105 transition-transform">
+                    </div>
+                    <span class="font-medium group-hover:text-primary transition-colors">{{ $brand->nama_brand }}</span>
+                </a>
                 @endforeach
             </div>
         </div>
@@ -108,37 +116,33 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <!-- Product 1 -->
                 @foreach ($barang as $item)
-                    
-                
-                <div
-                    class="bg-white rounded shadow-sm border border-gray-100 overflow-hidden transition-transform hover:shadow-md">
-                    <div class="h-64 overflow-hidden">
-                        <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->nama_barang }}"
-                        class="w-full h-full object-cover object-top">
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-bold text-gray-800 mb-1">{{ $item->nama_barang }}</h3>
-                        <p class="text-sm text-gray-500 mb-1">Ukuran: 38-45</p>
-                        <div class="flex star-rating mb-2">
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-fill"></i>
-                            <i class="ri-star-line"></i>
-                            <span class="text-xs text-gray-500 ml-1">(87)</span>
+                    <div class="bg-white rounded shadow-sm border border-gray-100 overflow-hidden transition-transform hover:shadow-md">
+                        <div class="h-64 overflow-hidden">
+                            <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->nama_barang }}"
+                                class="w-full h-full object-cover object-top">
                         </div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-500 line-through">{{ $item->formatted_harga }}</p>
-                                <p class="text-lg font-bold text-primary">{{ $item->harga_diskon }}</p>
+                        <div class="p-4">
+                            <h3 class="font-bold text-gray-800 mb-1">{{ $item->nama_barang }}</h3>
+                            <p class="text-sm text-gray-500 mb-1">Ukuran: 38-45</p>
+                            <div class="flex star-rating mb-2">
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-fill"></i>
+                                <i class="ri-star-line"></i>
+                                <span class="text-xs text-gray-500 ml-1">(87)</span>
                             </div>
-                            <button
-                                class="bg-primary text-white px-3 py-2 rounded-button flex items-center whitespace-nowrap">
-                                <i class="ri-shopping-cart-2-line mr-1"></i> Beli
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 line-through">{{ $item->formatted_harga }}</p>
+                                    <p class="text-lg font-bold text-primary">{{ $item->harga_diskon }}</p>
+                                </div>
+                                <button class="bg-primary text-white px-3 py-2 rounded-button flex items-center whitespace-nowrap">
+                                    <i class="ri-shopping-cart-2-line mr-1"></i> Beli
+                                </button>
+                                </div>
+                                </div>
+                                </div>
                 @endforeach
             </div>
 
