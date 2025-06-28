@@ -15,6 +15,7 @@ class BarangMasuk extends Model
     public $timestamps = false;
 
     protected $fillable = ['kode_pembelian', 'id_admin', 'tanggal_masuk', 'bukti_pembelian'];
+    
 
     /**
      * Relationship with detail_barang_masuk

@@ -64,7 +64,7 @@
                                             </td> --}}
                                             <td>
                                                 <div class="d-flex">
-                                                    <a href="{{ route('barang-masuk.show', $item->kode_pembelian) }}"
+                                                    <a href="{{ route('detail-barang-masuk.show', $item->kode_pembelian) }}"
                                                         class="btn btn-sm btn-info me-2" title="Detail">
                                                         <i class="fas fa-eye"></i>
                                                     </a>

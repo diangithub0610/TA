@@ -1,5 +1,5 @@
 @extends('admin.layouts.app')
-@section('title', 'Tipe')
+@section('title', 'persediaan')
 @section('content')
 
     <div class="page-inner">
@@ -44,7 +44,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <select name="brand" class="form-select">
+                            <select name="brand" id= "brand-filter" class="form-select">
                                 <option value="">-- Filter Brand --</option>
                                 @foreach ($brands as $brand)
                                     <option value="{{ $brand->kode_brand }}"
@@ -184,14 +184,17 @@
 
 @endsection
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> --}}
     <script>
         // Script JavaScript tetap sama seperti sebelumnya
         document.addEventListener("DOMContentLoaded", function() {
             // Filter Script
-            document.getElementById("brand-filter").addEventListener("change", function() {
+            const brandFilter = document.getElementById("brand-filter");
+        if (brandFilter) {
+            brandFilter.addEventListener("change", function() {
                 console.log("Filter brand:", this.value);
             });
+        }
 
             // Pagination Script
             document.querySelectorAll(".page-link").forEach(button => {

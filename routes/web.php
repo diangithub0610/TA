@@ -80,6 +80,8 @@ Route::get('/search-location', [AlamatController::class, 'searchLocation'])
 Route::get('/get-saved-addresses', [AlamatController::class, 'getSavedAddresses'])
     ->name('alamat.saved');
 
+
+
 // Route::post('/cek-ongkir', [CheckoutController::class, 'cekOngkir'])->name('checkout.cek-ongkir');
 // Route::get('/search-destination', [CheckoutController::class, 'searchDestination'])->name('checkout.search-destination');
 
@@ -121,6 +123,9 @@ Route::post('/barang-masuk/store-barang-baru', [BarangMasukController::class, 's
 
 Route::get('/barang-masuk/get-detail-by-produk', [BarangMasukController::class, 'getDetailByProduk'])
     ->name('barang-masuk.get-detail-by-produk');
+
+
+    Route::resource('detail-barang-masuk', BarangMasukController::class);
 
 Route::middleware(['auth:admin', 'role:shopkeeper'])->prefix('admin')->name('admin-')->group(function () {
     // Route untuk transaksi
@@ -351,11 +356,11 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
 
     // Laporan Barang Terjual
     Route::get('/transaksi', [LaporanController::class, 'transaksi'])->name('transaksi');
-    // Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportBarangTerjualPdf'])->name('barang-terjual.export-pdf');
+    Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportbarangTerjualPdf'])->name('barang-terjual.export-pdf');
     // Route::get('/barang-terjual/export-excel', [LaporanController::class, 'exportBarangTerjualExcel'])->name('barang-terjual.export-excel');
-    Route::get('/barang-terjual', [LaporanController::class, 'laporanBarangTerjual'])->name('barang-terjual');
+    Route::get('/barang-terjual', [LaporanController::class, 'laporanbarangterjual'])->name('barang-terjual');
 
-    Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportPdfBarangTerjual'])->name('barang-terjual.export.pdf');
+    // Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportPdfBarangTerjual'])->name('barang-terjual.export.pdf');
 
 
     // Laporan Pemusnahan Barang
@@ -370,7 +375,7 @@ Route::get('/pesanan-inv/{kode_transaksi}/invoice', [CustomerOrderController::cl
 
 Route::resource('management-user', ManagementUserController::class);
 Route::patch('management-user/{id}/toggle-status', [ManagementUserController::class, 'toggleStatus'])->name('management-user.toggle-status');
-   
+
 Route::patch('management-user/{id}/reset-password', [ManagementUserController::class, 'resetPassword'])->name('management-user.reset-password');
 
 
@@ -379,12 +384,13 @@ Route::patch('management-user/{id}/reset-password', [ManagementUserController::c
 Route::prefix('barang-masuk')->name('barang-masuk.')->group(function () {
 
     Route::get('/ajax/get-detail-by-barang', [BarangMasukController::class, 'getDetailByBarang'])->name('get-detail-by-barang');
-   
 });
-    
-    // Profile routes
-    Route::get('/profile', [ManagementUserController::class, 'profil'])->name('profile.show');
-    Route::get('/profile/edit', [ManagementUserController::class, 'editProfile'])->name('profile.edit');
-    Route::put('/profile/update', [ManagementUserController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/profile/update-password', [ManagementUserController::class, 'updatePassword'])->name('profile.update-password');
-    Route::delete('/profile/delete-foto', [ManagementUserController::class, 'deleteFotoProfil'])->name('profile.delete-foto');
+
+// Profile routes
+Route::get('/profile', [ManagementUserController::class, 'profil'])->name('profile.show');
+Route::get('/profile/edit', [ManagementUserController::class, 'editProfile'])->name('profile.edit');
+Route::put('/profile/update', [ManagementUserController::class, 'updateProfile'])->name('profile.update');
+Route::post('/profile/update-password', [ManagementUserController::class, 'updatePassword'])->name('profile.update-password');
+Route::delete('/profile/delete-foto', [ManagementUserController::class, 'deleteFotoProfil'])->name('profile.delete-foto');
+
+

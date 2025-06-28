@@ -14,6 +14,7 @@ class Pengguna extends Authenticatable
     protected $table = 'Pengguna';
     protected $primaryKey = 'id_admin';
     public $incrementing = false;
+    public $timestamps = false;
 
     protected $fillable = [
         'id_admin',
@@ -32,10 +33,10 @@ class Pengguna extends Authenticatable
     ];
 
     // Mutator for password hashing
-    public function setKataSandiAttribute($value)
-    {
-        $this->attributes['kata_sandi'] = bcrypt($value);
-    }
+    // public function setKataSandiAttribute($value)
+    // {
+    //     $this->attributes['kata_sandi'] = bcrypt($value);
+    // }
 
     // Check user role methods
     public function isGudang()

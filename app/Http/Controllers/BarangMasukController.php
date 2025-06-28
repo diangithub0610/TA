@@ -205,7 +205,7 @@ public function store(Request $request)
 
                 // Update harga beli dan stok minimum di detail_barang
                 $updateData = [
-                    'harga_beli' => $detail['harga_barang_masuk'],
+                    // 'harga_barang_masuk' => $detail['harga_barang_masuk'],
                     'stok_minimum' => $detail['stok_minimum'],
                 ];
 
@@ -430,7 +430,7 @@ public function update(Request $request, $kode_pembelian)
             // Update stok, harga, stok minimum, dan potongan harga
             $updateData = [
                 'stok' => $detailBarang->stok + $detail['jumlah'],
-                'harga_beli' => $detail['harga_barang_masuk']
+                // 'harga_beli' => $detail['harga_barang_masuk']
             ];
 
             // Tambahkan stok_minimum jika ada
@@ -450,7 +450,7 @@ public function update(Request $request, $kode_pembelian)
             // Update harga beli di tabel barang
             DB::table('barang')
                 ->where('kode_barang', $detailBarang->kode_barang)
-                ->update(['harga_beli' => $detail['harga_barang_masuk']]);
+                ->update(['harga_barang_masuk' => $detail['harga_barang_masuk']]);
         }
 
         DB::commit();
@@ -507,6 +507,20 @@ public function update(Request $request, $kode_pembelian)
 
         return response()->json($tipes);
     }
-    // Method untuk menyimpan barang baru dari form barang masuk
+    public function show($kode_pembelian)
+    {
+        $barangMasuk = BarangMasuk::with('admin')->findOrFail($kode_pembelian);
+        $detailBarangMasuk = DetailBarangMasuk::with('barang')
+            ->where('kode_pembelian', $kode_pembelian)
+            ->get();
+        
+        // Hitung total
+        $totalJumlah = $detailBarangMasuk->sum('jumlah');
+        $totalHarga = $detailBarangMasuk->sum(function($item) {
+            return $item->jumlah * $item->harga_barang_masuk;
+        });
+
+        return view('admin.barang-masuk.show', compact('barangMasuk', 'detailBarangMasuk', 'totalJumlah', 'totalHarga'));
+    }
 
 }

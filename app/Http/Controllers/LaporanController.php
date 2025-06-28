@@ -72,7 +72,7 @@ class LaporanController extends Controller
                 'b.nama_barang',
                 'br.nama_brand',
                 't.nama_tipe',
-                'dbm.jumlah',
+                'dbm.jumlah as jumlah_masuk',
                 'dbm.harga_barang_masuk',
                 DB::raw('(dbm.jumlah * dbm.harga_barang_masuk) as total_harga')
             );
@@ -97,10 +97,11 @@ class LaporanController extends Controller
         $brands = DB::table('brand')->get();
         
         // Calculate totals
-        $totalJumlah = $barangMasuk->sum('jumlah');
+        $totalJumlah = $barangMasuk->sum('jumlah_masuk');
         $totalNilai = $barangMasuk->sum('total_harga');
+        
 
-        return view('laporan.laporan-barangmasuk', compact('barangMasuk', 'brands', 'totalJumlah', 'totalNilai'));
+        return view('laporan.barang-masuk.laporan-barangmasuk', compact('barangMasuk', 'brands', 'totalJumlah', 'totalNilai'));
     }
 
     // Laporan transaksi Terjual
@@ -236,17 +237,67 @@ class LaporanController extends Controller
     }
 
     // Export PDF Methods
-    public function exportBarangMasukPdf(Request $request)
-    {
-        $barangMasuk = $this->getBarangMasukData($request);
-        $pdf = Pdf::loadView('laporan.pdf.barang-masuk', compact('barangMasuk'));
-        return $pdf->download('laporan-barang-masuk-' . date('Y-m-d') . '.pdf');
+
+    
+public function exportBarangMasukPdf(Request $request)
+{
+    $query = DB::table('barang_masuk as bm')
+        ->join('detail_barang_masuk as dbm', 'bm.kode_pembelian', '=', 'dbm.kode_pembelian')
+        ->join('barang as b', 'dbm.kode_barang', '=', 'b.kode_barang')
+        ->join('tipe as t', 'b.kode_tipe', '=', 't.kode_tipe')
+        ->join('brand as br', 't.kode_brand', '=', 'br.kode_brand')
+        ->join('pengguna as p', 'bm.id_admin', '=', 'p.id_admin')
+        ->select(
+            'bm.kode_pembelian',
+            'bm.tanggal_masuk',
+            'bm.bukti_pembelian',
+            'p.nama_admin as admin',
+            'b.kode_barang',
+            'b.nama_barang',
+            'br.nama_brand',
+            't.nama_tipe',
+            'dbm.jumlah as jumlah_masuk',
+            'dbm.harga_barang_masuk',
+            DB::raw('(dbm.jumlah * dbm.harga_barang_masuk) as total_harga')
+        );
+
+    // Filter berdasarkan tanggal
+    if ($request->filled('tanggal_mulai')) {
+        $query->where('bm.tanggal_masuk', '>=', $request->tanggal_mulai);
     }
+
+    if ($request->filled('tanggal_selesai')) {
+        $query->where('bm.tanggal_masuk', '<=', $request->tanggal_selesai);
+    }
+
+    // Filter berdasarkan brand
+    if ($request->filled('brand')) {
+        $query->where('br.kode_brand', $request->brand);
+    }
+
+    $barangMasuk = $query->orderBy('bm.tanggal_masuk', 'desc')->get();
+
+    // Total jumlah dan nilai
+    $totalJumlah = $barangMasuk->sum('jumlah_masuk');
+    $totalNilai = $barangMasuk->sum('total_harga');
+
+    // Load view dan generate PDF
+    $pdf = Pdf::loadView('laporan.barang-masuk.barangmasukpdf', compact('barangMasuk', 'totalJumlah', 'totalNilai'))
+              ->setPaper('A4', 'landscape');
+
+    return $pdf->download('laporan.barang-masuk-barangmasuk.pdf');
+}
+    // public function exportBarangMasukPdf(Request $request)
+    // {
+    //     $barangMasuk = $this->getBarangMasukData($request);
+    //     $pdf = Pdf::loadView('laporan.laporan-barangmasuk', compact('barangMasuk','totalJumlah','totalNilai','brands'));
+    //     return $pdf->download('laporan.laporan.barang-masuk-' . date('Y-m-d') . '.pdf');
+    // }
 
     public function exportBarangTerjualPdf(Request $request)
     {
         $barangTerjual = $this->getBarangTerjualData($request);
-        $pdf = Pdf::loadView('laporan.pdf.barang-terjual', compact('barangTerjual'));
+        $pdf = Pdf::loadView('laporan.barang.pdf', compact('barangTerjual'));
         return $pdf->download('laporan-barang-terjual-' . date('Y-m-d') . '.pdf');
     }
 
@@ -278,7 +329,7 @@ class LaporanController extends Controller
                 'b.nama_barang',
                 'br.nama_brand',
                 't.nama_tipe',
-                'dbm.jumlah',
+                'dbm.jumlah as jumlah_masuk',
                 'dbm.harga_barang_masuk',
                 DB::raw('(dbm.jumlah * dbm.harga_barang_masuk) as total_harga')
             );
@@ -471,7 +522,7 @@ class LaporanController extends Controller
                     ->get();
         $warnas = DB::table('warna')->select('kode_warna', 'warna')->get();
 
-        return view('laporan.barang-terjual', compact(
+        return view('laporan.barang.barang-terjual', compact(
             'laporanBarang', 
             'brands', 
             'tipes', 

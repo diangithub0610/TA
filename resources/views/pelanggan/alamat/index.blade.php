@@ -34,6 +34,23 @@
                                     Hapus
                                 </button>
                             </form>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio"
+                                       name="primary_address"
+                                       value="{{ $item->id_alamat }}"
+                                       class="hidden"
+                                       {{ $item->is_utama ? 'checked' : '' }}>
+                            
+                                <div class="w-4 h-4 border border-gray-300 rounded-full mr-2 flex items-center justify-center">
+                                    @if ($item->is_utama)
+                                        <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                    @endif
+                                </div>
+                            
+                                <span class="text-sm text-gray-600 {{ $item->is_utama ? 'font-semibold' : '' }}">
+                                    {{ $item->is_utama ? 'Utama' : 'Jadikan Alamat Utama' }}
+                                </span>
+                            </label>                            
                         </div>
                     </div>
                     <p>{{ $item->alamat_lengkap }}</p>

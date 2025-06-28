@@ -907,16 +907,41 @@ class BarangController extends Controller
         }
     }
 
+    // public function destroy($kode_barang)
+    // {
+    //     $barang = Barang::findOrFail($kode_barang);
+
+    //     // Soft delete
+    //     // $barang->update(['is_active' => 0]);
+    //     $barang->delete();
+
+    //     return redirect()->route('barang.index')
+    //         ->with('success', 'Data barang berhasil dihapus');
+    // }
+
     public function destroy($kode_barang)
-    {
-        $barang = Barang::findOrFail($kode_barang);
-
-        // Soft delete
-        $barang->update(['is_active' => 0]);
-
-        return redirect()->route('barang.index')
-            ->with('success', 'Data barang berhasil dihapus');
-    }
+        {
+            try {
+                $barang = Barang::findOrFail($kode_barang);
+    
+                // Hapus gambar jika ada
+                if ($barang->gambar) {
+                    Storage::disk('public')->delete($barang->gambar);
+                }
+    
+                // Hapus detail barang terlebih dahulu
+                DetailBarang::where('kode_barang', $kode_barang)->delete();
+    
+                // Hapus barang
+                $barang->delete();
+    
+                return redirect()->route('barang.index')
+                    ->with('success', 'Barang berhasil dihapus');
+            } catch (Exception $e) {
+                return redirect()->route('barang.index')
+                    ->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
+            }
+        }
 
     public function deleteGambarPendukung($kode_gambar)
     {
@@ -929,5 +954,10 @@ class BarangController extends Controller
         $gambar->delete();
 
         return response()->json(['success' => true]);
+    }
+    public function byBrand($brandId)
+    {
+        // Redirect ke route yang benar
+        return redirect()->route('pelanggan.barang', ['brand' => $brandId]);
     }
 }
