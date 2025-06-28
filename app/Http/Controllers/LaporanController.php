@@ -163,7 +163,7 @@ class LaporanController extends Controller
         $totalKuantitas = $barangTerjual->sum('kuantitas');
         $totalNilai = $barangTerjual->sum('total_harga');
     
-        return view('laporan.laporan-transaksi', [
+        return view('laporan.transaksi.laporan-transaksi', [
             'barangTerjual' => $barangTerjual,
             'barangTerjualGrouped' => $barangTerjualGrouped,
             'brands' => $brands,
@@ -297,7 +297,7 @@ public function exportBarangMasukPdf(Request $request)
     public function exportBarangTerjualPdf(Request $request)
     {
         $barangTerjual = $this->getBarangTerjualData($request);
-        $pdf = Pdf::loadView('laporan.barang.pdf', compact('barangTerjual'));
+        $pdf = Pdf::loadView('laporan.transaksi.pdf', compact('barangTerjual'));
         return $pdf->download('laporan-barang-terjual-' . date('Y-m-d') . '.pdf');
     }
 
@@ -531,12 +531,73 @@ public function exportBarangMasukPdf(Request $request)
         ));
     }
 
-    public function exportPdfBarangTerjual(Request $request)
-    {
-        // Logic untuk export PDF (menggunakan library seperti DomPDF atau TCPDF)
-        // Implementasi sesuai kebutuhan
-        
-        return response()->json(['message' => 'Export PDF berhasil']);
+    public function exportLaporanBarangPdf(Request $request)
+{
+    $laporanBarang = DB::table('detail_barang as db')
+        ->join('barang as b', 'db.kode_barang', '=', 'b.kode_barang')
+        ->join('tipe as t', 'b.kode_tipe', '=', 't.kode_tipe')
+        ->join('brand as br', 't.kode_brand', '=', 'br.kode_brand')
+        ->leftJoin('warna as w', 'db.kode_warna', '=', 'w.kode_warna')
+        ->select(
+            'db.kode_detail',
+            'b.nama_barang',
+            't.nama_tipe',
+            'br.nama_brand',
+            'w.warna',
+            'db.ukuran',
+            'db.stok',
+            'db.harga_normal',
+            DB::raw('(SELECT SUM(kuantitas) FROM detail_transaksi WHERE kode_detail = db.kode_detail) as jumlah_terjual'),
+            DB::raw('(SELECT SUM(kuantitas * harga) FROM detail_transaksi WHERE kode_detail = db.kode_detail) as total_pendapatan')
+            
+        );
+
+    // Filter opsional
+    if ($request->brand) {
+        $laporanBarang->where('br.kode_brand', $request->brand);
     }
+
+    if ($request->tipe) {
+        $laporanBarang->where('t.kode_tipe', $request->tipe);
+    }
+
+    if ($request->warna) {
+        $laporanBarang->where('db.kode_warna', $request->warna);
+    }
+
+    if ($request->tanggal_mulai && $request->tanggal_selesai) {
+        $laporanBarang->whereIn('db.kode_detail', function ($q) use ($request) {
+            $q->select('kode_detail')
+              ->from('detail_transaksi as dt')
+              ->join('transaksi as t', 'dt.kode_transaksi', '=', 't.kode_transaksi')
+              ->whereBetween('t.tanggal_transaksi', [$request->tanggal_mulai, $request->tanggal_selesai]);
+        });
+    }
+
+    $data = $laporanBarang->get()->map(function ($item) {
+        $item->jumlah_terjual = $item->jumlah_terjual ?? 0;
+        $item->total_pendapatan = $item->total_pendapatan ?? 0;
+        return $item;
+    });
+
+    // Ambil label filter
+    $filter = [
+        'brand_nama' => $request->brand ? DB::table('brand')->where('kode_brand', $request->brand)->value('nama_brand') : null,
+        'tipe_nama' => $request->tipe ? DB::table('tipe')->where('kode_tipe', $request->tipe)->value('nama_tipe') : null,
+        'warna_nama' => $request->warna ? DB::table('warna')->where('kode_warna', $request->warna)->value('warna') : null,
+        'tanggal_mulai' => $request->tanggal_mulai,
+        'tanggal_selesai' => $request->tanggal_selesai,
+    ];
+
+    $admin = auth()->user()->nama_admin ?? 'Administrator';
+
+    $pdf = Pdf::loadView('laporan.barang.pdf', [
+        'laporanBarang' => $data,
+        'filter' => $filter,
+        'admin' => $admin,
+    ])->setPaper('a4', 'landscape');
+
+    return $pdf->download('laporan.barang.pdf');
+}
 }
 

@@ -48,7 +48,7 @@
                                             class="form-control @error('kode_pembelian') is-invalid @enderror"
                                             id="kode_pembelian" name="kode_pembelian"
                                             value="{{ old('kode_pembelian', $barang_masuk->kode_pembelian ?? '') }}"
-                                            required maxlength="10" {{ isset($barang_masuk) ? 'readonly' : '' }}>
+                                            required maxlength="30" {{ isset($barang_masuk) ? 'readonly' : '' }}>
                                         @error('kode_pembelian')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

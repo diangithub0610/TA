@@ -348,25 +348,25 @@
     </div>
 
     <!-- Modal untuk Crop Gambar -->
-    <div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cropModalLabel">Crop Gambar Utama</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+   <div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropModalLabel">Crop Gambar Utama</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="crop-container" style="max-height: 400px; overflow: hidden; border-radius: 8px; background: #f8f9fa;">
+                    <img id="cropImage" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
                 </div>
-                <div class="modal-body">
-                    <div class="text-center">
-                        <img id="cropImage" style="max-width: 100%;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="cropBtn">Crop & Simpan</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary btn-sm" id="cropBtn">Crop & Simpan</button>
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('styles')

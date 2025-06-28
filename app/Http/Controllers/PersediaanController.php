@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Tipe;
 use App\Models\Brand;
 use App\Models\Warna;
@@ -75,10 +76,13 @@ class PersediaanController extends Controller
         $brandName = $brandFilter ? Brand::where('kode_brand', $brandFilter)->first()?->nama_brand : 'Semua';
         $tipeName = $tipeFilter ? Tipe::where('kode_tipe', $tipeFilter)->first()?->nama_tipe : 'Semua';
 
+        Carbon::setLocale('id');
+        $tanggal = Carbon::now()->translatedFormat('d F Y');
+
         $data = [
             'detailBarangs' => $detailBarangs,
-            'tanggal' => now()->format('d F Y'),
-            'admin' => auth()->user()->name ?? 'Administrator',
+            'tanggal' => Carbon::parse($tanggal)->translatedFormat('d F Y'),
+            'admin' => optional(auth('admin')->user())->nama_admin ?? 'Administrator',
             'filters' => [
                 'warna' => $warnaName,
                 'brand' => $brandName,

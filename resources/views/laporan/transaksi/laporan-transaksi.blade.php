@@ -6,7 +6,7 @@
 <div class="container">
     <div class="page-inner">
         <div class="page-header">
-            <h3 class="fw-bold mb-3">Laporan Barang Terjual</h3>
+            <h3 class="fw-bold mb-3">Laporan Transaksi</h3>
             <ul class="breadcrumbs mb-3">
                 <li class="nav-home">
                     <a href="{{ route('dashboard') }}">
@@ -23,7 +23,7 @@
                     <i class="icon-arrow-right"></i>
                 </li>
                 <li class="nav-item">
-                    <a href="#">Barang Terjual</a>
+                    <a href="{{ route('laporan.barang-terjual') }}">Barang Terjual</a>
                 </li>
             </ul>
         </div>
@@ -101,11 +101,11 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0">Data Barang Terjual</h4>
+                        <h4 class="card-title mb-0">Data Transaksi Penjualan</h4>
                         
                         <!-- Export Buttons -->
                         <div class="d-flex gap-2">
-                            {{-- <form method="GET" action="{{ route('laporan.barang-terjual.export-pdf') }}" style="display: inline;">
+                            <form method="GET" action="{{ route('laporan.barang-terjual.export-pdf') }}" style="display: inline;">
                                 <input type="hidden" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}">
                                 <input type="hidden" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}">
                                 <input type="hidden" name="brand" value="{{ request('brand') }}">
@@ -113,7 +113,7 @@
                                 <button type="submit" class="btn btn-danger btn-sm">
                                     <i class="fas fa-file-pdf"></i> Export PDF
                                 </button>
-                            </form> --}}
+                            </form>
                             {{-- <form method="GET" action="{{ route('laporan.barang-terjual.export-excel') }}" style="display: inline;">
                                 <input type="hidden" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}">
                                 <input type="hidden" name="tanggal_selesai" value="{{ request('tanggal_selesai') }}">

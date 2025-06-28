@@ -360,6 +360,9 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     // Route::get('/barang-terjual/export-excel', [LaporanController::class, 'exportBarangTerjualExcel'])->name('barang-terjual.export-excel');
     Route::get('/barang-terjual', [LaporanController::class, 'laporanbarangterjual'])->name('barang-terjual');
 
+    Route::get('/laporan/barang-terjual/export-pdf', [LaporanController::class, 'exportLaporanBarangPdf'])
+    ->name('barang.export-pdf');
+
     // Route::get('/barang-terjual/export-pdf', [LaporanController::class, 'exportPdfBarangTerjual'])->name('barang-terjual.export.pdf');
 
 

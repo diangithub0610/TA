@@ -237,42 +237,7 @@ class BarangMasukController extends Controller
 
             return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat mengupdate data: ' . $e->getMessage());
         }
-
-        //     DB::commit();
-
-        //     return response()->json([
-        //         'success' => true,
-        //         'message' => 'Barang masuk berhasil disimpan',
-        //         'redirect' => route('barang-masuk.index')
-        //     ]);
-
-        // } catch (\Exception $e) {
-        //     DB::rollback();
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
-        //     ], 500);
-        // }
     }
-
-    // private function generateKodeBarangMasuk()
-    // {
-    //     $today = date('Ymd');
-    //     $lastBarangMasuk = DB::table('barang_masuk')
-    //         ->where('kode_pembelian', 'LIKE', 'BM' . $today . '%')
-    //         ->orderBy('kode_pembelian', 'desc')
-    //         ->first();
-
-    //     if ($lastBarangMasuk) {
-    //         $lastNumber = (int) substr($lastBarangMasuk->kode_barang_masuk, -3);
-    //         $newNumber = $lastNumber + 1;
-    //     } else {
-    //         $newNumber = 1;
-    //     }
-
-    //     return 'BM' . $today . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
-    // }
-
 
     // Method untuk menyimpan barang baru dari form barang masuk
     public function storeBarangBaru(Request $request)

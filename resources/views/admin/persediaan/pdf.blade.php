@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,31 +12,51 @@
             padding: 20px;
             font-size: 12px;
         }
-        
+
         .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #000;
             padding-bottom: 15px;
+            position: relative;
         }
-        
+
+        .logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            padding: 10px;
+        }
+
+        .logo-img {
+            height: 80px;
+            width: auto;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
         .company-name {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 5px;
             text-transform: uppercase;
         }
-        
+
         .address {
             font-size: 12px;
             margin-bottom: 10px;
             line-height: 1.4;
         }
-        
+
         .report-info {
             margin-bottom: 20px;
         }
-        
+
         .report-title {
             font-size: 18px;
             font-weight: bold;
@@ -43,28 +64,28 @@
             margin-bottom: 15px;
             text-transform: uppercase;
         }
-        
+
         .info-table {
             width: 100%;
             margin-bottom: 20px;
         }
-        
+
         .info-table td {
             padding: 3px 0;
             vertical-align: top;
         }
-        
+
         .info-label {
             width: 120px;
             font-weight: bold;
         }
-        
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
-        
+
         .data-table th,
         .data-table td {
             border: 1px solid #000;
@@ -72,21 +93,21 @@
             text-align: left;
             font-size: 11px;
         }
-        
+
         .data-table th {
             background-color: #f0f0f0;
             font-weight: bold;
             text-align: center;
         }
-        
+
         .text-center {
             text-align: center;
         }
-        
+
         .text-right {
             text-align: right;
         }
-        
+
         .badge-danger {
             background-color: #dc3545;
             color: white;
@@ -94,7 +115,7 @@
             border-radius: 3px;
             font-size: 10px;
         }
-        
+
         .badge-success {
             background-color: #28a745;
             color: white;
@@ -102,25 +123,25 @@
             border-radius: 3px;
             font-size: 10px;
         }
-        
+
         .summary {
             margin-top: 20px;
             padding: 10px;
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
         }
-        
+
         .signature {
             margin-top: 40px;
             text-align: right;
         }
-        
+
         .signature-box {
             display: inline-block;
             text-align: center;
             min-width: 200px;
         }
-        
+
         .signature-line {
             border-top: 1px solid #000;
             margin-top: 60px;
@@ -128,9 +149,14 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <div class="header">
+        <div class="logo" style="flex: 0 0 100px;">
+            <img src="{{ public_path('img/logo/logo-wf-panjang.png') }}" alt="Logo Warrior" style="height: 40px;">
+
+        </div>
         <div class="company-name">Warrior Footwear</div>
         <div class="address">
             Jl. Contoh Alamat No. 123<br>
@@ -142,7 +168,7 @@
     <!-- Report Info -->
     <div class="report-info">
         <div class="report-title">Laporan Persediaan Barang</div>
-        
+
         <table class="info-table">
             <tr>
                 <td class="info-label">Tanggal Laporan</td>
@@ -214,14 +240,14 @@
     </table>
 
     <!-- Summary -->
-    @if($detailBarangs->count() > 0)
-    <div class="summary">
-        <strong>Ringkasan:</strong><br>
-        Total Item: {{ $detailBarangs->count() }} item<br>
-        Total Stok: {{ $detailBarangs->sum('stok') }} unit<br>
-        Item Perlu Restok: {{ $detailBarangs->where('stok', '<', 10)->count() }} item<br>
-        Item Stok Aman: {{ $detailBarangs->where('stok', '>=', 10)->count() }} item
-    </div>
+    @if ($detailBarangs->count() > 0)
+        <div class="summary">
+            <strong>Ringkasan:</strong><br>
+            Total Item: {{ $detailBarangs->count() }} item<br>
+            Total Stok: {{ $detailBarangs->sum('stok') }} unit<br>
+            Item Perlu Restok: {{ $detailBarangs->where('stok', '<', 10)->count() }} item<br>
+            Item Stok Aman: {{ $detailBarangs->where('stok', '>=', 10)->count() }} item
+        </div>
     @endif
 
     <!-- Signature -->
@@ -235,4 +261,5 @@
         </div>
     </div>
 </body>
+
 </html>

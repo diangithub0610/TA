@@ -258,10 +258,10 @@
                                             class="avatar-img rounded" />
                                     </div>
                                     <div class="u-text">
-                                        <h4>Hizrian</h4>
-                                        <p class="text-muted">hello@example.com</p>
-                                        <a href="profile.html" class="btn btn-xs btn-secondary btn-sm">View
-                                            Profile</a>
+                                        <h4>{{  optional(auth('admin')->user())->nama_admin ?? 'Admin'  }}</h4>
+                                        <p class="text-muted">{{ optional(auth('admin')->user())->email ?? '****' }}</p>
+                                        {{-- <a href="profile.html" class="btn btn-xs btn-secondary btn-sm">View
+                                            Profile</a> --}}
                                     </div>
                                 </div>
                             </li>
