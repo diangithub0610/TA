@@ -59,6 +59,177 @@ class PembayaranController extends Controller
         return view('pelanggan.transaksi.pembayaran', compact('transaksi'));
     }
 
+    // public function notificationCallback(Request $request)
+    // {
+    //     // Log raw request untuk debugging
+    //     Log::info('Midtrans Raw Request', [
+    //         'method' => $request->method(),
+    //         'headers' => $request->headers->all(),
+    //         'body' => $request->getContent()
+    //     ]);
+
+    //     try {
+    //         // Ambil payload dan decode sebagai JSON
+    //         $payload = $request->getContent();
+    //         $notification = json_decode($payload, true);
+
+    //         // Log untuk debugging
+    //         Log::info('Midtrans Notification Received', ['data' => $notification]);
+
+    //         // Validasi parameter yang diperlukan
+    //         if (!isset($notification['order_id']) || !isset($notification['transaction_status'])) {
+    //             Log::error('Midtrans Notification: Parameter tidak lengkap', ['data' => $notification]);
+    //             return response()->json(['status' => 'error', 'message' => 'Parameter tidak lengkap'], 400);
+    //         }
+
+    //         // Ambil data dari notifikasi
+    //         $orderId = $notification['order_id'];
+    //         $statusCode = $notification['status_code'] ?? null;
+    //         $transactionStatus = $notification['transaction_status'];
+    //         $fraudStatus = $notification['fraud_status'] ?? null;
+    //         $paymentType = $notification['payment_type'] ?? null;
+    //         $transactionId = $notification['transaction_id'] ?? null;
+
+    //         Log::info('Midtrans Notification', [
+    //             'order_id' => $orderId,
+    //             'status_code' => $statusCode,
+    //             'transaction_status' => $transactionStatus,
+    //             'fraud_status' => $fraudStatus
+    //         ]);
+
+    //         // Cari pembayaran dengan midtrans_order_id yang sesuai
+    //         $pembayaran = Pembayaran::where('midtrans_order_id', $orderId)->first();
+
+    //         if (!$pembayaran) {
+    //             // Coba cari menggunakan substring dari order_id jika mengandung format tertentu
+    //             $uuidPattern = '/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i';
+    //             if (preg_match($uuidPattern, $orderId, $matches)) {
+    //                 $uuid = $matches[1];
+    //                 $pembayaran = Pembayaran::where('midtrans_order_id', 'LIKE', "%{$uuid}%")->first();
+    //             }
+
+    //             if (!$pembayaran) {
+    //                 Log::error('Pembayaran tidak ditemukan', [
+    //                     'order_id' => $orderId,
+    //                     'attempted_uuid_match' => $matches[1] ?? null
+    //                 ]);
+
+    //                 // Cek apakah ini notifikasi testing dari Midtrans
+    //                 if (strpos($orderId, 'payment_notif_test') !== false) {
+    //                     Log::info('Detected test notification from Midtrans, responding with OK');
+    //                     return response('OK', 200);
+    //                 }
+
+    //                 return response('OK', 200); // Tetap mengembalikan OK agar Midtrans tidak retry terus-menerus
+    //             }
+    //         }
+
+    //         // Cari transaksi
+    //         $transaksi = Transaksi::where('kode_transaksi', $pembayaran->kode_transaksi)->first();
+
+    //         if (!$transaksi) {
+    //             Log::error('Transaksi tidak ditemukan', ['kode_transaksi' => $pembayaran->kode_transaksi]);
+    //             return response('OK', 200);
+    //         }
+
+    //         DB::beginTransaction();
+
+    //         // Update pembayaran dengan data dari Midtrans
+    //         $pembayaran->midtrans_transaction_id = $transactionId;
+
+    //         // Handle status pembayaran berdasarkan transaction_status & fraud_status
+    //         if ($transactionStatus == 'capture') {
+    //             if ($fraudStatus == 'challenge') {
+    //                 // Pembayaran challenge, perlu pengecekan manual
+    //                 $pembayaran->status = 'pending';
+    //                 $transaksi->status = 'belum_dibayar';
+    //             } else if ($fraudStatus == 'accept') {
+    //                 // Pembayaran sukses
+    //                 $pembayaran->status = 'sukses';
+    //                 $pembayaran->tanggal_pembayaran = now();
+    //                 $transaksi->status = 'menunggu_konfirmasi';
+    //             }
+    //         } else if ($transactionStatus == 'settlement') {
+    //             // Pembayaran sukses (metode transfer bank, dll)
+    //             $pembayaran->status = 'sukses';
+    //             $pembayaran->tanggal_pembayaran = now();
+    //             $transaksi->status = 'menunggu_konfirmasi';
+    //         } else if ($transactionStatus == 'pending') {
+    //             // Pembayaran pending
+    //             $pembayaran->status = 'pending';
+    //             $transaksi->status = 'belum_dibayar';
+    //         } else if ($transactionStatus == 'deny') {
+    //             // Pembayaran ditolak
+    //             $pembayaran->status = 'gagal';
+    //             $transaksi->status = 'dibatalkan';
+    //         } else if ($transactionStatus == 'expire') {
+    //             // Pembayaran kadaluarsa
+    //             $pembayaran->status = 'kadaluarsa';
+    //             $transaksi->status = 'dibatalkan';
+    //         } else if ($transactionStatus == 'cancel') {
+    //             // Pembayaran dibatalkan
+    //             $pembayaran->status = 'gagal';
+    //             $transaksi->status = 'dibatalkan';
+    //         }
+
+    //         // Simpan detail VA atau link PDF jika ada
+    //         if ($paymentType == 'bank_transfer') {
+    //             // Menyimpan nomor VA
+    //             if (isset($notification['va_numbers']) && !empty($notification['va_numbers'])) {
+    //                 $vaNumber = $notification['va_numbers'][0]['va_number'];
+    //                 $pembayaran->virtual_account = $vaNumber;
+    //             }
+    //         } elseif ($paymentType == 'echannel') {
+    //             // Untuk Mandiri Bill Payment
+    //             if (isset($notification['bill_key'])) {
+    //                 $pembayaran->virtual_account = $notification['bill_key'];
+    //             }
+    //         } elseif ($paymentType == 'gopay' || $paymentType == 'shopeepay') {
+    //             // Untuk e-wallet seperti GoPay atau ShopeePay
+    //             if (isset($notification['actions']) && !empty($notification['actions'])) {
+    //                 foreach ($notification['actions'] as $action) {
+    //                     if ($action['name'] === 'generate-qr-code') {
+    //                         $pembayaran->pdf_url = $action['url'];
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         } elseif ($paymentType == 'cstore') {
+    //             // Untuk convenience store seperti Indomaret atau Alfamart
+    //             if (isset($notification['payment_code'])) {
+    //                 $pembayaran->virtual_account = $notification['payment_code'];
+    //             }
+    //             if (isset($notification['pdf_url'])) {
+    //                 $pembayaran->pdf_url = $notification['pdf_url'];
+    //             }
+    //         }
+
+    //         // Simpan perubahan
+    //         $pembayaran->save();
+    //         $transaksi->save();
+
+    //         DB::commit();
+
+    //         Log::info('Midtrans Notification Processed Successfully', [
+    //             'order_id' => $orderId,
+    //             'transaction_status' => $transactionStatus,
+    //             'payment_id' => $pembayaran->id_pembayaran
+    //         ]);
+
+    //         return response('OK', 200); // Midtrans mengharapkan "OK" dengan status 200
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Error processing Midtrans notification: ' . $e->getMessage(), [
+    //             'exception' => $e,
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+
+    //         return response('OK', 200); // Tetap mengembalikan OK agar Midtrans tidak retry terus-menerus
+    //     }
+    // }
+
+
     public function notificationCallback(Request $request)
     {
         // Log raw request untuk debugging
@@ -137,6 +308,9 @@ class PembayaranController extends Controller
             // Update pembayaran dengan data dari Midtrans
             $pembayaran->midtrans_transaction_id = $transactionId;
 
+            // Flag untuk menentukan apakah pembayaran sukses
+            $pembayaranSukses = false;
+
             // Handle status pembayaran berdasarkan transaction_status & fraud_status
             if ($transactionStatus == 'capture') {
                 if ($fraudStatus == 'challenge') {
@@ -148,12 +322,14 @@ class PembayaranController extends Controller
                     $pembayaran->status = 'sukses';
                     $pembayaran->tanggal_pembayaran = now();
                     $transaksi->status = 'menunggu_konfirmasi';
+                    $pembayaranSukses = true;
                 }
             } else if ($transactionStatus == 'settlement') {
                 // Pembayaran sukses (metode transfer bank, dll)
                 $pembayaran->status = 'sukses';
                 $pembayaran->tanggal_pembayaran = now();
                 $transaksi->status = 'menunggu_konfirmasi';
+                $pembayaranSukses = true;
             } else if ($transactionStatus == 'pending') {
                 // Pembayaran pending
                 $pembayaran->status = 'pending';
@@ -208,12 +384,40 @@ class PembayaranController extends Controller
             $pembayaran->save();
             $transaksi->save();
 
+            // ===== TAMBAHAN UNTUK AUTOMATIC SHIPPING CREATION =====
+            // Jika pembayaran sukses, buat record pengiriman otomatis
+            if ($pembayaranSukses) {
+                try {
+                    $trackingService = new \App\Services\TrackingService();
+                    $pengiriman = $trackingService->buatPengirimanOtomatis($transaksi->kode_transaksi);
+
+                    if ($pengiriman) {
+                        Log::info('Pengiriman otomatis berhasil dibuat', [
+                            'kode_transaksi' => $transaksi->kode_transaksi,
+                            'id_pengiriman' => $pengiriman->id_pengiriman
+                        ]);
+                    } else {
+                        Log::warning('Gagal membuat pengiriman otomatis', [
+                            'kode_transaksi' => $transaksi->kode_transaksi
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error saat membuat pengiriman otomatis: ' . $e->getMessage(), [
+                        'kode_transaksi' => $transaksi->kode_transaksi,
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    // Jangan throw error, biarkan callback tetap sukses
+                }
+            }
+            // ===== END TAMBAHAN =====
+
             DB::commit();
 
             Log::info('Midtrans Notification Processed Successfully', [
                 'order_id' => $orderId,
                 'transaction_status' => $transactionStatus,
-                'payment_id' => $pembayaran->id_pembayaran
+                'payment_id' => $pembayaran->id_pembayaran,
+                'pengiriman_created' => $pembayaranSukses
             ]);
 
             return response('OK', 200); // Midtrans mengharapkan "OK" dengan status 200
@@ -228,7 +432,6 @@ class PembayaranController extends Controller
             return response('OK', 200); // Tetap mengembalikan OK agar Midtrans tidak retry terus-menerus
         }
     }
-
     /**
      * Membuat data pengiriman setelah pembayaran berhasil
      */

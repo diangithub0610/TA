@@ -310,8 +310,6 @@ class CheckoutController extends Controller
 
     public function proses(Request $request)
     {
-
-
         $request->validate([
             'id_alamat' => 'required|exists:alamat,id_alamat',
             'ekspedisi' => 'required|string',
