@@ -38,7 +38,7 @@
                                         <th>Kode Barang</th>
                                         <th>Nama Barang</th>
                                         <th>Tipe</th>
-                                        <th>Harga</th>
+                                        {{-- <th>Harga</th> --}}
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -49,7 +49,7 @@
                                             <td>{{ $barang->kode_barang }}</td>
                                             <td>{{ $barang->nama_barang }}</td>
                                             <td>{{ $barang->tipe->nama_tipe }}</td>
-                                            <td>{{ $barang->formatted_harga }}</td>
+                                            {{-- <td>{{ 'Rp ' . number_format($barang->harga_normal, 0, ',', '.') }}</td> --}}
                                             <td>
                                                 @if (Route::currentRouteName() == 'barang.index')
                                                     <div class="d-flex">

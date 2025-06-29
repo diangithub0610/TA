@@ -68,7 +68,7 @@ class DetailBarang extends Model
     protected function formattedHargaByRole(): Attribute
     {
         return Attribute::make(
-            get: fn() => 'Rp ' . number_format($this->harga_by_role, 0, ',', '.')
+            get: fn () => 'Rp ' . number_format($this->harga_by_role, 0, ',', '.')
         );
     }
 
@@ -76,7 +76,7 @@ class DetailBarang extends Model
     protected function formattedHargaNormal(): Attribute
     {
         return Attribute::make(
-            get: fn() => 'Rp ' . number_format($this->harga_normal, 0, ',', '.')
+            get: fn () => 'Rp ' . number_format($this->harga_normal, 0, ',', '.')
         );
     }
 
@@ -84,7 +84,7 @@ class DetailBarang extends Model
     protected function formattedHargaDiskon(): Attribute
     {
         return Attribute::make(
-            get: fn() => 'Rp ' . number_format($this->harga_normal - $this->potongan_harga, 0, ',', '.')
+            get: fn () => 'Rp ' . number_format($this->harga_normal - $this->potongan_harga, 0, ',', '.')
         );
     }
 
@@ -103,11 +103,14 @@ class DetailBarang extends Model
             $userRole = $this->getCurrentUserRole();
         }
 
+        $harga_normal = $this->harga_normal ?? 0;
+        $potongan_harga = $this->potongan_harga ?? 0;
+
         if ($userRole === 'reseller') {
-            return $this->harga_normal - $this->potongan_harga;
+            return (int) ($harga_normal - $potongan_harga);
         }
 
-        return $this->harga_normal;
+        return (int) $harga_normal;
     }
 
     // Method untuk mendapatkan role user saat ini
@@ -118,5 +121,9 @@ class DetailBarang extends Model
         }
 
         return 'guest';
+    }
+    public function pemusnahan_barang()
+    {
+        return $this->hasMany(PemusnahanBarang::class, 'kode_detail', 'kode_detail');
     }
 }

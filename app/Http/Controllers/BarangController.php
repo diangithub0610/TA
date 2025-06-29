@@ -15,7 +15,7 @@ class BarangController extends Controller
 {
     public function index()
     {
-        $barangs = Barang::with('tipe')->get();
+        $barangs = Barang::with('tipe','detailBarangs')->get();
         return view('admin.barang.index', compact('barangs'));
     }
 
@@ -314,28 +314,40 @@ class BarangController extends Controller
     // }
 
     public function destroy($kode_barang)
-        {
-            try {
-                $barang = Barang::findOrFail($kode_barang);
+    {
+        try {
+            $barang = Barang::findOrFail($kode_barang);
     
-                // Hapus gambar jika ada
-                if ($barang->gambar) {
-                    Storage::disk('public')->delete($barang->gambar);
-                }
+            // Cek jika masih ada detail_barang yang berelasi dengan tabel lain (contoh: pemusnahan_barang)
+            $relasiAktif = DetailBarang::where('kode_barang', $kode_barang)
+                            ->whereHas('pemusnahan_barang') // relasi dari DetailBarang ke PemusnahanBarang
+                            ->exists();
     
-                // Hapus detail barang terlebih dahulu
-                DetailBarang::where('kode_barang', $kode_barang)->delete();
-    
-                // Hapus barang
-                $barang->delete();
-    
+            if ($relasiAktif) {
                 return redirect()->route('barang.index')
-                    ->with('success', 'Barang berhasil dihapus');
-            } catch (Exception $e) {
-                return redirect()->route('barang.index')
-                    ->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
+                    ->with('error', 'Barang tidak bisa dihapus karena sedang digunakan dalam data pemusnahan.');
             }
+    
+            // Hapus gambar jika ada
+            if ($barang->gambar) {
+                Storage::disk('public')->delete($barang->gambar);
+            }
+    
+            // Hapus detail barang terlebih dahulu
+            DetailBarang::where('kode_barang', $kode_barang)->delete();
+    
+            // Hapus barang
+            $barang->delete();
+    
+            return redirect()->route('barang.index')
+                ->with('success', 'Barang berhasil dihapus');
+    
+        } catch (\Throwable $e) {
+            return redirect()->route('barang.index')
+                ->with('error', 'Gagal menghapus barang. Data sedang digunakan.');
         }
+    }
+    
 
     public function deleteGambarPendukung($kode_gambar)
     {

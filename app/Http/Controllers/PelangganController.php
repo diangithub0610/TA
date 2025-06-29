@@ -92,8 +92,36 @@ class PelangganController extends Controller
         ])->where('kode_barang', $kode_barang)
             ->where('is_active', 1)
             ->firstOrFail();
-
+    
+        // Tambahkan informasi role user untuk JavaScript
+        $userRole = 'guest';
+        if (Auth::guard('pelanggan')->check()) {
+            $userRole = Auth::guard('pelanggan')->user()->role;
+        }
+    
+        $barangTerkait = Barang::with(['tipe.brand'])
+            ->where('kode_tipe', $barang->kode_tipe)
+            ->where('kode_barang', '!=', $kode_barang)
+            ->where('is_active', 1)
+            ->take(4)
+            ->get();
+    
+        // Group detail barang by ukuran dan warna
+        $ukuranTersedia = $barang->detailBarangs
+            ->pluck('ukuran')
+            ->unique()
+            ->sort()
+            ->values();
+    
+        $warnaTersedia = $barang->detailBarangs
+            ->pluck('warna')
+            ->unique()
+            ->values();
+    
+        // Mengelompokkan detail barang dengan data lengkap dari tabel detail_barang
         $detailByUkuranWarna = [];
+        $hargaTerendah = null;
+        
         foreach ($barang->detailBarangs as $detail) {
             $detailByUkuranWarna[$detail->ukuran][$detail->kode_warna] = [
                 'kode_detail' => $detail->kode_detail,
@@ -102,84 +130,49 @@ class PelangganController extends Controller
                 'kode_hex' => $detail->warna->kode_hex,
                 'harga_normal' => (int)$detail->harga_normal,
                 'potongan_harga' => (int)$detail->potongan_harga,
-                'harga_by_role' => (int)$detail->harga_by_role,
+                'harga_by_role' => (int)$detail->getHargaByRole($userRole),
                 'formatted_harga_by_role' => $detail->formatted_harga_by_role,
             ];
+            
+            // Cari harga terendah berdasarkan role user
+            $hargaItem = $detail->getHargaByRole($userRole);
+            if ($hargaTerendah === null || $hargaItem < $hargaTerendah) {
+                $hargaTerendah = $hargaItem;
+            }
         }
-
-        // Tambahkan informasi role user untuk JavaScript
-        $userRole = 'guest';
-        if (Auth::guard('pelanggan')->check()) {
-            $userRole = Auth::guard('pelanggan')->user()->role;
-        }
-
-        $barangTerkait = Barang::with(['tipe.brand'])
-            ->where('kode_tipe', $barang->kode_tipe)
-            ->where('kode_barang', '!=', $kode_barang)
-            ->where('is_active', 1)
-            ->take(4)
-            ->get();
-
-        // Group detail barang by ukuran dan warna
-        $ukuranTersedia = $barang->detailBarangs
-            ->where('stok', '>', 0)
-            ->pluck('ukuran')
-            ->unique()
-            ->sort()
-            ->values();
-
-        $warnaTersedia = $barang->detailBarangs
-            ->where('stok', '>', 0)
-            ->pluck('warna')
-            ->unique()
-            ->values();
-
-        // Mengelompokkan detail barang
-        $detailByUkuranWarna = [];
-        foreach ($barang->detailBarangs as $detail) {
-            $detailByUkuranWarna[$detail->ukuran][$detail->kode_warna] = [
-                'kode_detail' => $detail->kode_detail,
-                'stok' => (int)$detail->stok,  // Pastikan integer
-                'warna' => $detail->warna->warna,
-                'kode_hex' => $detail->warna->kode_hex
-            ];
-        }
-        // dd($detailByUkuranWarna);
-
+    
         // Ambil ulasan terkait barang
         $ulasan = Ulasan::where('kode_barang', $barang->kode_barang)
             ->latest()
-            ->paginate(5); // paginasi
-
+            ->paginate(5);
+    
         // Hitung rata-rata rating
         $averageRating = Ulasan::where('kode_barang', $barang->kode_barang)->avg('rating') ?? 0;
-
+    
         // Hitung total ulasan
         $totalUlasan = Ulasan::where('kode_barang', $barang->kode_barang)->count();
-
+    
         // Cek apakah user bisa memberikan ulasan
         $canReview = false;
         $hasPurchased = false;
-
+    
         if (Auth::check()) {
             $user = Auth::user();
-
-            // Cek apakah user pernah beli barang ini dan belum pernah mengulas
+    
             $hasPurchased = $user->transaksis()
                 ->whereHas('detailTransaksis', function ($query) use ($barang) {
                     $query->where('kode_barang', $barang->kode_barang);
                 })
                 ->where('status', 'selesai')
                 ->exists();
-
+    
             $hasReviewed = Ulasan::where('kode_barang', $barang->kode_barang)
                 ->where('id_pelanggan', $user->id_pelanggan)
                 ->exists();
-
+    
             $canReview = $hasPurchased && !$hasReviewed;
         }
-
-
+    
         return view('pelanggan.barang.show', compact(
             'barang',
             'barangTerkait',
@@ -191,9 +184,11 @@ class PelangganController extends Controller
             'totalUlasan',
             'canReview',
             'hasPurchased',
-            'userRole' // Tambahkan ini
+            'userRole',
+            'hargaTerendah'
         ));
     }
+
     public function resellerLoyal()
     {
         // Berdasarkan jumlah transaksi

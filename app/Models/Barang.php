@@ -74,7 +74,7 @@ class Barang extends Model
         return $this->detailBarang->count();
     }
 
-        public static function generateKodeBarang($kode_tipe)
+    public static function generateKodeBarang($kode_tipe)
     {
         // Cari nomor terakhir untuk tipe inif
         $last_barang = self::where('kode_tipe', $kode_tipe)
@@ -91,5 +91,9 @@ class Barang extends Model
         $next_number = intval($parts[0]) + 1;
 
         return "{$next_number}-{$kode_tipe}";
+    }
+    public function getHargaNormalAttribute()
+    {
+        return $this->detailBarang->first()->harga_normal ?? 0;
     }
 }

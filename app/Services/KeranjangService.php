@@ -20,19 +20,19 @@ class KeranjangService
     public function tambahItem($kodeDetail, $jumlah = 1)
     {
         $keranjang = $this->getKeranjang();
-
+    
         // Cek apakah detail barang valid
         $detailBarang = DetailBarang::with('barang', 'barang.tipe', 'warna')
             ->where('kode_detail', $kodeDetail)
             ->first();
-
+    
         if (!$detailBarang || $detailBarang->stok < 1) {
             return [
                 'status' => 'error',
                 'message' => 'Barang tidak tersedia'
             ];
         }
-
+    
         // Cek apakah jumlah melebihi stok
         if ($jumlah > $detailBarang->stok) {
             return [
@@ -40,11 +40,11 @@ class KeranjangService
                 'message' => 'Jumlah melebihi stok yang tersedia'
             ];
         }
-
+    
         // Cek apakah barang sudah ada di keranjang
         if (isset($keranjang[$kodeDetail])) {
             $newJumlah = $keranjang[$kodeDetail]['jumlah'] + $jumlah;
-
+    
             // Cek apakah penambahan melebihi stok
             if ($newJumlah > $detailBarang->stok) {
                 return [
@@ -52,24 +52,15 @@ class KeranjangService
                     'message' => 'Jumlah melebihi stok yang tersedia'
                 ];
             }
-
+    
             $keranjang[$kodeDetail]['jumlah'] = $newJumlah;
         } else {
             // Hitung harga berdasarkan role pelanggan
             $pelanggan = Auth::guard('pelanggan')->user();
-
-            // Default harga adalah harga normal
-            $harga = $detailBarang->barang->harga_normal;
-
-            // Jika pelanggan adalah pelanggan biasa, naikkan harga 10%
-            if ($pelanggan && $pelanggan->role === 'pelanggan') {
-                $harga = $detailBarang->barang->harga_normal * 1.1;
-            }
-            // Jika reseller, gunakan harga setelah potongan
-            elseif ($pelanggan && $pelanggan->role === 'reseller') {
-                $harga = $detailBarang->barang->harga_setelah_potongan;
-            }
-
+    
+            // Gunakan method getHargaByRole untuk mendapatkan harga yang sesuai
+            $harga = $detailBarang->getHargaByRole($pelanggan ? $pelanggan->role : 'guest');
+    
             $keranjang[$kodeDetail] = [
                 'kode_detail' => $kodeDetail,
                 'kode_barang' => $detailBarang->kode_barang,
@@ -83,9 +74,9 @@ class KeranjangService
                 'stok' => $detailBarang->stok
             ];
         }
-
+    
         session(['keranjang' => $keranjang]);
-
+    
         return [
             'status' => 'success',
             'message' => 'Barang berhasil ditambahkan ke keranjang',

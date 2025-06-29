@@ -92,6 +92,7 @@
                                         <th>Warna</th>
                                         <th>Ukuran</th>
                                         <th>Stok</th>
+                                        <th>Harga</th>
                                         @if (Route::currentRouteName() == 'pemusnahan-barang.detail-barang')
                                             <th>Aksi</th>
                                         @endif
@@ -108,6 +109,7 @@
                                             </td>
                                             <td>{{ $detail->ukuran }}</td>
                                             <td>{{ $detail->stok }}</td>
+                                             <td>{{ 'Rp ' . number_format($detail->harga_normal, 0, ',', '.') }}</td>
                                             @if (Route::currentRouteName() == 'pemusnahan-barang.detail-barang')
                                                 <td>
                                                     <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
