@@ -12,7 +12,7 @@
                                 </span>
                             </div>
                         </div>
-                        
+
                         <!-- Content -->
                         <div class="flex-1">
                             <div class="flex items-center justify-between">
@@ -21,7 +21,7 @@
                                     {{ $review->tanggal_review->format('d F Y') }}
                                 </span>
                             </div>
-                            
+
                             <!-- Rating -->
                             <div class="flex items-center mt-1">
                                 @for($i = 1; $i <= 5; $i++)
@@ -31,24 +31,21 @@
                                 @endfor
                                 <span class="ml-2 text-sm text-gray-600">{{ $review->rating }}/5</span>
                             </div>
-                            
+
                             <!-- Comment -->
                             @if($review->komentar)
                                 <p class="mt-3 text-sm text-gray-600">{{ $review->komentar }}</p>
                             @endif
-                            
+
                             <!-- Actions for own review -->
-                            @auth
+                            @if (Auth::guard('pelanggan')->check()) {
                                 @if($review->user_id == auth()->id())
                                     <div class="flex items-center space-x-4 mt-3">
-                                        <a href="{{ route('ulasan.edit', $review->id) }}" 
-                                           class="text-sm text-blue-600 hover:text-blue-800">
+                                        <a href="{{ route('ulasan.edit', $review->id) }}" class="text-sm text-blue-600 hover:text-blue-800">
                                             Edit
                                         </a>
-                                        <form action="{{ route('ulasan.destroy', $review->id) }}" 
-                                              method="POST" 
-                                              class="inline"
-                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus ulasan ini?')">
+                                        <form action="{{ route('ulasan.destroy', $review->id) }}" method="POST" class="inline"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus ulasan ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-sm text-red-600 hover:text-red-800">
@@ -57,13 +54,13 @@
                                         </form>
                                     </div>
                                 @endif
-                            @endauth
+                            @endif
                         </div>
                     </div>
                 </div>
             @endforeach
         </div>
-        
+
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-gray-200">
             {{ $ulasan->links() }}

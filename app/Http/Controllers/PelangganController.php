@@ -155,24 +155,25 @@ class PelangganController extends Controller
         // Cek apakah user bisa memberikan ulasan
         $canReview = false;
         $hasPurchased = false;
-    
-        if (Auth::check()) {
-            $user = Auth::user();
-    
-            $hasPurchased = $user->transaksis()
-                ->whereHas('detailTransaksis', function ($query) use ($barang) {
+
+        if (Auth::guard('pelanggan')->check()) {
+            $user = Auth::guard('pelanggan')->user();
+
+            $hasPurchased = $user->transaksi()
+                ->whereHas('detailTransaksi', function ($query) use ($barang) {
                     $query->where('kode_barang', $barang->kode_barang);
                 })
                 ->where('status', 'selesai')
                 ->exists();
-    
+
             $hasReviewed = Ulasan::where('kode_barang', $barang->kode_barang)
                 ->where('id_pelanggan', $user->id_pelanggan)
                 ->exists();
-    
+
             $canReview = $hasPurchased && !$hasReviewed;
         }
-    
+
+
         return view('pelanggan.barang.show', compact(
             'barang',
             'barangTerkait',

@@ -1,15 +1,16 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Barang;
-use App\Models\DetailBarang;
-use App\Models\Gambar;
 use App\Models\Tipe;
-use App\Models\Warna;
 use App\Models\Brand;
+use App\Models\Warna;
+use App\Models\Barang;
+use App\Models\Gambar;
+use Illuminate\Support\Str;
+use App\Models\DetailBarang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class BarangController extends Controller
 {
@@ -144,8 +145,6 @@ class BarangController extends Controller
 
     public function update(Request $request, $kode_barang)
     {
-        $barang = Barang::findOrFail($kode_barang);
-    
         $request->validate([
             'nama_barang' => 'required|max:100',
             'berat' => 'nullable|integer',
@@ -160,144 +159,127 @@ class BarangController extends Controller
             'detail_barang.*.stok_minimum' => 'nullable|integer|min:0',
             'detail_barang.*.potongan_harga' => 'nullable|integer|min:0',
         ]);
-    
+
         DB::beginTransaction();
-    
+
         try {
-            // Update gambar utama jika ada
+            // Cari barang yang akan diupdate
+            $barang = Barang::findOrFail($kode_barang);
+
+            // Handle upload gambar utama
+            $gambar_utama = $barang->gambar; // Gunakan gambar lama jika tidak ada yang baru
             if ($request->hasFile('gambar_utama')) {
-                // Hapus gambar lama
-                if ($barang->gambar) {
-                    Storage::delete('public/barang/' . $barang->gambar);
+                // Hapus gambar lama jika ada
+                if ($barang->gambar && Storage::disk('public')->exists($barang->gambar)) {
+                    Storage::disk('public')->delete($barang->gambar);
                 }
-                $barang->gambar = $request->file('gambar_utama')->store('barang_images', 'public');
+
+                $gambar_utama = $request->file('gambar_utama')->store('barang_images', 'public');
             }
-    
-            // Update barang
+
+            // Update data barang
             $barang->update([
                 'nama_barang' => $request->nama_barang,
                 'berat' => $request->berat,
                 'deskripsi' => $request->deskripsi,
+                'gambar' => $gambar_utama,
                 'kode_tipe' => $request->kode_tipe,
-                'gambar' => $barang->gambar,
             ]);
-    
-            // PERBAIKAN: Cek detail yang bisa dihapus vs yang tidak bisa
+
+            // Update detail barang
+            // Ambil detail barang yang sudah ada
             $existingDetails = DetailBarang::where('kode_barang', $kode_barang)->get();
-            $cannotDeleteDetails = [];
-            $deletableDetails = [];
-    
-            foreach ($existingDetails as $detail) {
-                // Cek apakah detail ini digunakan di tabel lain (pemusnahan_barang, dll)
-                $isUsedInPemusnahan = DB::table('pemusnahan_barang')
-                    ->where('kode_detail', $detail->kode_detail)
-                    ->exists();
-                
-                // Tambahkan pengecekan tabel lain yang mungkin menggunakan kode_detail
-                $isUsedInTransaksi = DB::table('detail_transaksi')
-                    ->where('kode_detail', $detail->kode_detail)
-                    ->exists();
-    
-                if ($isUsedInPemusnahan || $isUsedInTransaksi) {
-                    $cannotDeleteDetails[] = $detail;
+            $existingDetailIds = [];
+
+            foreach ($request->detail_barang as $index => $detail) {
+                // Cek apakah detail dengan ukuran dan warna yang sama sudah ada
+                $existingDetail = $existingDetails->where('ukuran', $detail['ukuran'])
+                    ->where('kode_warna', $detail['kode_warna'])
+                    ->first();
+
+                if ($existingDetail) {
+                    // Update detail yang sudah ada (TIDAK mengupdate stok dan harga_beli)
+                    $existingDetail->update([
+                        'harga_normal' => $detail['harga_normal'] ?? 0,
+                        'stok_minimum' => $detail['stok_minimum'] ?? 0,
+                        'potongan_harga' => $detail['potongan_harga'] ?? 0,
+                    ]);
+
+                    $existingDetailIds[] = $existingDetail->kode_detail;
                 } else {
-                    $deletableDetails[] = $detail;
-                }
-            }
-    
-            // Hapus hanya detail yang bisa dihapus
-            foreach ($deletableDetails as $detail) {
-                $detail->delete();
-            }
-    
-            // Hitung counter berdasarkan detail yang tidak bisa dihapus
-            $warnaCounters = [];
-            foreach ($cannotDeleteDetails as $detail) {
-                $warna = $detail->kode_warna;
-                if (!isset($warnaCounters[$warna])) {
-                    $warnaCounters[$warna] = 0;
-                }
-                $warnaCounters[$warna]++;
-            }
-    
-            // Simpan detail barang baru
-            foreach ($request->detail_barang as $detail) {
-                $kode_warna = $detail['kode_warna'];
-                
-                // Increment counter untuk warna ini
-                if (!isset($warnaCounters[$kode_warna])) {
-                    $warnaCounters[$kode_warna] = 0;
-                }
-                $warnaCounters[$kode_warna]++;
-    
-                // Generate kode detail dengan counter yang sudah di-increment
-                $kode_detail = DetailBarang::generateKodeDetail(
-                    $kode_barang,
-                    $kode_warna,
-                    $warnaCounters[$kode_warna]
-                );
-    
-                // Safety check: pastikan kode_detail unique
-                $attempt = 0;
-                $originalKode = $kode_detail;
-                while (DetailBarang::where('kode_detail', $kode_detail)->exists() && $attempt < 50) {
-                    $attempt++;
+                    // Buat detail baru
+                    $existingCount = DetailBarang::where('kode_barang', $kode_barang)
+                        ->where('kode_warna', $detail['kode_warna'])
+                        ->count();
+
                     $kode_detail = DetailBarang::generateKodeDetail(
                         $kode_barang,
-                        $kode_warna,
-                        $warnaCounters[$kode_warna] + $attempt
+                        $detail['kode_warna'],
+                        $existingCount + 1
                     );
+
+                    $newDetail = DetailBarang::create([
+                        'kode_detail' => $kode_detail,
+                        'kode_barang' => $kode_barang,
+                        'stok' => 0, // Default stok = 0 untuk detail baru
+                        'ukuran' => $detail['ukuran'],
+                        'kode_warna' => $detail['kode_warna'],
+                        'harga_normal' => $detail['harga_normal'] ?? 0,
+                        'stok_minimum' => $detail['stok_minimum'] ?? 0,
+                        'potongan_harga' => $detail['potongan_harga'] ?? 0,
+                    ]);
+
+                    $existingDetailIds[] = $newDetail->kode_detail;
                 }
-    
-                if ($attempt >= 50) {
-                    throw new \Exception("Tidak dapat generate kode_detail yang unique untuk {$kode_barang}-{$kode_warna}");
-                }
-    
-                DetailBarang::create([
-                    'kode_detail' => $kode_detail,
-                    'kode_barang' => $kode_barang,
-                    'stok' => 0,
-                    'ukuran' => $detail['ukuran'],
-                    'kode_warna' => $kode_warna,
-                    // 'harga_beli' => 0,
-                    'harga_normal' => $detail['harga_normal'] ?? 0,
-                    'stok_minimum' => $detail['stok_minimum'] ?? 0,
-                    'potongan_harga' => $detail['potongan_harga'] ?? 0,
-                ]);
             }
-    
-            // Upload gambar pendukung baru jika ada
+
+            // Hapus detail yang tidak ada dalam form (detail yang dihapus user)
+            DetailBarang::where('kode_barang', $kode_barang)
+                ->whereNotIn('kode_detail', $existingDetailIds)
+                ->delete();
+
+            // Handle upload gambar pendukung
             if ($request->hasFile('gambar_pendukung')) {
                 foreach ($request->file('gambar_pendukung') as $file) {
                     $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
                     $file->storeAs('public/barang', $filename);
-    
+
                     Gambar::create([
                         'kode_barang' => $kode_barang,
                         'gambar' => $filename,
                     ]);
                 }
             }
-    
+
             DB::commit();
-    
-            $message = 'Data barang berhasil diperbarui';
-            if (!empty($cannotDeleteDetails)) {
-                $message .= '. Beberapa detail lama tidak dapat dihapus karena sedang digunakan dalam transaksi lain.';
-            }
-    
-            return redirect()->route('barang.index')->with('success', $message);
-                
+
+            return redirect()->route('barang.index')
+                ->with('success', 'Data barang berhasil diupdate');
         } catch (\Exception $e) {
             DB::rollback();
-            
-            // Debug logging
-            \Log::error('Error updating barang: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
             return redirect()->back()
-                ->with('error', 'Gagal memperbarui data: ' . $e->getMessage())
+                ->with('error', 'Gagal mengupdate data: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+
+    // Method tambahan untuk menghapus gambar pendukung (sudah ada di JavaScript)
+    public function deleteGambar($kode_gambar)
+    {
+        try {
+            $gambar = Gambar::findOrFail($kode_gambar);
+
+            // Hapus file dari storage
+            if (Storage::disk('public')->exists('barang/' . $gambar->gambar)) {
+                Storage::disk('public')->delete('barang/' . $gambar->gambar);
+            }
+
+            // Hapus record dari database
+            $gambar->delete();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 

@@ -56,8 +56,8 @@
             </div>
 
             @php
-                $toko = \App\Models\Toko::first();
-                $biayaReseller = $toko ? number_format($toko->biaya_pendaftaran_reseller, 0, ',', '.') : '100.000';
+$toko = \App\Models\Toko::first();
+$biayaReseller = $toko ? number_format($toko->biaya_pendaftaran_reseller, 0, ',', '.') : '100.000';
             @endphp
 
             <div id="reseller-info" class="bg-purple-50 text-purple-800 p-4 rounded-md mb-6 hidden">
@@ -137,7 +137,7 @@
                     @enderror
                 </div>
 
-                <div>
+                {{-- <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -148,9 +148,9 @@
                             placeholder="Masukkan alamat lengkap" rows="3">{{ old('alamat_pengguna') }}</textarea>
                     </div>
                     @error('alamat_pengguna')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
-                </div>
+                </div> --}}
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Kata Sandi</label>

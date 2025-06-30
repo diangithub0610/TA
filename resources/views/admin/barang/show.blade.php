@@ -65,10 +65,6 @@
                                 <th>Berat</th>
                                 <td>{{ $barang->berat }} gram</td>
                             </tr>
-                            <tr>
-                                <th>Harga</th>
-                                <td>{{ $barang->formatted_harga }}</td>
-                            </tr>
                         </table>
 
                         @if ($barang->deskripsi)
@@ -92,6 +88,7 @@
                                         <th>Warna</th>
                                         <th>Ukuran</th>
                                         <th>Stok</th>
+                                        <th>Stok Minimum</th>
                                         <th>Harga</th>
                                         @if (Route::currentRouteName() == 'pemusnahan-barang.detail-barang')
                                             <th>Aksi</th>
@@ -109,6 +106,7 @@
                                             </td>
                                             <td>{{ $detail->ukuran }}</td>
                                             <td>{{ $detail->stok }}</td>
+                                            <td>{{ $detail->stok_minimum }}</td>
                                              <td>{{ 'Rp ' . number_format($detail->harga_normal, 0, ',', '.') }}</td>
                                             @if (Route::currentRouteName() == 'pemusnahan-barang.detail-barang')
                                                 <td>
