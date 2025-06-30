@@ -23,6 +23,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PemusnahanController;
+use App\Http\Controllers\PengirimanController;
 use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\RegistrasiController;
 use App\Http\Controllers\BarangMasukController;
@@ -396,4 +397,20 @@ Route::put('/profile/update', [ManagementUserController::class, 'updateProfile']
 Route::post('/profile/update-password', [ManagementUserController::class, 'updatePassword'])->name('profile.update-password');
 Route::delete('/profile/delete-foto', [ManagementUserController::class, 'deleteFotoProfil'])->name('profile.delete-foto');
 
+
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    // Pengiriman Routes
+    Route::prefix('pengiriman')->name('pengiriman.')->group(function () {
+        Route::get('/', [PengirimanController::class, 'index'])->name('index');
+        Route::get('/{id}', [PengirimanController::class, 'show'])->name('show');
+        Route::get('/{id}/edit-resi', [PengirimanController::class, 'editResi'])->name('edit-resi');
+        Route::put('/{id}/update-resi', [PengirimanController::class, 'updateResi'])->name('update-resi');
+
+        Route::patch('/update-semua-tracking', [PengirimanController::class, 'updateSemuaTracking'])->name('update-semua-tracking');
+    });
+});
+
+// Route untuk pelanggan cek tracking
+Route::get('/tracking/{kode_transaksi}', [PengirimanController::class, 'trackingPelanggan'])->name('tracking.pelanggan');
 

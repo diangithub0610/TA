@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\PengirimanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,5 +27,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //             ->withoutMiddleware(['csrf']);
 //     });
 
+Route::patch('/admin/pengiriman/{id}/update-tracking', [PengirimanController::class, 'updateTracking'])->name('update-tracking');
+
+Route::post('/debug/tracking-api', [PengirimanController::class, 'debugTrackingAPI'])
+    ->name('debug.tracking-api');
+
+// Route untuk test courier codes
+Route::post('/debug/test-couriers', [PengirimanController::class, 'testCourierCodes'])
+    ->name('debug.test-couriers');
 
 Route::post('/midtrans/notification/pendaftaran', [App\Http\Controllers\RegistrasiController::class, 'notifikasi'])->name('midtrans.notification');

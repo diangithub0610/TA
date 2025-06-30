@@ -435,23 +435,23 @@ class PembayaranController extends Controller
     /**
      * Membuat data pengiriman setelah pembayaran berhasil
      */
-    private function createPengiriman(Transaksi $transaksi)
-    {
-        // Cek apakah pengiriman sudah ada
-        $pengiriman = Pengiriman::where('kode_transaksi', $transaksi->kode_transaksi)->first();
+    // private function createPengiriman(Transaksi $transaksi)
+    // {
+    //     // Cek apakah pengiriman sudah ada
+    //     $pengiriman = Pengiriman::where('kode_transaksi', $transaksi->kode_transaksi)->first();
 
-        // Jika belum ada, buat baru
-        if (!$pengiriman) {
-            Pengiriman::create([
-                'kode_pengiriman' => 'KRM001',
-                'kode_transaksi' => $transaksi->kode_transaksi,
-                'status' => 'disiapkan',
-                'tanggal_pengiriman' => null,
-                'tanggal_estimasi_tiba' => null,
-                'tanggal_tiba' => null
-            ]);
-        }
-    }
+    //     // Jika belum ada, buat baru
+    //     if (!$pengiriman) {
+    //         Pengiriman::create([
+    //             'kode_pengiriman' => 'KRM001',
+    //             'kode_transaksi' => $transaksi->kode_transaksi,
+    //             'status' => 'disiapkan',
+    //             'tanggal_pengiriman' => null,
+    //             'tanggal_estimasi_tiba' => null,
+    //             'tanggal_tiba' => null
+    //         ]);
+    //     }
+    // }
 
     /**
      * Handle redirect setelah pembayaran berhasil

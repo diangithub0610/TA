@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Pengiriman;
 use App\Models\Transaksi;
+use App\Models\Pengiriman;
+use Illuminate\Http\Request;
 use App\Services\TrackingService;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class PengirimanController extends Controller
 {
@@ -17,51 +19,6 @@ class PengirimanController extends Controller
         $this->trackingService = $trackingService;
     }
 
-    /**
-     * Menampilkan daftar pengiriman
-     */
-    public function index(Request $request)
-    {
-        $query = Pengiriman::with(['transaksi', 'transaksi.pelanggan'])
-            ->orderBy('created_at', 'desc');
-
-        // Filter berdasarkan status
-        if ($request->filled('status')) {
-            $query->where('status_pengiriman', $request->status);
-        }
-
-        // Filter berdasarkan ekspedisi
-        if ($request->filled('ekspedisi')) {
-            $query->where('ekspedisi', $request->ekspedisi);
-        }
-
-        // Search berdasarkan nomor resi atau kode transaksi
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('nomor_resi', 'like', "%{$search}%")
-                    ->orWhere('kode_transaksi', 'like', "%{$search}%");
-            });
-        }
-
-        $pengiriman = $query->paginate(20);
-
-        // Data untuk filter
-        $statusList = [
-            'menunggu_pengiriman' => 'Menunggu Pengiriman',
-            'dikemas' => 'Sedang Dikemas',
-            'diserahkan_ke_kurir' => 'Diserahkan ke Kurir',
-            'dalam_perjalanan' => 'Dalam Perjalanan',
-            'tiba_di_kota_tujuan' => 'Tiba di Kota Tujuan',
-            'sedang_diantar' => 'Sedang Diantar',
-            'terkirim' => 'Terkirim',
-            'gagal_kirim' => 'Gagal Kirim'
-        ];
-
-        $ekspedisiList = Pengiriman::distinct()->pluck('ekspedisi')->filter();
-
-        return view('admin.pengiriman.index', compact('pengiriman', 'statusList', 'ekspedisiList'));
-    }
 
     /**
      * Menampilkan detail pengiriman
@@ -73,7 +30,7 @@ class PengirimanController extends Controller
 
         $trackingData = $this->trackingService->getPengirimanDenganTracking($id);
 
-        return view('admin.pengiriman.show', compact('pengiriman', 'trackingData'));
+        return view('admin.shopkeeper.pengiriman', compact('pengiriman', 'trackingData'));
     }
 
     /**
@@ -82,7 +39,7 @@ class PengirimanController extends Controller
     public function editResi($id)
     {
         $pengiriman = Pengiriman::with('transaksi')->findOrFail($id);
-        return view('admin.pengiriman.edit-resi', compact('pengiriman'));
+        return view('admin.shopkeeper.edit-resi', compact('pengiriman'));
     }
 
     /**
@@ -122,22 +79,107 @@ class PengirimanController extends Controller
     /**
      * Update tracking manual untuk satu pengiriman
      */
+    // public function updateTracking($id)
+    // {
+    //     try {
+    //         $pengiriman = Pengiriman::findOrFail($id);
+    //         $result = $this->trackingService->updateTrackingTunggal($pengiriman);
+
+    //         if ($result['success']) {
+    //             return redirect()->back()->with('success', 'Tracking berhasil diupdate');
+    //         } else {
+    //             return redirect()->back()->with('error', $result['message']);
+    //         }
+    //     } catch (\Exception $e) {
+    //         return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    //     }
+    // }
+
     public function updateTracking($id)
     {
         try {
             $pengiriman = Pengiriman::findOrFail($id);
+
+            // Validasi data pengiriman
+            if (empty($pengiriman->nomor_resi)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nomor resi tidak ditemukan pada pengiriman ini'
+                ], 400);
+            }
+
+            if (empty($pengiriman->ekspedisi)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data ekspedisi tidak ditemukan pada pengiriman ini'
+                ], 400);
+            }
+
             $result = $this->trackingService->updateTrackingTunggal($pengiriman);
 
             if ($result['success']) {
-                return redirect()->back()->with('success', 'Tracking berhasil diupdate');
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tracking berhasil diupdate',
+                    'data' => [
+                        'pengiriman_id' => $pengiriman->id_pengiriman,
+                        'nomor_resi' => $pengiriman->nomor_resi,
+                        'ekspedisi' => $pengiriman->ekspedisi,
+                        'tracking_info' => $result['data'] ?? null
+                    ]
+                ]);
             } else {
-                return redirect()->back()->with('error', $result['message']);
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'debug_info' => [
+                        'nomor_resi' => $pengiriman->nomor_resi,
+                        'ekspedisi' => $pengiriman->ekspedisi
+                    ]
+                ], 400);
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            Log::error('Error in updateTracking controller: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ], 500);
         }
     }
 
+    // Method tambahan untuk mendapatkan detail tracking
+    public function getTrackingDetail($id)
+    {
+        try {
+            $pengiriman = Pengiriman::findOrFail($id);
+
+            if (empty($pengiriman->nomor_resi)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nomor resi tidak ditemukan'
+                ], 400);
+            }
+
+            // Ambil data tracking langsung dari API tanpa update database
+            $trackingData = $this->trackingService->getTrackingFromAPIAlternative($pengiriman->nomor_resi, $pengiriman->ekspedisi);
+
+            return response()->json([
+                'success' => $trackingData['success'],
+                'message' => $trackingData['success'] ? 'Data tracking berhasil diambil' : $trackingData['message'],
+                'data' => $trackingData['data'] ?? null
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getTrackingDetail: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Update tracking untuk semua pengiriman aktif
      */
@@ -158,50 +200,119 @@ class PengirimanController extends Controller
         }
     }
 
-    /**
-     * Export data pengiriman
-     */
-    public function export(Request $request)
+    public function debugTrackingAPI(Request $request)
     {
-        // Implement export logic here
-        // Bisa menggunakan Laravel Excel atau export manual
+        try {
+            $awb = $request->input('awb', 'JP9323358880');
+            $courier = $request->input('courier', 'jnt');
 
-        return redirect()->back()->with('info', 'Fitur export sedang dalam pengembangan');
+            $apiKey = config('services.rajaongkir.key');
+            $baseUrl = config('services.rajaongkir.url');
+
+            Log::info('Debug Tracking API', [
+                'awb' => $awb,
+                'courier' => $courier,
+                'apiKey' => substr($apiKey, 0, 10) . '...',
+                'baseUrl' => $baseUrl
+            ]);
+
+            // Test 1: Query Parameters
+            $url1 = $baseUrl . '/track/waybill?' . http_build_query([
+                'awb' => $awb,
+                'courier' => $courier
+            ]);
+
+            $response1 = Http::withHeaders([
+                'key' => $apiKey
+            ])->post($url1);
+
+            // Test 2: Form Data
+            $response2 = Http::withHeaders([
+                'key' => $apiKey,
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ])->asForm()->post($baseUrl . '/track/waybill', [
+                'awb' => $awb,
+                'courier' => $courier
+            ]);
+
+            // Test 3: JSON Body
+            $response3 = Http::withHeaders([
+                'key' => $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ])->post($baseUrl . '/track/waybill', [
+                'awb' => $awb,
+                'courier' => $courier
+            ]);
+
+            return response()->json([
+                'debug_info' => [
+                    'awb' => $awb,
+                    'courier' => $courier,
+                    'api_key_prefix' => substr($apiKey, 0, 10) . '...',
+                    'base_url' => $baseUrl
+                ],
+                'test_1_query_params' => [
+                    'url' => $url1,
+                    'status' => $response1->status(),
+                    'response' => $response1->json(),
+                    'headers_sent' => ['key' => substr($apiKey, 0, 10) . '...']
+                ],
+                'test_2_form_data' => [
+                    'status' => $response2->status(),
+                    'response' => $response2->json(),
+                    'method' => 'POST with form data'
+                ],
+                'test_3_json_body' => [
+                    'status' => $response3->status(),
+                    'response' => $response3->json(),
+                    'method' => 'POST with JSON body'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
-    /**
-     * Dashboard pengiriman - statistik
-     */
-    public function dashboard()
+    // Method untuk test dengan berbagai courier codes
+    public function testCourierCodes(Request $request)
     {
-        $stats = [
-            'total_pengiriman' => Pengiriman::count(),
-            'menunggu_pengiriman' => Pengiriman::where('status_pengiriman', 'menunggu_pengiriman')->count(),
-            'dalam_perjalanan' => Pengiriman::whereIn('status_pengiriman', ['dikemas', 'diserahkan_ke_kurir', 'dalam_perjalanan', 'tiba_di_kota_tujuan', 'sedang_diantar'])->count(),
-            'terkirim' => Pengiriman::where('status_pengiriman', 'terkirim')->count(),
-            'gagal_kirim' => Pengiriman::where('status_pengiriman', 'gagal_kirim')->count(),
-        ];
+        $awb = $request->input('awb', 'JP9323358880');
+        $testCouriers = ['jnt', 'j&t', 'jne', 'tiki', 'pos', 'sicepat'];
 
-        // Pengiriman terbaru yang perlu nomor resi
-        $perluResi = Pengiriman::with(['transaksi', 'transaksi.pelanggan'])
-            ->whereNull('nomor_resi')
-            ->where('status_pengiriman', 'menunggu_pengiriman')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        $apiKey = config('services.rajaongkir.key');
+        $baseUrl = config('services.rajaongkir.url');
 
-        // Pengiriman yang sudah lama tidak diupdate
-        $perluUpdate = Pengiriman::with(['transaksi', 'transaksi.pelanggan'])
-            ->whereNotNull('nomor_resi')
-            ->whereNotIn('status_pengiriman', ['terkirim', 'gagal_kirim'])
-            ->where(function ($query) {
-                $query->whereNull('terakhir_update_tracking')
-                    ->orWhere('terakhir_update_tracking', '<', now()->subHours(6));
-            })
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        $results = [];
 
-        return view('admin.pengiriman.dashboard', compact('stats', 'perluResi', 'perluUpdate'));
+        foreach ($testCouriers as $courier) {
+            try {
+                $response = Http::withHeaders([
+                    'key' => $apiKey,
+                    'Content-Type' => 'application/x-www-form-urlencoded'
+                ])->asForm()->post($baseUrl . '/track/waybill', [
+                    'awb' => $awb,
+                    'courier' => $courier
+                ]);
+
+                $results[$courier] = [
+                    'status' => $response->status(),
+                    'success' => $response->successful(),
+                    'response' => $response->json()
+                ];
+            } catch (\Exception $e) {
+                $results[$courier] = [
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return response()->json([
+            'awb' => $awb,
+            'test_results' => $results
+        ]);
     }
 }

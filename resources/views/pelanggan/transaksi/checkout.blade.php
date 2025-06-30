@@ -1,458 +1,455 @@
 @extends('pelanggan.layouts.app')
 @section('title', 'Checkout')
 @section('content')
-    <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-10">
-        <div class="container mx-auto px-4 py-8">
-            <h1 class="text-2xl font-bold mb-6">Checkout</h1>
-
-            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
-                <div class="lg:col-span-8">
-                    <!-- Alamat Pengiriman -->
-                    <div class="bg-white rounded-lg shadow mb-6">
-                        <div class="p-4 border-b flex justify-between items-center">
-                            <h2 class="text-lg font-medium">Alamat Pengiriman</h2>
-                            <button type="button" id="btnTambahAlamat" class="text-custom hover:text-custom/80">
-                                <i class="fas fa-plus-circle mr-1"></i> Tambah Alamat Baru
-                            </button>
-                        </div>
-
-                        <div class="p-4">
-                            @if ($alamat->count() > 0)
-                                <div class="space-y-4">
-                                    @foreach ($alamat as $adr)
-                                        <div class="border rounded-lg p-4 {{ $adr->is_utama ? 'border-custom' : 'border-gray-200' }} cursor-pointer alamat-card"
-                                            data-id="{{ $adr->id_alamat }}" data-kecamatan-id="{{ $adr->kecamatan_id }}">
-                                            <div class="flex justify-between">
-                                                <div>
-                                                    <div class="flex items-center">
-                                                        <h3 class="font-medium">{{ $adr->nama_alamat }}</h3>
-                                                        @if ($adr->is_utama)
-                                                            <span
-                                                                class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Utama</span>
-                                                        @endif
-                                                    </div>
-                                                    <p class="text-sm text-gray-600 mt-1">{{ $adr->nama_penerima }}
-                                                        ({{ $adr->no_hp_penerima }})
-                                                    </p>
-                                                    <p class="text-sm text-gray-600 mt-1">
-                                                       {{ $adr->nama_alamat}}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <div>
-                                                        <input type="radio" name="alamat_pengiriman"
-                                                            id="alamat-{{ $adr->id_alamat }}"
-                                                            value="{{ $adr->id_alamat }}"
-                                                            data-kecamatan-id="{{ $adr->kecamatan_id }}"
-                                                            {{ $adr->is_utama ? 'checked' : '' }} class="radio-alamat">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-
-                                    <script>
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            // Menangani klik pada card alamat
-                                            const alamatCards = document.querySelectorAll('.alamat-card');
-
-                                            // Fungsi untuk mengatur border pada semua card
-                                            function updateBorders(selectedId) {
-                                                alamatCards.forEach(function(card) {
-                                                    const cardId = card.getAttribute('data-id');
-                                                    if (cardId === selectedId) {
-                                                        card.classList.remove('border-gray-200');
-                                                        card.classList.add('border-custom');
-                                                    } else {
-                                                        card.classList.remove('border-custom');
-                                                        card.classList.add('border-gray-200');
-                                                    }
-                                                });
-                                            }
-
-                                            // Set border awal berdasarkan radio button yang sudah checked
-                                            const checkedRadio = document.querySelector('input[name="alamat_pengiriman"]:checked');
-                                            if (checkedRadio) {
-                                                updateBorders(checkedRadio.value);
-                                            }
-
-                                            // Event listener untuk klik pada card
-                                            alamatCards.forEach(function(card) {
-                                                card.addEventListener('click', function() {
-                                                    const alamatId = this.getAttribute('data-id');
-                                                    const radioBtn = document.getElementById('alamat-' + alamatId);
-
-                                                    // Mengecek semua radio button terkait alamat
-                                                    const allRadios = document.querySelectorAll('input[name="alamat_pengiriman"]');
-                                                    allRadios.forEach(function(radio) {
-                                                        radio.checked = false;
-                                                    });
-
-                                                    // Pilih radio button yang sesuai
-                                                    radioBtn.checked = true;
-
-                                                    // Update border pada semua card
-                                                    updateBorders(alamatId);
-
-                                                    // Trigger event change untuk radio button
-                                                    const event = new Event('change');
-                                                    radioBtn.dispatchEvent(event);
-                                                });
-                                            });
-
-                                            // Tambahkan event listener pada radio button untuk menangani kasus klik langsung pada radio
-                                            const radioButtons = document.querySelectorAll('.radio-alamat');
-                                            radioButtons.forEach(function(radio) {
-                                                radio.addEventListener('change', function() {
-                                                    if (this.checked) {
-                                                        updateBorders(this.value);
-                                                    }
-                                                });
-                                            });
-                                        });
-                                    </script>
-                                </div>
-                            @else
-                                <div class="text-center py-4">
-                                    <p class="text-gray-500 mb-4">Anda belum memiliki alamat pengiriman</p>
-                                    <button type="button" id="btnTambahAlamatIcon"
-                                        class="btn-tambah-alamat bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90">
-                                        Tambah Alamat Baru
-                                    </button>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-
-
-                    <!-- Metode Pengiriman -->
-                    <div class="bg-white rounded-lg shadow mb-6">
-                        <div class="p-4 border-b">
-                            <h2 class="text-lg font-medium">Metode Pengiriman</h2>
-                        </div>
-
-                        <div class="p-4" id="pengirimanContainer">
-                            <div id="loadingPengiriman" class="text-center py-4 hidden">
-                                <div
-                                    class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-custom">
-                                </div>
-                                <p class="mt-2 text-gray-600">Mengambil data pengiriman...</p>
-                            </div>
-
-                            <div id="errorPengiriman" class="text-center py-4 hidden">
-                                <p class="text-red-500">Pilih alamat pengiriman terlebih dahulu</p>
-                            </div>
-
-                            <div id="pilihKurir" class="mb-4 hidden">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kurir</label>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
-                                        data-kurir="jne">
-                                        <img src="{{ asset('img/ekspedisi/jne.png') }}" alt="JNE"
-                                            class="h-8 mx-auto mb-1">
-                                        <span class="text-sm">JNE</span>
-                                    </div>
-                                    <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
-                                        data-kurir="pos">
-                                        <img src="{{ asset('img/ekspedisi/pos.png') }}" alt="POS"
-                                            class="h-8 mx-auto mb-1">
-                                        <span class="text-sm">POS</span>
-                                    </div>
-                                    <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
-                                        data-kurir="tiki">
-                                        <img src="{{ asset('img/ekspedisi/tiki.png') }}" alt="TIKI"
-                                            class="h-8 mx-auto mb-1">
-                                        <span class="text-sm">TIKI</span>
-                                    </div>
-                                    <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
-                                        data-kurir="jnt">
-                                        <img src="{{ asset('img/ekspedisi/jnt.png') }}" alt="J&T"
-                                            class="h-8 mx-auto mb-1">
-                                        <span class="text-sm">J&T</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="layananKurir" class="hidden">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Layanan</label>
-                                <div id="layananContainer" class="space-y-2">
-                                    <!-- Layanan akan diisi melalui AJAX -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Daftar Barang -->
-                    <div class="bg-white rounded-lg shadow">
-                        <div class="p-4 border-b">
-                            <h2 class="text-lg font-medium">Daftar Barang</h2>
-                        </div>
-
-                        <div class="divide-y divide-gray-200">
-                            @foreach ($keranjang as $item)
-                                <div class="p-4 flex items-start">
-                                    <div class="flex-shrink-0 w-16 h-16">
-                                        <img src="{{ asset('storage/' . $item['gambar']) }}"
-                                            alt="{{ $item['nama_barang'] }}" class="w-full h-full object-cover rounded">
-                                    </div>
-                                    <div class="ml-4 flex-1">
-                                        <div class="flex justify-between">
-                                            <div>
-                                                <h3 class="text-sm font-medium text-gray-900">{{ $item['nama_barang'] }}
-                                                </h3>
-                                                <p class="mt-1 text-xs text-gray-500">
-                                                    {{ $item['jumlah'] }} x Rp
-                                                    {{ number_format($item['harga'], 0, ',', '.') }}
-                                                </p>
-                                                <p class="mt-1 text-xs text-gray-500">
-                                                    Ukuran: {{ $item['ukuran'] }} | Warna:
-                                                    <span class="inline-block w-3 h-3 rounded-full align-middle"
-                                                        style="background-color: {{ $item['kode_hex'] }}"></span>
-                                                </p>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-sm font-medium text-gray-900">
-                                                    Rp {{ number_format($item['harga'] * $item['jumlah'], 0, ',', '.') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- Opsi Dropship -->
-                    <div class="bg-white rounded-lg shadow mb-6">
-                        <div class="p-4 border-b">
-                            <h2 class="text-lg font-medium">Pengiriman Dropship</h2>
-                        </div>
-                        <div class="p-4">
-                            <div class="mb-4">
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="is_dropship" name="is_dropship"
-                                        class="h-4 w-4 text-custom focus:ring-custom"
-                                        {{ auth()->guard('pelanggan')->user()->role === 'reseller' ? 'checked' : '' }}
-                                        {{ auth()->guard('pelanggan')->user()->role === 'pelanggan' ? 'disabled' : '' }}>
-                                    <label for="is_dropship" class="ml-2 text-sm text-gray-700">
-                                        Kirim sebagai dropship
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div id="dropshipDetails"
-                                class="{{ auth()->guard('pelanggan')->user()->role === 'reseller' ? '' : 'hidden' }}">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="nama_pengirim" class="block text-sm font-medium text-gray-700 mb-1">
-                                            Nama Pengirim
-                                        </label>
-                                        <input type="text" id="nama_pengirim" name="nama_pengirim"
-                                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                            placeholder="Nama pengirim untuk label">
-                                    </div>
-                                    <div>
-                                        <label for="no_hp_pengirim" class="block text-sm font-medium text-gray-700 mb-1">
-                                            No. HP Pengirim
-                                        </label>
-                                        <input type="text" id="no_hp_pengirim" name="no_hp_pengirim"
-                                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                            placeholder="Nomor HP pengirim">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-4 mt-6 lg:mt-0">
-                    <div class="bg-white rounded-lg shadow sticky top-4">
-                        <div class="p-4 border-b">
-                            <h2 class="text-lg font-medium">Ringkasan Pesanan</h2>
-                        </div>
-
-                        <div class="p-4">
-                            <div class="space-y-2">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Total Harga ({{ count($keranjang) }} barang)</span>
-                                    <span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Biaya Pengiriman</span>
-                                    <span id="ongkirDisplay">Rp 0</span>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 pt-4 border-t">
-                                <div class="flex justify-between mb-4">
-                                    <span class="font-medium">Total Tagihan</span>
-                                    <span class="text-lg font-bold text-custom" id="totalDisplay">
-                                        {{-- {{$subtotal}} --}}
-                                        Rp {{ number_format($subtotal, 0, ',', '.') }}
-                                    </span>
-                                </div>
-
-                                <form id="checkoutForm" action="{{ route('checkout.proses') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="id_alamat" id="idAlamat">
-                                    <input type="hidden" name="ekspedisi" id="ekspedisi">
-                                    <input type="hidden" name="layanan_ekspedisi" id="layananEkspedisi">
-                                    <input type="hidden" name="ongkir" id="ongkir" value="0">
-                                    <input type="hidden" name="estimasi_waktu" id="estimasiWaktu">
-                                    <input type="hidden" name="is_dropship" id="is_dropship_hidden"
-                                        value="{{ auth()->guard('pelanggan')->user()->role === 'reseller' ? '1' : '0' }}">
-                                    <input type="hidden" name="nama_pengirim" id="nama_pengirim_hidden" value="">
-                                    <input type="hidden" name="no_hp_pengirim" id="no_hp_pengirim_hidden"
-                                        value="">
-
-                                    <div class="mb-4">
-                                        <label for="keterangan"
-                                            class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
-                                        <textarea name="keterangan" id="keterangan"
-                                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                            rows="2" placeholder="Catatan untuk pesanan (opsional)"></textarea>
-                                    </div>
-
-                                    <button type="submit" id="btnBayar"
-                                        class="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                        disabled>
-                                        Bayar Sekarang
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-10">
+            <div class="container mx-auto px-4 py-8">
+                <h1 class="text-2xl font-bold mb-6">Checkout</h1>
+    {{-- Success Message --}}
+    @if (session('success'))
+        <div class="mb-4 rounded-lg bg-green-100 border border-green-400 text-green-700 px-4 py-3" role="alert">
+            <strong class="font-bold">Berhasil!</strong>
+            <span class="block sm:inline">{{ session('success') }}</span>
         </div>
+    @endif
 
-        <!-- Modal Tambah Alamat -->
-        <div id="modalAlamat" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium">Tambah Alamat Baru</h3>
-                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+    {{-- Error Message --}}
+    @if (session('error'))
+        <div class="mb-4 rounded-lg bg-red-100 border border-red-400 text-red-700 px-4 py-3" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
 
-                <form id="formAlamat" method="POST" action="{{ route('checkout.simpan-alamat') }}">
-                    @csrf
-                    <div class="space-y-4">
-                        <div>
-                            <label for="nama_alamat" class="block text-sm font-medium text-gray-700 mb-1">Label
-                                Alamat</label>
-                            <input type="text" id="nama_alamat" name="nama_alamat"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                placeholder="Rumah, Kantor, dll" required>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="nama_penerima" class="block text-sm font-medium text-gray-700 mb-1">Nama
-                                    Penerima</label>
-                                <input type="text" id="nama_penerima" name="nama_penerima"
-                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                    placeholder="Nama lengkap penerima" required>
-                            </div>
-                            <div>
-                                <label for="no_hp_penerima" class="block text-sm font-medium text-gray-700 mb-1">No. HP
-                                    Penerima</label>
-                                <input type="text" id="no_hp_penerima" name="no_hp_penerima"
-                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                    placeholder="Nomor HP aktif" required>
-                            </div>
-                        </div>
-
-                        <!-- Input Search Lokasi -->
-                        <div>
-                            <label for="search_location" class="block text-sm font-medium text-gray-700 mb-1">Cari
-                                Lokasi</label>
-                            <div class="flex space-x-2">
-                                <input type="text" id="search_location"
-                                    class="flex-1 border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                    placeholder="Ketik minimal 3 huruf...">
-                                <button type="button" id="btn_search_location"
-                                    class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-                                    Cari
+                <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                    <div class="lg:col-span-8">
+                        <!-- Alamat Pengiriman -->
+                        <div class="bg-white rounded-lg shadow mb-6">
+                            <div class="p-4 border-b flex justify-between items-center">
+                                <h2 class="text-lg font-medium">Alamat Pengiriman</h2>
+                                <button type="button" id="btnTambahAlamat" class="text-custom hover:text-custom/80">
+                                    <i class="fas fa-plus-circle mr-1"></i> Tambah Alamat Baru
                                 </button>
                             </div>
-                            <div class="mt-2" id="search_results" style="display:none;">
-                                <select id="location_results" size="5"
-                                    class="w-full border-gray-300 rounded-md shadow-sm mt-2"></select>
+
+                            <div class="p-4">
+                                @if ($alamat->count() > 0)
+                                    <div class="space-y-4">
+                                        @foreach ($alamat as $adr)
+                                            <div class="border rounded-lg p-4 {{ $adr->is_utama ? 'border-custom' : 'border-gray-200' }} cursor-pointer alamat-card"
+                                                data-id="{{ $adr->id_alamat }}" data-kecamatan-id="{{ $adr->kecamatan_id }}">
+                                                <div class="flex justify-between">
+                                                    <div>
+                                                        <div class="flex items-center">
+                                                            <h3 class="font-medium">{{ $adr->nama_alamat }}</h3>
+                                                            @if ($adr->is_utama)
+                                                                <span
+                                                                    class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Utama</span>
+                                                            @endif
+                                                        </div>
+                                                        <p class="text-sm text-gray-600 mt-1">{{ $adr->nama_penerima }}
+                                                            ({{ $adr->no_hp_penerima }})
+                                                        </p>
+                                                        <p class="text-sm text-gray-600 mt-1">
+                                                           {{ $adr->nama_alamat}}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <div>
+                                                            <input type="radio" name="alamat_pengiriman"
+                                                                id="alamat-{{ $adr->id_alamat }}"
+                                                                value="{{ $adr->id_alamat }}"
+                                                                data-kecamatan-id="{{ $adr->kecamatan_id }}"
+                                                                {{ $adr->is_utama ? 'checked' : '' }} class="radio-alamat">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                // Menangani klik pada card alamat
+                                                const alamatCards = document.querySelectorAll('.alamat-card');
+
+                                                // Fungsi untuk mengatur border pada semua card
+                                                function updateBorders(selectedId) {
+                                                    alamatCards.forEach(function(card) {
+                                                        const cardId = card.getAttribute('data-id');
+                                                        if (cardId === selectedId) {
+                                                            card.classList.remove('border-gray-200');
+                                                            card.classList.add('border-custom');
+                                                        } else {
+                                                            card.classList.remove('border-custom');
+                                                            card.classList.add('border-gray-200');
+                                                        }
+                                                    });
+                                                }
+
+                                                // Set border awal berdasarkan radio button yang sudah checked
+                                                const checkedRadio = document.querySelector('input[name="alamat_pengiriman"]:checked');
+                                                if (checkedRadio) {
+                                                    updateBorders(checkedRadio.value);
+                                                }
+
+                                                // Event listener untuk klik pada card
+                                                alamatCards.forEach(function (card) {
+                                                    card.addEventListener('click', function () {
+                                                        const alamatId = this.getAttribute('data-id');
+                                                        const radioBtn = document.getElementById('alamat-' + alamatId);
+
+                                                        // Mengecek semua radio button terkait alamat
+                                                        const allRadios = document.querySelectorAll('input[name="alamat_pengiriman"]');
+                                                        allRadios.forEach(function (radio) {
+                                                            radio.checked = false;
+                                                        });
+
+                                                        // Pilih radio button yang sesuai
+                                                        radioBtn.checked = true;
+
+                                                        // Update border pada semua card
+                                                        updateBorders(alamatId);
+
+                                                        // Trigger event change untuk radio button
+                                                        const event = new Event('change');
+                                                        radioBtn.dispatchEvent(event);
+                                                    });
+                                                });
+
+                                                // Tambahkan event listener pada radio button untuk menangani kasus klik langsung pada radio
+                                                const radioButtons = document.querySelectorAll('.radio-alamat');
+                                                radioButtons.forEach(function (radio) {
+                                                    radio.addEventListener('change', function () {
+                                                        if (this.checked) {
+                                                            updateBorders(this.value);
+                                                        }
+                                                    });
+                                                });
+                                            });
+                                                </script>
+                                        </div>
+                                @else
+                                            <div class="text-center py-4">
+                                                <p class="text-gray-500 mb-4">Anda belum memiliki alamat pengiriman</p>
+                                                <button type="button" id="btnTambahAlamatIcon"
+                                                    class="btn-tambah-alamat bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90">
+                                                    Tambah Alamat Baru
+                                                </button>
+                                            </div>
+                                        @endif
+                                        </div>
+                                        </div>
+
+
+
+                        <!-- Metode Pengiriman -->
+                        <div class="bg-white rounded-lg shadow mb-6">
+                            <div class="p-4 border-b">
+                                <h2 class="text-lg font-medium">Metode Pengiriman</h2>
+                            </div>
+
+                            <div class="p-4" id="pengirimanContainer">
+                                <div id="loadingPengiriman" class="text-center py-4 hidden">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-custom">
+                                    </div>
+                                    <p class="mt-2 text-gray-600">Mengambil data pengiriman...</p>
+                                </div>
+
+                                <div id="errorPengiriman" class="text-center py-4 hidden">
+                                    <p class="text-red-500">Pilih alamat pengiriman terlebih dahulu</p>
+                                </div>
+
+                                <div id="pilihKurir" class="mb-4 hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kurir</label>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option" data-kurir="jne">
+                                            <img src="{{ asset('img/ekspedisi/jne.png') }}" alt="JNE" class="h-8 mx-auto mb-1">
+                                            <span class="text-sm">JNE</span>
+                                        </div>
+                                        <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option" data-kurir="pos">
+                                            <img src="{{ asset('img/ekspedisi/pos.png') }}" alt="POS" class="h-8 mx-auto mb-1">
+                                            <span class="text-sm">POS</span>
+                                        </div>
+                                        <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option"
+                                            data-kurir="tiki">
+                                            <img src="{{ asset('img/ekspedisi/tiki.png') }}" alt="TIKI" class="h-8 mx-auto mb-1">
+                                            <span class="text-sm">TIKI</span>
+                                        </div>
+                                        <div class="border rounded-lg p-3 text-center cursor-pointer hover:border-custom kurir-option" data-kurir="jnt">
+                                            <img src="{{ asset('img/ekspedisi/jnt.png') }}" alt="J&T" class="h-8 mx-auto mb-1">
+                                            <span class="text-sm">J&T</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="layananKurir" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Layanan</label>
+                                    <div id="layananContainer" class="space-y-2">
+                                        <!-- Layanan akan diisi melalui AJAX -->
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
+
+                        <!-- Daftar Barang -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-4 border-b">
+                                <h2 class="text-lg font-medium">Daftar Barang</h2>
+                            </div>
+
+                            <div class="divide-y divide-gray-200">
+                                @foreach ($keranjang as $item)
+                                    <div class="p-4 flex items-start">
+                                        <div class="flex-shrink-0 w-16 h-16">
+                                            <img src="{{ asset('storage/' . $item['gambar']) }}"
+                                                alt="{{ $item['nama_barang'] }}" class="w-full h-full object-cover rounded">
+                                        </div>
+                                        <div class="ml-4 flex-1">
+                                            <div class="flex justify-between">
+                                                <div>
+                                                    <h3 class="text-sm font-medium text-gray-900">{{ $item['nama_barang'] }}
+                                                    </h3>
+                                                    <p class="mt-1 text-xs text-gray-500">
+                                                        {{ $item['jumlah'] }} x Rp
+                                                        {{ number_format($item['harga'], 0, ',', '.') }}
+                                                    </p>
+                                                    <p class="mt-1 text-xs text-gray-500">
+                                                        Ukuran: {{ $item['ukuran'] }} | Warna:
+                                                        <span class="inline-block w-3 h-3 rounded-full align-middle"
+                                                            style="background-color: {{ $item['kode_hex'] }}"></span>
+                                                    </p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-sm font-medium text-gray-900">
+                                                        Rp {{ number_format($item['harga'] * $item['jumlah'], 0, ',', '.') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
 
-                        <!-- Hidden / Readonly Location Fields -->
-                        <input type="hidden" id="provinsi_id" name="provinsi_id">
-                        <input type="hidden" id="kota_id" name="kota_id">
-                        <input type="hidden" id="kecamatan_id" name="kecamatan_id">
+                        <!-- Opsi Dropship -->
+                        <div class="bg-white rounded-lg shadow mb-6">
+                            <div class="p-4 border-b">
+                                <h2 class="text-lg font-medium">Pengiriman Dropship</h2>
+                            </div>
+                            <div class="p-4">
+                                <div class="mb-4">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="is_dropship" name="is_dropship"
+                                            class="h-4 w-4 text-custom focus:ring-custom"
+                                            {{ auth()->guard('pelanggan')->user()->role === 'reseller' ? 'checked' : '' }}
+                                            {{ auth()->guard('pelanggan')->user()->role === 'pelanggan' ? 'disabled' : '' }}>
+                                        <label for="is_dropship" class="ml-2 text-sm text-gray-700">
+                                            Kirim sebagai dropship
+                                        </label>
+                                    </div>
+                                </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="provinsi"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
-                                <input type="text" id="provinsi" name="provinsi"
-                                    class="w-full bg-gray-100 border border-gray-300 rounded-md" readonly required>
-                            </div>
-                            <div>
-                                <label for="kota"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Kota/Kabupaten</label>
-                                <input type="text" id="kota" name="kota"
-                                    class="w-full bg-gray-100 border border-gray-300 rounded-md" readonly required>
-                            </div>
-                        </div>
+                                <div id="dropshipDetails" class="{{ auth()->guard('pelanggan')->user()->role === 'reseller' ? '' : 'hidden' }}">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="nama_pengirim" class="block text-sm font-medium text-gray-700 mb-1">
+                                                Nama Pengirim
+                                            </label>
+                                            <input type="text" id="nama_pengirim" name="nama_pengirim"
+                                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                                placeholder="Nama pengirim untuk label">
+                                        </div>
+                                        <div>
+                                            <label for="no_hp_pengirim" class="block text-sm font-medium text-gray-700 mb-1">
+                                                No. HP Pengirim
+                                            </label>
+                                            <input type="text" id="no_hp_pengirim" name="no_hp_pengirim"
+                                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                                placeholder="Nomor HP pengirim">
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="kecamatan"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Kecamatan</label>
-                                <input type="text" id="kecamatan" name="kecamatan"
-                                    class="w-full bg-gray-100 border border-gray-300 rounded-md" readonly required>
+                    <div class="lg:col-span-4 mt-6 lg:mt-0">
+                        <div class="bg-white rounded-lg shadow sticky top-4">
+                            <div class="p-4 border-b">
+                                <h2 class="text-lg font-medium">Ringkasan Pesanan</h2>
                             </div>
+
+                            <div class="p-4">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Harga ({{ count($keranjang) }} barang)</span>
+                                        <span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Biaya Pengiriman</span>
+                                        <span id="ongkirDisplay">Rp 0</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t">
+                                    <div class="flex justify-between mb-4">
+                                        <span class="font-medium">Total Tagihan</span>
+                                        <span class="text-lg font-bold text-custom" id="totalDisplay">
+                                            {{-- {{$subtotal}} --}}
+                                            Rp {{ number_format($subtotal, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+
+                                    <form id="checkoutForm" action="{{ route('checkout.proses') }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="id_alamat" id="idAlamat">
+                                        <input type="hidden" name="ekspedisi" id="ekspedisi">
+                                        <input type="hidden" name="layanan_ekspedisi" id="layananEkspedisi">
+                                        <input type="hidden" name="ongkir" id="ongkir" value="0">
+                                        <input type="hidden" name="estimasi_waktu" id="estimasiWaktu">
+                                        <input type="hidden" name="is_dropship" id="is_dropship_hidden"
+                                            value="{{ auth()->guard('pelanggan')->user()->role === 'reseller' ? '1' : '0' }}">
+                                        <input type="hidden" name="nama_pengirim" id="nama_pengirim_hidden" value="">
+                                        <input type="hidden" name="no_hp_pengirim" id="no_hp_pengirim_hidden" value="">
+
+                                        <div class="mb-4">
+                                            <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                                            <textarea name="keterangan" id="keterangan"
+                                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                                rows="2" placeholder="Catatan untuk pesanan (opsional)"></textarea>
+                                        </div>
+
+                                        <button type="submit" id="btnBayar"
+                                            class="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                            disabled>
+                                            Bayar Sekarang
+                                        </button>
+                                        </form>
+                                        </div>
+                                        </div>
+                                        </div>
+                                        </div>
+                                        </div>
+                                        </div>
+
+            <!-- Modal Tambah Alamat -->
+            <div id="modalAlamat" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Tambah Alamat Baru</h3>
+                        <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <form id="formAlamat" method="POST" action="{{ route('checkout.simpan-alamat') }}">
+                        @csrf
+                        <div class="space-y-4">
                             <div>
-                                <label for="kelurahan"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Kelurahan/Desa</label>
-                                <input type="text" id="kelurahan" name="kelurahan"
+                                <label for="nama_alamat" class="block text-sm font-medium text-gray-700 mb-1">Label
+                                    Alamat</label>
+                                <input type="text" id="nama_alamat" name="nama_alamat"
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                    placeholder="Rumah, Kantor, dll" required>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="nama_penerima" class="block text-sm font-medium text-gray-700 mb-1">Nama
+                                        Penerima</label>
+                                    <input type="text" id="nama_penerima" name="nama_penerima"
+                                        class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                        placeholder="Nama lengkap penerima" required>
+                                </div>
+                                <div>
+                                    <label for="no_hp_penerima" class="block text-sm font-medium text-gray-700 mb-1">No. HP
+                                        Penerima</label>
+                                    <input type="text" id="no_hp_penerima" name="no_hp_penerima"
+                                        class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                        placeholder="Nomor HP aktif" required>
+                                </div>
+                            </div>
+
+                            <!-- Input Search Lokasi -->
+                            <div>
+                                <label for="search_location" class="block text-sm font-medium text-gray-700 mb-1">Cari
+                                    Lokasi</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" id="search_location"
+                                        class="flex-1 border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                        placeholder="Ketik minimal 3 huruf...">
+                                    <button type="button" id="btn_search_location"
+                                        class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                                        Cari
+                                    </button>
+                                </div>
+                                <div class="mt-2" id="search_results" style="display:none;">
+                                    <select id="location_results" size="5" class="w-full border-gray-300 rounded-md shadow-sm mt-2"></select>
+                                </div>
+                            </div>
+
+                            <!-- Hidden / Readonly Location Fields -->
+                            <input type="hidden" id="provinsi_id" name="provinsi_id">
+                            <input type="hidden" id="kota_id" name="kota_id">
+                            <input type="hidden" id="kecamatan_id" name="kecamatan_id">
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="provinsi" class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
+                                    <input type="text" id="provinsi" name="provinsi" class="w-full bg-gray-100 border border-gray-300 rounded-md"
+                                        readonly required>
+                                </div>
+                                <div>
+                                    <label for="kota" class="block text-sm font-medium text-gray-700 mb-1">Kota/Kabupaten</label>
+                                    <input type="text" id="kota" name="kota" class="w-full bg-gray-100 border border-gray-300 rounded-md" readonly
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="kecamatan" class="block text-sm font-medium text-gray-700 mb-1">Kecamatan</label>
+                                    <input type="text" id="kecamatan" name="kecamatan" class="w-full bg-gray-100 border border-gray-300 rounded-md"
+                                        readonly required>
+                                </div>
+                                <div>
+                                    <label for="kelurahan" class="block text-sm font-medium text-gray-700 mb-1">Kelurahan/Desa</label>
+                                    <input type="text" id="kelurahan" name="kelurahan"
+                                        class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="kode_pos" class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
+                                <input type="text" id="kode_pos" name="kode_pos"
                                     class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
                                     required>
                             </div>
+
+                            <div>
+                                <label for="alamat_lengkap" class="block text-sm font-medium text-gray-700 mb-1">Alamat
+                                    Lengkap</label>
+                                <textarea id="alamat_lengkap" name="alamat_lengkap"
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
+                                    rows="3" placeholder="Nama jalan, nomor rumah, RT/RW, patokan" required></textarea>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is_utama" name="is_utama" class="h-4 w-4 text-custom focus:ring-custom">
+                                <label for="is_utama" class="ml-2 text-sm text-gray-700">Jadikan sebagai alamat utama</label>
+                            </div>
+                            </div>
+
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button type="button" id="btnBatalAlamat" class="px-4 py-2 border rounded-lg hover:bg-gray-100">Batal</button>
+                            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Simpan
+                                Alamat</button>
                         </div>
+                        </form>
 
-                        <div>
-                            <label for="kode_pos" class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
-                            <input type="text" id="kode_pos" name="kode_pos"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                required>
-                        </div>
-
-                        <div>
-                            <label for="alamat_lengkap" class="block text-sm font-medium text-gray-700 mb-1">Alamat
-                                Lengkap</label>
-                            <textarea id="alamat_lengkap" name="alamat_lengkap"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom focus:ring focus:ring-custom focus:ring-opacity-50"
-                                rows="3" placeholder="Nama jalan, nomor rumah, RT/RW, patokan" required></textarea>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input type="checkbox" id="is_utama" name="is_utama"
-                                class="h-4 w-4 text-custom focus:ring-custom">
-                            <label for="is_utama" class="ml-2 text-sm text-gray-700">Jadikan sebagai alamat utama</label>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" id="btnBatalAlamat"
-                            class="px-4 py-2 border rounded-lg hover:bg-gray-100">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Simpan
-                            Alamat</button>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-    </main>
+                </div>
+                </div>
+                </main>
 
 @endsection
 

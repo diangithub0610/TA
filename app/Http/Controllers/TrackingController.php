@@ -18,22 +18,6 @@ class TrackingController extends Controller
     }
 
     /**
-     * Menampilkan daftar pesanan customer dengan status pengiriman
-     */
-    public function index()
-    {
-        $pelanggan = auth()->guard('pelanggan')->user();
-
-        $transaksi = Transaksi::with(['pengiriman', 'pembayaran'])
-            ->where('id_pelanggan', $pelanggan->id_pelanggan)
-            ->whereIn('status', ['menunggu_konfirmasi', 'diproses', 'dikirim', 'selesai'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('customer.tracking.index', compact('transaksi'));
-    }
-
-    /**
      * Menampilkan detail tracking pengiriman
      */
     public function show($kodeTransaksi)
