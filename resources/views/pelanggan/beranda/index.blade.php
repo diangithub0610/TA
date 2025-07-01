@@ -60,9 +60,9 @@
                                             <p class="text-sm text-gray-500 line-through">{{ $item->harganormal }}</p>
                                             <p class="text-lg font-bold text-green-600">{{ $item->harga_termurah }}</p>
                                         @elseif(function_exists('isPelanggan') && isPelanggan())
-                                            <p class="text-lg font-bold text-primary">{{ $item->harga_termurah }}</p>
+                                            <p class="text-lg font-bold text-red-600">{{ $item->harga_termurah }}</p>
                                         @else
-                                            <p class="text-lg font-bold text-primary">{{ $item->harga_termurah }}</p>
+                                            <p class="text-lg font-bold text-red-600">{{ $item->harga_termurah }}</p>
                                         @endif
                                     </div>
                                     <a href="{{ route('pelanggan.detailBarang', $item->kode_barang) }}"
