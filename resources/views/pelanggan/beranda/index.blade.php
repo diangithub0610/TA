@@ -66,7 +66,7 @@
                                         @endif
                                     </div>
                                     <a href="{{ route('pelanggan.detailBarang', $item->kode_barang) }}"
-                                        class="bg-red-600 text-white px-3 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-primary-dark transition-colors">
+                                        class="bg-primary text-white px-3 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-primary-dark transition-colors">
                                         <i class="ri-shopping-cart-2-line mr-1"></i> Beli
                                     </a>
                                 </div>
