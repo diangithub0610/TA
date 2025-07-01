@@ -427,7 +427,7 @@
                                                     {{ $product->tipe->nama_tipe ?? 'No Brand' }}
                                                 </p>
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span class="fw-bold text-primary">Rp
+                                                    <span class="fw-bold text-success">Rp
                                                         {{ number_format($product->harga_normal, 0, ',', '.') }}</span>
                                                     <small class="text-muted">Stok: {{ $stok }}</small>
                                                 </div>
