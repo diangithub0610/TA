@@ -72,7 +72,7 @@
                                             'dibatalkan' => ['class' => 'danger', 'text' => 'Dibatalkan'],
                                         ];
                                         $currentStatus = $statusBadge[$item->status] ?? [
-                                            'class' => 'secondary',
+                                            'class' => 'primary',
                                             'text' => ucfirst($item->status),
                                         ];
                                     @endphp
