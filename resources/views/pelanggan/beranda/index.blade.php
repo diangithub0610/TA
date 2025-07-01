@@ -1,7 +1,7 @@
 @extends('pelanggan.layouts.app')
 @section('title', 'Beranda')
 @section('content')
-    <h1>test</h1>
+    {{-- <h1>test</h1> --}}
         <!-- Hero Section -->
         <div class="carousel relative w-full">
             <div class="carousel-inner">
