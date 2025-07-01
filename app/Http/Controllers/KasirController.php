@@ -89,160 +89,170 @@ class KasirController extends Controller
         ]);
     }
 
-    public function checkReseller(Request $request)
-    {
 
-        $id_reseller = $request->get('id_reseller');
 
-        $reseller = Pelanggan::where('id_pelanggan', $id_reseller)
-            ->where('role', 'reseller')
-            ->first();
+// Perbaikan fungsi checkReseller
+public function checkReseller(Request $request)
+{
+    $id_reseller = $request->get('id_reseller');
 
-        if ($reseller) {
-            return response()->json([
-                'valid' => true,
-                'nama' => $reseller->nama_pelanggan,
-                'discount' => 10 // Anda bisa adjust persentase diskon sesuai kebutuhan
-            ]);
-        }
+    $reseller = Pelanggan::where('id_pelanggan', $id_reseller)
+        ->where('role', 'reseller')
+        ->first();
 
-        return response()->json(['valid' => false]);
-    }
-
-    public function processTransaction(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-
-            $request->validate([
-                'items' => 'required|array',
-                'jenis_transaksi' => 'required|in:offline,marketplace',
-                'marketplace' => 'nullable|in:shopee,tokopedia',
-                'id_reseller' => 'nullable|string',
-                'keterangan' => 'nullable|string'
-            ]);
-
-            // Generate kode transaksi
-            // $kode_transaksi = 'TRX' . date('YmdHis') . rand(100, 999);
-
-            $kodeTransaksi = GenerateId::transaksi();
-
-            // Determine customer
-            // $id_pelanggan = 'GUEST001'; // Default guest customer
-            if ($request->id_reseller) {
-                $reseller = Pelanggan::where('id_pelanggan', $request->id_reseller)
-                    ->where('role', 'reseller')
-                    ->first();
-                if ($reseller) {
-                    $id_pelanggan = $reseller->id_pelanggan;
-                }
-            }
-
-            // Prepare keterangan
-            $keterangan = $request->keterangan ?? '';
-            if ($request->jenis_transaksi == 'marketplace' && $request->marketplace) {
-                $keterangan = ucfirst($request->marketplace) . ($keterangan ? ' - ' . $keterangan : '');
-            }
-
-            $id_pelanggan = $request->input('id_pelanggan');
-            // Create transaction
-            $transaksi = Transaksi::create([
-                'kode_transaksi' => $kodeTransaksi,
-                'id_pelanggan' => $id_pelanggan,
-                'id_pengguna' => auth()->user()->id ?? null,
-                'tanggal_transaksi' => now(),
-                // 'id_alamat' => 'DEFAULT01', // You might need to adjust this
-                'ongkir' => 0,
-                'keterangan' => $keterangan,
-                'ekspedisi' => 'PICKUP',
-                'layanan_ekspedisi' => 'PICKUP',
-                'status' => 'selesai',
-                'jenis' => 'offline'
-            ]);
-
-            // Add transaction details
-            foreach ($request->items as $item) {
-                DetailTransaksi::create([
-                    'kode_transaksi' => $kodeTransaksi,
-                    'kode_detail' => $item['kode_detail'],
-                    'kuantitas' => $item['quantity'],
-                    'harga' => $item['price']
-                ]);
-
-                // Update stock
-                $detailBarang = DetailBarang::where('kode_detail', $item['kode_detail'])->first();
-                if ($detailBarang) {
-                    $detailBarang->stok -= $item['quantity'];
-                    $detailBarang->save();
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaksi berhasil diproses',
-                'kode_transaksi' => $kodeTransaksi
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function getResellerPrice(Request $request)
-    {
-        $kode_detail = $request->get('kode_detail');
-        $id_reseller = $request->get('id_reseller');
-        
-        if (!$id_reseller) {
-            return response()->json(['error' => 'ID reseller required']);
-        }
-        
-        // Validasi reseller
-        $reseller = Pelanggan::where('id_pelanggan', $id_reseller)
-            ->where('role', 'reseller')
-            ->first();
-            
-        if (!$reseller) {
-            return response()->json(['error' => 'Invalid reseller']);
-        }
-        
-        // Get detail barang dengan join ke barang dan tipe
-        $detail = DB::table('detail_barang')
-            ->join('barang', 'detail_barang.kode_barang', '=', 'barang.kode_barang')
-            ->join('tipe', 'barang.kode_tipe', '=', 'tipe.kode_tipe')
-            ->where('detail_barang.kode_detail', $kode_detail)
-            ->select('detail_barang.harga_normal', 'tipe.potongan_harga')
-            ->first();
-        
-        if (!$detail) {
-            return response()->json(['error' => 'Product not found']);
-        }
-        
-        $harga_reseller = $detail->harga_normal - $detail->potongan_harga;
-        
+    if ($reseller) {
         return response()->json([
-            'harga_normal' => $detail->harga_normal,
-            'potongan_harga' => $detail->potongan_harga,
-            'harga_reseller' => $harga_reseller
+            'valid' => true,
+            'nama' => $reseller->nama_pelanggan,
+            'discount' => 10 // Bisa disesuaikan dengan kebutuhan
         ]);
     }
 
-    public function print($kode_transaksi)
-    {
-        $transaksi = Transaksi::with(['pelanggan', 'detailTransaksi.detailBarang.barang'])
-            ->find($kode_transaksi);
+    return response()->json(['valid' => false]);
+}
 
-        if (!$transaksi) {
-            return redirect()->back()->with('error', 'Transaksi tidak ditemukan');
+// Perbaikan fungsi getResellerPrice
+public function getResellerPrice(Request $request)
+{
+    $kode_detail = $request->get('kode_detail');
+    $id_reseller = $request->get('id_reseller');
+    
+    if (!$id_reseller) {
+        return response()->json(['error' => 'ID reseller required']);
+    }
+    
+    // Validasi reseller
+    $reseller = Pelanggan::where('id_pelanggan', $id_reseller)
+        ->where('role', 'reseller')
+        ->first();
+        
+    if (!$reseller) {
+        return response()->json(['error' => 'Invalid reseller']);
+    }
+    
+    // Get detail barang langsung dari tabel detail_barang
+    $detail = DetailBarang::where('kode_detail', $kode_detail)->first();
+    
+    if (!$detail) {
+        return response()->json(['error' => 'Product not found']);
+    }
+    
+    // Hitung harga reseller = harga_normal - potongan_harga
+    $harga_normal = $detail->harga_normal;
+    $potongan_harga = $detail->potongan_harga ?? 0;
+    $harga_reseller = $harga_normal - $potongan_harga;
+    
+    // Pastikan harga reseller tidak negatif
+    $harga_reseller = max(0, $harga_reseller);
+    
+    return response()->json([
+        'harga_normal' => $harga_normal,
+        'potongan_harga' => $potongan_harga,
+        'harga_reseller' => $harga_reseller
+    ]);
+}
+
+// Perbaikan fungsi processTransaction untuk memastikan harga yang disimpan benar
+public function processTransaction(Request $request)
+{
+    try {
+        DB::beginTransaction();
+
+        $request->validate([
+            'items' => 'required|array',
+            'jenis_transaksi' => 'required|in:offline,marketplace',
+            'marketplace' => 'nullable|in:shopee,tokopedia',
+            'id_reseller' => 'nullable|string',
+            'keterangan' => 'nullable|string'
+        ]);
+
+        $kodeTransaksi = GenerateId::transaksi();
+
+        // Determine customer
+        $id_pelanggan = null;
+        if ($request->id_reseller) {
+            $reseller = Pelanggan::where('id_pelanggan', $request->id_reseller)
+                ->where('role', 'reseller')
+                ->first();
+            if ($reseller) {
+                $id_pelanggan = $reseller->id_pelanggan;
+            }
         }
 
-        return view('admin.shopkeeper.struk-kasir', compact('transaksi'));
+        // Prepare keterangan
+        $keterangan = $request->keterangan ?? '';
+        if ($request->jenis_transaksi == 'marketplace' && $request->marketplace) {
+            $keterangan = ucfirst($request->marketplace) . ($keterangan ? ' - ' . $keterangan : '');
+        }
+
+        // Create transaction
+        $transaksi = Transaksi::create([
+            'kode_transaksi' => $kodeTransaksi,
+            'id_pelanggan' => $id_pelanggan,
+            'id_pengguna' => auth()->user()->id ?? null,
+            'tanggal_transaksi' => now(),
+            'ongkir' => 0,
+            'keterangan' => $keterangan,
+            'ekspedisi' => 'PICKUP',
+            'layanan_ekspedisi' => 'PICKUP',
+            'status' => 'selesai',
+            'jenis' => 'offline'
+        ]);
+
+        // Add transaction details
+        foreach ($request->items as $item) {
+            // Pastikan harga yang disimpan adalah harga yang sudah benar (termasuk diskon reseller)
+            DetailTransaksi::create([
+                'kode_transaksi' => $kodeTransaksi,
+                'kode_detail' => $item['kode_detail'],
+                'kuantitas' => $item['quantity'],
+                'harga' => $item['price'] // Ini sudah harga yang benar dari frontend
+            ]);
+
+            // Update stock
+            $detailBarang = DetailBarang::where('kode_detail', $item['kode_detail'])->first();
+            if ($detailBarang) {
+                $detailBarang->stok -= $item['quantity'];
+                $detailBarang->save();
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Transaksi berhasil diproses',
+            'kode_transaksi' => $kodeTransaksi
+        ]);
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+public function print($kode_transaksi)
+{
+    $transaksi = Transaksi::with([
+        'pelanggan', 
+        'detailTransaksi.detailBarang.barang',
+        'detailTransaksi.detailBarang.warna'
+    ])->find($kode_transaksi);
+
+    if (!$transaksi) {
+        return redirect()->back()->with('error', 'Transaksi tidak ditemukan');
+    }
+
+    // Hitung total dari detail transaksi
+    $subtotal = $transaksi->detailTransaksi->sum(function($detail) {
+        return $detail->harga * $detail->kuantitas;
+    });
+
+    return view('admin.shopkeeper.struk-kasir', compact('transaksi', 'subtotal'));
+}    
+
     public function riwayat(Request $request)
     {
         $status = $request->get('status', 'menunggu_konfirmasi');

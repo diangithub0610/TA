@@ -392,7 +392,7 @@
                                 </select>
                             </div>
                         </div>
-                
+
                         <!-- Product Grid -->
                         <div id="productContainer">
                             <div class="row" id="productGrid">
@@ -432,7 +432,8 @@
                                                     <small class="text-muted">Stok: {{ $stok }}</small>
                                                 </div>
                                                 <div class="mt-auto">
-                                                    <button class="btn btn-sm w-100 mt-2 add-product-btn {{ $isOutOfStock ? 'btn-secondary' : 'btn-primary' }}"
+                                                    <button
+                                                        class="btn btn-sm w-100 mt-2 add-product-btn {{ $isOutOfStock ? 'btn-secondary' : 'btn-primary' }}"
                                                         {{ $isOutOfStock ? 'disabled' : '' }}>
                                                         <i class="fas fa-plus me-1"></i>
                                                         {{ $isOutOfStock ? 'Stok Habis' : 'Tambah' }}
@@ -446,7 +447,7 @@
                         </div>
                     </div>
                 </div>
-                
+
             </div>
 
             <!-- Card Keranjang Belanja -->
@@ -692,8 +693,8 @@
                             ${product.gambar ? 
                                 `<img src="/storage/${product.gambar}" class="card-img-top product-image" alt="${product.nama_barang}">` :
                                 `<div class="product-image bg-secondary d-flex align-items-center justify-content-center">
-                                            <i class="fas fa-image text-white fs-1"></i>
-                                        </div>`
+                                                    <i class="fas fa-image text-white fs-1"></i>
+                                                </div>`
                             }
                             <div class="card-body p-3">
                                 <h6 class="card-title mb-2 fw-bold">${product.nama_barang}</h6>
@@ -766,122 +767,118 @@
             $('#variantModal').modal('show');
         }
 
-        function addToCart(product, variant) {
-            // Tentukan harga yang akan digunakan
-            let finalPrice = variant.harga_normal;
+        async function addToCart(product, variant) {
+    let finalPrice = variant.harga_normal;
+    let isResellerPrice = false;
+    let hargaNormal = variant.harga_normal;
+    let potonganHarga = 0;
 
-            // Jika ada reseller yang valid, gunakan harga reseller
-            const resellerID = $('#resellerInput').val().trim();
-            if (resellerID && resellerDiscount > 0) {
-                // Ambil harga reseller dari server
-                $.post('{{ route('kasir.reseller-price') }}', {
-                        kode_detail: variant.kode_detail,
-                        id_reseller: resellerID,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    })
-                    .done(function(data) {
-                        if (!data.error) {
-                            finalPrice = data.harga_reseller;
+    // Jika ada reseller yang valid, ambil harga reseller
+    const resellerID = $('#resellerInput').val().trim();
+    if (resellerID && resellerDiscount > 0) {
+        try {
+            const response = await $.post('{{ route('kasir.reseller-price') }}', {
+                kode_detail: variant.kode_detail,
+                id_reseller: resellerID,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            });
 
-                            // Check if item already exists in cart
-                            const existingIndex = cart.findIndex(item =>
-                                item.kode_detail === variant.kode_detail
-                            );
-
-                            if (existingIndex !== -1) {
-                                cart[existingIndex].quantity += 1;
-                            } else {
-                                cart.push({
-                                    kode_detail: variant.kode_detail,
-                                    nama_produk: product.nama_barang,
-                                    ukuran: variant.ukuran,
-                                    warna: variant.warna,
-                                    price: finalPrice,
-                                    harga_normal: variant.harga_normal,
-                                    quantity: 1,
-                                    stok: variant.stok
-                                });
-                            }
-
-                            updateCartDisplay();
-                        }
-                    });
-            } else {
-                // Gunakan harga normal
-                const existingIndex = cart.findIndex(item =>
-                    item.kode_detail === variant.kode_detail
-                );
-
-                if (existingIndex !== -1) {
-                    cart[existingIndex].quantity += 1;
-                } else {
-                    cart.push({
-                        kode_detail: variant.kode_detail,
-                        nama_produk: product.nama_barang,
-                        ukuran: variant.ukuran,
-                        warna: variant.warna,
-                        price: finalPrice,
-                        harga_normal: variant.harga_normal,
-                        quantity: 1,
-                        stok: variant.stok
-                    });
-                }
-
-                updateCartDisplay();
+            if (!response.error) {
+                finalPrice = response.harga_reseller;
+                hargaNormal = response.harga_normal;
+                potonganHarga = response.potongan_harga;
+                isResellerPrice = true;
             }
+        } catch (error) {
+            console.log('Error mengambil harga reseller:', error);
+        }
+    }
+
+    // Check if item already exists in cart
+    const existingIndex = cart.findIndex(item =>
+        item.kode_detail === variant.kode_detail
+    );
+
+    if (existingIndex !== -1) {
+        cart[existingIndex].quantity += 1;
+    } else {
+        cart.push({
+            kode_detail: variant.kode_detail,
+            nama_produk: product.nama_barang,
+            ukuran: variant.ukuran,
+            warna: variant.warna,
+            price: finalPrice,
+            harga_normal: hargaNormal,
+            potongan_harga: potonganHarga,
+            quantity: 1,
+            stok: variant.stok,
+            isReseller: isResellerPrice
+        });
+    }
+
+    updateCartDisplay();
+}
+
+// Perbaikan fungsi updateCartDisplay untuk menampilkan harga coret dengan benar
+function updateCartDisplay() {
+    const cartItems = $('#cartItems');
+    const emptyCart = $('#emptyCart');
+
+    if (cart.length === 0) {
+        emptyCart.show();
+        cartItems.find('.cart-item').remove();
+        $('#cartCount').text('0');
+        $('#totalAmount').text('Rp 0');
+        $('#processTransactionBtn').prop('disabled', true);
+        return;
+    }
+
+    emptyCart.hide();
+    cartItems.find('.cart-item').remove();
+
+    let total = 0;
+    cart.forEach(function(item, index) {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+
+        // Tampilkan harga dengan format yang benar
+        let priceDisplay = `<span class="fw-bold">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>`;
+        
+        // Jika ini adalah reseller dan ada potongan harga, tampilkan harga coret
+        if (item.isReseller && item.potongan_harga > 0 && item.price < item.harga_normal) {
+            priceDisplay = `
+                <div>
+                    <span class="fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>
+                    <span class="text-muted text-decoration-line-through ms-2">Rp ${new Intl.NumberFormat('id-ID').format(item.harga_normal)}</span>
+                </div>
+                <small class="text-success d-block">
+                    <i class="fas fa-tag"></i> Hemat Rp ${new Intl.NumberFormat('id-ID').format(item.harga_normal - item.price)}
+                </small>
+            `;
         }
 
-        function updateCartDisplay() {
-            const cartItems = $('#cartItems');
-            const emptyCart = $('#emptyCart');
-
-            if (cart.length === 0) {
-                emptyCart.show();
-                cartItems.find('.cart-item').remove();
-                $('#cartCount').text('0');
-                $('#totalAmount').text('Rp 0');
-                $('#processTransactionBtn').prop('disabled', true);
-                return;
-            }
-
-            emptyCart.hide();
-            cartItems.find('.cart-item').remove();
-
-            let total = 0;
-            cart.forEach(function(item, index) {
-                const subtotal = item.price * item.quantity;
-                total += subtotal;
-
-                // Tampilkan info diskon jika ada
-                let priceDisplay =
-                    `<span class="fw-bold">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>`;
-                if (item.harga_normal && item.price < item.harga_normal) {
-                    priceDisplay = `
-                <span class="fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</span>
-                <br><small class="text-muted text-decoration-line-through">Rp ${new Intl.NumberFormat('id-ID').format(item.harga_normal)}</small>
-            `;
-                }
-
-                const itemHtml = `
+        const itemHtml = `
             <div class="cart-item card mb-2 p-3">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <h6 class="mb-1">${item.nama_produk}</h6>
-                        <small class="text-muted">(${item.ukuran}, ${item.warna})</small>
+                        <small class="text-muted">${item.ukuran}" - ${item.warna}</small>
+                        <div class="mt-2">
+                            ${priceDisplay}
+                        </div>
                         <div class="d-flex justify-content-between align-items-center mt-2">
-                            <div>${priceDisplay}</div>
                             <div class="quantity-control">
                                 <button class="btn btn-sm btn-outline-secondary quantity-minus" data-index="${index}">
                                     <i class="fas fa-minus"></i>
                                 </button>
-                                <span class="mx-2">${item.quantity}</span>
+                                <span class="mx-2 fw-bold">${item.quantity}</span>
                                 <button class="btn btn-sm btn-outline-secondary quantity-plus" data-index="${index}">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-1">
-                            <small class="text-primary fw-bold">Subtotal: Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}</small>
+                            <small class="text-primary fw-bold">
+                                Subtotal: Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}
+                            </small>
                         </div>
                     </div>
                     <button class="btn btn-sm btn-outline-danger ms-2 remove-item" data-index="${index}">
@@ -890,13 +887,13 @@
                 </div>
             </div>
         `;
-                cartItems.append(itemHtml);
-            });
+        cartItems.append(itemHtml);
+    });
 
-            $('#cartCount').text(cart.length);
-            $('#totalAmount').text('Rp ' + new Intl.NumberFormat('id-ID').format(total));
-            $('#processTransactionBtn').prop('disabled', false);
-        }
+    $('#cartCount').text(cart.length);
+    $('#totalAmount').text('Rp ' + new Intl.NumberFormat('id-ID').format(total));
+    $('#processTransactionBtn').prop('disabled', false);
+}
 
         function updateQuantity(index, change) {
             if (cart[index].quantity + change <= 0) {
@@ -925,9 +922,9 @@
         //     }
         // }
         function clearCart() {
-    cart = [];
-    updateCartDisplay();
-}
+            cart = [];
+            updateCartDisplay();
+        }
 
 
         function checkReseller() {
@@ -941,6 +938,7 @@
                 cart.forEach(item => {
                     if (item.harga_normal) {
                         item.price = item.harga_normal;
+                        item.isReseller = false;
                     }
                 });
                 updateCartDisplay();
@@ -954,7 +952,7 @@
                 .done(function(data) {
                     if (data.valid) {
                         statusDiv.html(
-                            `<small class="text-success"><i class="fas fa-check"></i> ${data.nama} - Diskon ${data.discount}%</small>`
+                            `<small class="text-success"><i class="fas fa-check"></i> ${data.nama} - Berhasil mendapatkan diskon</small>`
                         );
                         resellerDiscount = data.discount;
 
@@ -969,6 +967,7 @@
                         cart.forEach(item => {
                             if (item.harga_normal) {
                                 item.price = item.harga_normal;
+                                item.isReseller = false;
                             }
                         });
                         updateCartDisplay();
@@ -981,27 +980,31 @@
                 });
         }
 
-        function updateCartPricesForReseller(resellerID) {
-            if (cart.length === 0) return;
+        
+// Perbaikan fungsi updateCartPricesForReseller dengan async/await
+async function updateCartPricesForReseller(resellerID) {
+    if (cart.length === 0) return;
 
-            let promises = cart.map(item => {
-                return $.post('{{ route('kasir.reseller-price') }}', {
-                    kode_detail: item.kode_detail,
-                    id_reseller: resellerID,
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                });
+    try {
+        for (let i = 0; i < cart.length; i++) {
+            const response = await $.post('{{ route('kasir.reseller-price') }}', {
+                kode_detail: cart[i].kode_detail,
+                id_reseller: resellerID,
+                _token: $('meta[name="csrf-token"]').attr('content')
             });
 
-            Promise.all(promises).then(responses => {
-                responses.forEach((data, index) => {
-                    if (!data.error) {
-                        cart[index].price = data.harga_reseller;
-                        cart[index].harga_normal = data.harga_normal;
-                    }
-                });
-                updateCartDisplay();
-            });
+            if (!response.error) {
+                cart[i].price = response.harga_reseller;
+                cart[i].harga_normal = response.harga_normal;
+                cart[i].potongan_harga = response.potongan_harga;
+                cart[i].isReseller = true;
+            }
         }
+        updateCartDisplay();
+    } catch (error) {
+        console.log('Error updating cart prices for reseller:', error);
+    }
+}
 
         function processTransaction() {
             if (cart.length === 0) {
@@ -1036,27 +1039,27 @@
                     }
                 })
                 .done(function(data) {
-    if (data.success) {
-        alert(`Transaksi berhasil!\nKode Transaksi: ${data.kode_transaksi}`);
+                    if (data.success) {
+                        alert(`Transaksi berhasil!\nKode Transaksi: ${data.kode_transaksi}`);
 
-        // Buka jendela baru untuk cetak struk
-        window.open(`/kasir/print/${data.kode_transaksi}`, '_blank');
+                        // Buka jendela baru untuk cetak struk
+                        window.open(`/kasir/print/${data.kode_transaksi}`, '_blank');
 
-        // Reset form
-        clearCart();
-        $('#resellerInput').val('');
-        $('#keteranganInput').val('');
-        $('#resellerStatus').empty();
-        $('.marketplace-option').removeClass('bg-primary text-white');
-        selectedMarketplace = '';
-        resellerDiscount = 0;
+                        // Reset form
+                        clearCart();
+                        $('#resellerInput').val('');
+                        $('#keteranganInput').val('');
+                        $('#resellerStatus').empty();
+                        $('.marketplace-option').removeClass('bg-primary text-white');
+                        selectedMarketplace = '';
+                        resellerDiscount = 0;
 
-        // Refresh products to update stock
-        searchProducts();
-    } else {
-        alert('Error: ' + data.message);
-    }
-})
+                        // Refresh products to update stock
+                        searchProducts();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
 
                 .fail(function(xhr) {
                     const response = xhr.responseJSON;

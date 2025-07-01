@@ -223,47 +223,96 @@
             DAFTAR ITEM
         </div>
 
-        <!-- Items -->
-        @php $total = 0; @endphp
-        @foreach ($transaksi->detailTransaksi as $detail)
-            @php
-                $subtotal = $detail->harga * $detail->qty;
-                $total += $subtotal;
-            @endphp
-            <div class="item">
-                <div class="item-name">{{ $detail->detailBarang->barang->nama_barang }}</div>
-                <div class="item-details">
-                    <span>Ukuran: {{ $detail->detailBarang->ukuran }}</span>
-                    @if ($detail->detailBarang->warna)
-                        <span>{{ $detail->detailBarang->warna->warna }}</span>
+        @php 
+        $subtotalTransaksi = 0; 
+    @endphp
+    
+    @foreach ($transaksi->detailTransaksi as $detail)
+        @php
+            // Gunakan kolom yang benar dari database
+            $qty = $detail->kuantitas; // Sesuai dengan nama kolom di database
+            $harga = $detail->harga;
+            $subtotalItem = $harga * $qty;
+            $subtotalTransaksi += $subtotalItem;
+            
+            // Cek apakah ada diskon reseller (jika harga lebih rendah dari harga normal)
+            $hargaNormal = $detail->detailBarang->harga_normal ?? 0;
+            $isDiscounted = $harga < $hargaNormal;
+            $totalHemat = $isDiscounted ? ($hargaNormal - $harga) * $qty : 0;
+        @endphp
+        
+        <div class="item">
+            <div class="item-name">{{ $detail->detailBarang->barang->nama_barang }}</div>
+            <div class="item-details">
+                <span>Ukuran: {{ $detail->detailBarang->ukuran }}"</span>
+                @if ($detail->detailBarang->warna)
+                    <span>- {{ $detail->detailBarang->warna->warna }}</span>
+                @endif
+            </div>
+            
+            <div class="item-price-qty">
+                <div class="price-info">
+                    @if ($isDiscounted)
+                        <!-- Tampilkan harga dengan diskon -->
+                        <span class="discounted-price">
+                            {{ $qty }} x Rp {{ number_format($harga, 0, ',', '.') }}
+                            <small class="original-price">(Normal: Rp {{ number_format($hargaNormal, 0, ',', '.') }})</small>
+                        </span>
+                        <div class="savings">
+                            <small>Hemat: Rp {{ number_format($totalHemat, 0, ',', '.') }}</small>
+                        </div>
+                    @else
+                        <!-- Harga normal -->
+                        <span>{{ $qty }} x Rp {{ number_format($harga, 0, ',', '.') }}</span>
                     @endif
                 </div>
-                <div class="item-price-qty">
-                    <span>{{ $detail->qty }} x Rp {{ number_format($detail->harga, 0, ',', '.') }}</span>
-                    <span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
-                </div>
-            </div>
-        @endforeach
-
-        <!-- Total Section -->
-        <div class="total-section">
-            <div class="total-row">
-                <span>Subtotal:</span>
-                <span>Rp {{ number_format($total, 0, ',', '.') }}</span>
-            </div>
-
-            @if ($transaksi->ongkir > 0)
-                <div class="total-row">
-                    <span>Ongkir:</span>
-                    <span>Rp {{ number_format($transaksi->ongkir, 0, ',', '.') }}</span>
-                </div>
-            @endif
-
-            <div class="total-row grand-total">
-                <span>TOTAL:</span>
-                <span>Rp {{ number_format($total + $transaksi->ongkir, 0, ',', '.') }}</span>
+                <span class="subtotal">Rp {{ number_format($subtotalItem, 0, ',', '.') }}</span>
             </div>
         </div>
+    @endforeach
+    
+    <!-- Total Section -->
+    <div class="total-section">
+        <div class="total-row">
+            <span>Subtotal:</span>
+            <span>Rp {{ number_format($subtotalTransaksi, 0, ',', '.') }}</span>
+        </div>
+    
+        @if ($transaksi->ongkir > 0)
+            <div class="total-row">
+                <span>Ongkir:</span>
+                <span>Rp {{ number_format($transaksi->ongkir, 0, ',', '.') }}</span>
+            </div>
+        @endif
+    
+        @php
+            $grandTotal = $subtotalTransaksi + $transaksi->ongkir;
+        @endphp
+    
+        <div class="total-row grand-total">
+            <span>TOTAL:</span>
+            <span>Rp {{ number_format($grandTotal, 0, ',', '.') }}</span>
+        </div>
+    
+        <!-- Tampilkan info reseller jika ada -->
+        @if ($transaksi->pelanggan && $transaksi->pelanggan->role == 'reseller')
+            @php
+                $totalHematKeseluruhan = $transaksi->detailTransaksi->sum(function($detail) {
+                    $hargaNormal = $detail->detailBarang->harga_normal ?? 0;
+                    $hargaJual = $detail->harga;
+                    $hemat = $hargaNormal > $hargaJual ? ($hargaNormal - $hargaJual) * $detail->kuantitas : 0;
+                    return $hemat;
+                });
+            @endphp
+            
+            @if ($totalHematKeseluruhan > 0)
+                <div class="total-row reseller-info">
+                    <span>Total Hemat (Reseller):</span>
+                    <span class="text-success">Rp {{ number_format($totalHematKeseluruhan, 0, ',', '.') }}</span>
+                </div>
+            @endif
+        @endif
+    </div>
 
         <!-- Footer -->
         <div class="footer">
