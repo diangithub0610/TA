@@ -41,7 +41,7 @@
                                                 </button>
                                             @endif
 
-                                            <a href="{{ route('admin.pengiriman.index') }}" class="btn btn-secondary btn-sm">
+                                            <a href="{{ route('admin-transaksi.show', $pengiriman->kode_transaksi) }}" class="btn btn-secondary btn-sm">
                                                 <i class="fas fa-arrow-left me-1"></i>Kembali
                                             </a>
                                         </div>
@@ -169,7 +169,7 @@
     {{-- {{dd($trackingData['tracking_history']);}} --}}
 
     <div class="card-body">
-       
+
 
         @php
             // Fungsi untuk flatten array multi-dimensional dan mengambil data tracking
