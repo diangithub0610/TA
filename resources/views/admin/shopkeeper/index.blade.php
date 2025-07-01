@@ -45,7 +45,7 @@
 
         <!-- Filter Form (Hidden) -->
         <form method="GET" id="filterForm" style="display: none;">
-            <input type="hidden" name="status" id="statusFilter" value="{{ request('status') }}">
+            <input type="hidden" name="status"  id="statusFilter" value="{{ request('status') }}">
         </form>
 {{-- {{ dd('asa') }} --}}
         <!-- Orders List -->
@@ -96,7 +96,7 @@
                                         @else
                                             <div class="bg-light rounded d-flex align-items-center justify-content-center"
                                                 style="width: 80px; height: 80px;">
-                                                <i class="fas fa-image text-muted"></i>
+                                                <i class="fas fa-image text-primary"></i>
                                             </div>
                                         @endif
                                     @endif
