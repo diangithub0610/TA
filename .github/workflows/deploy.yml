@@ -17,8 +17,15 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./
-        server-dir: /
+        server-dir: /  # Sesuaikan dengan hosting Anda
         exclude: |
-          */.git/*
-          */node_modules/*
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
           **/.env
+          **/.env.*
+          **/composer.lock
+          **/package-lock.json
+          **/.gitignore
+          **/README.md
+          **/.github/**
