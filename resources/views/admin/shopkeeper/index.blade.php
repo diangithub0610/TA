@@ -33,7 +33,7 @@
                 onclick="filterByStatus('dikirim')">
                 Dikirim
             </button>
-            <button class="btn {{ request('status') == 'selesai' ? 'btn-dark' : 'btn-light' }} btn-md"
+            <button class="btn {{ request('status') == 'selesai' ? 'btn-dark' : 'btn-red-600' }} btn-md"
                 onclick="filterByStatus('selesai')">
                 Selesai
             </button>
