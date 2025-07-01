@@ -98,14 +98,15 @@ class PelangganController extends Controller
         if (Auth::guard('pelanggan')->check()) {
             $userRole = Auth::guard('pelanggan')->user()->role;
         }
-    
+
         $barangTerkait = Barang::with(['tipe.brand'])
             ->where('kode_tipe', $barang->kode_tipe)
-            ->where('kode_barang', '!=', $kode_barang)
+            ->where('kode_barang', '!=', $barang->kode_barang) // gunakan dari $barang, bukan $kode_barang
             ->where('is_active', 1)
             ->take(4)
             ->get();
-    
+
+
         // Group detail barang by ukuran dan warna
         $ukuranTersedia = $barang->detailBarangs
             ->pluck('ukuran')
@@ -155,24 +156,26 @@ class PelangganController extends Controller
         // Cek apakah user bisa memberikan ulasan
         $canReview = false;
         $hasPurchased = false;
-    
-        if (Auth::check()) {
-            $user = Auth::user();
-    
-            $hasPurchased = $user->transaksis()
-                ->whereHas('detailTransaksis', function ($query) use ($barang) {
+
+        if (Auth::guard('pelanggan')->check()) {
+            $user = Auth::guard('pelanggan')->user();
+
+            $hasPurchased = $user->transaksi()
+                ->whereHas('detailTransaksi.detailBarang', function ($query) use ($barang) {
                     $query->where('kode_barang', $barang->kode_barang);
                 })
                 ->where('status', 'selesai')
                 ->exists();
-    
+
+
             $hasReviewed = Ulasan::where('kode_barang', $barang->kode_barang)
                 ->where('id_pelanggan', $user->id_pelanggan)
                 ->exists();
-    
+
             $canReview = $hasPurchased && !$hasReviewed;
         }
-    
+
+
         return view('pelanggan.barang.show', compact(
             'barang',
             'barangTerkait',

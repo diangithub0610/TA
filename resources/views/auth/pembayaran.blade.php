@@ -11,7 +11,7 @@
     <script
         src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1">
     </script>
-    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#FE5900"
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#4300FF"
         data-border-radius='medium'></script>
 </head>
 
@@ -43,10 +43,10 @@
                                 <span
                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 {{ $pendaftaran->status_pembayaran == 'pending'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : ($pendaftaran->status_pembayaran == 'berhasil'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-red-100 text-red-800') }}">
+    ? 'bg-yellow-100 text-yellow-800'
+    : ($pendaftaran->status_pembayaran == 'berhasil'
+        ? 'bg-green-100 text-green-800'
+        : 'bg-red-100 text-red-800') }}">
                                     {{ ucfirst($pendaftaran->status_pembayaran) }}
                                 </span>
                             </p>

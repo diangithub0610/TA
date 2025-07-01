@@ -414,3 +414,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // Route untuk pelanggan cek tracking
 Route::get('/tracking/{kode_transaksi}', [PengirimanController::class, 'trackingPelanggan'])->name('tracking.pelanggan');
 
+//test

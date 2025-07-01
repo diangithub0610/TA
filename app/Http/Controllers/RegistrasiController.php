@@ -38,7 +38,7 @@ class RegistrasiController extends Controller
             'nama_pelanggan' => 'required|string|max:50',
             'no_hp' => 'required|string|max:15',
             'email' => 'required|string|email|max:100|unique:pelanggan',
-            'alamat_pengguna' => 'required|string',
+            // 'alamat_pengguna' => 'required|string',
             'username' => 'required|string|max:25|unique:pelanggan',
             'password' => 'required|string|min:8|confirmed',
             'tipe_akun' => 'required|in:pelanggan,reseller',
@@ -63,7 +63,7 @@ class RegistrasiController extends Controller
             'nama_pelanggan' => $request->nama_pelanggan,
             'no_hp' => $request->no_hp,
             'email' => $request->email,
-            'alamat_pengguna' => $request->alamat_pengguna,
+            // 'alamat_pengguna' => $request->alamat_pengguna,
             'username' => $request->username,
             'role' => 'pelanggan', // Semua dimulai sebagai pelanggan sebelum diverifikasi
             'kata_sandi' => Hash::make($request->password),

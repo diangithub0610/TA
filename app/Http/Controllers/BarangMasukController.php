@@ -145,7 +145,7 @@ class BarangMasukController extends Controller
                 ->get();
 
             return response()->json($detailBarang);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'error' => 'Terjadi kesalahan saat mengambil detail barang',
                 'message' => $e->getMessage()
@@ -154,7 +154,6 @@ class BarangMasukController extends Controller
     }
 
 
-    // Method store yang diubah
     // Method store yang diubah
     public function store(Request $request)
     {
@@ -175,16 +174,13 @@ class BarangMasukController extends Controller
 
             DB::beginTransaction();
 
-            // Generate kode barang masuk
-            // $kodeBarangMasuk = $this->generateKodeBarangMasuk();
-
-            // Insert barang masuk
-
+            // Upload bukti pembelian jika ada
             $buktiPath = null;
             if ($request->hasFile('bukti_pembelian')) {
                 $buktiPath = $request->file('bukti_pembelian')->store('bukti_pembelian', 'public');
             }
 
+            // Simpan barang masuk
             DB::table('barang_masuk')->insert([
                 'kode_pembelian' => $request->kode_pembelian,
                 'tanggal_masuk' => $request->tanggal_masuk,
@@ -192,32 +188,33 @@ class BarangMasukController extends Controller
                 'bukti_pembelian' => $buktiPath,
             ]);
 
-            // Insert detail barang masuk dan update stok
+            // Proses detail produk
             foreach ($request->produk as $produk) {
                 foreach ($produk['detail'] as $detail) {
-                    // Insert ke tabel detail_barang_masuk (transaksi pembelian)
+                    // Insert ke tabel detail_barang_masuk
                     DB::table('detail_barang_masuk')->insert([
                         'kode_pembelian' => $request->kode_pembelian,
-                        'kode_barang' => $produk['kode_barang'], // Menggunakan kode_barang dari level produk
+                        'kode_barang' => $produk['kode_barang'],
                         'jumlah' => $detail['jumlah'],
                         'harga_barang_masuk' => $detail['harga_barang_masuk'],
                     ]);
 
-                    // Update stok di detail_barang (menambah stok)
-                    DB::table('detail_barang')
-                        ->where('kode_detail', $detail['kode_detail'])
-                        ->increment('stok', $detail['jumlah']);
-
-                    // Update harga beli dan stok minimum di detail_barang
+                    // Update stok + update stok_minimum + update harga_normal di detail_barang
                     $updateData = [
-                        // 'harga_barang_masuk' => $detail['harga_barang_masuk'],
                         'stok_minimum' => $detail['stok_minimum'],
+                        'harga_normal' => $detail['harga_barang_masuk'], // Dianggap harga terbaru
+                        'potongan_harga' => $detail['potongan_harga'], // Dianggap harga terbaru
                     ];
 
-                    // Jika ada potongan harga, update juga
+                    // Tambah potongan harga jika diisi
                     if (isset($detail['potongan_harga']) && $detail['potongan_harga'] > 0) {
                         $updateData['potongan_harga'] = $detail['potongan_harga'];
                     }
+
+                    // Update stok dan field lainnya
+                    DB::table('detail_barang')
+                        ->where('kode_detail', $detail['kode_detail'])
+                        ->increment('stok', $detail['jumlah']);
 
                     DB::table('detail_barang')
                         ->where('kode_detail', $detail['kode_detail'])
@@ -227,17 +224,18 @@ class BarangMasukController extends Controller
 
             DB::commit();
 
-            return redirect()->route('barang-masuk.index')->with('success', 'Barang masuk berhasil diupdate');
+            return redirect()->route('barang-masuk.index')->with('success', 'Barang masuk berhasil disimpan');
         } catch (Exception $e) {
-            DB::rollback();
+            DB::rollBack();
 
             if (isset($buktiPath) && Storage::exists($buktiPath)) {
                 Storage::delete($buktiPath);
             }
 
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat mengupdate data: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
     }
+
 
     // Method untuk menyimpan barang baru dari form barang masuk
     public function storeBarangBaru(Request $request)

@@ -3,236 +3,305 @@
 @section('title', isset($barang) ? 'Edit Barang' : 'Tambah Barang')
 
 @section('content')
-    <div class="page-inner">
-        <div class="page-header">
-            <h3 class="fw-bold mb-3">@yield('title')</h3>
-            <ul class="breadcrumbs mb-3">
-                <li class="nav-home">
-                    <a href="{{ route('dashboard') }}">
-                        <i class="icon-home"></i>
-                    </a>
-                </li>
-                <li class="separator">
-                    <i class="icon-arrow-right"></i>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('barang.index') }}">@yield('title')</a>
-                </li>
-                <li class="separator">
-                    <i class="icon-arrow-right"></i>
-                </li>
-                <li class="nav-item">
-                    <a
-                        href="{{ isset($barang) ? route('barang.edit', $barang->kode_barang) : route('barang.create') }}">@yield('title')</a>
-                </li>
-            </ul>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">{{ isset($barang) ? 'Edit Barang' : 'Tambah Barang' }}</h4>
-                        <a href="{{ route('barang.index') }}" class="btn btn-secondary btn-sm float-end">
-                            <i class="fas fa-arrow-left"></i> Kembali
+        <div class="page-inner">
+            <div class="page-header">
+                <h3 class="fw-bold mb-3">@yield('title')</h3>
+                <ul class="breadcrumbs mb-3">
+                    <li class="nav-home">
+                        <a href="{{ route('dashboard') }}">
+                            <i class="icon-home"></i>
                         </a>
-                    </div>
-                    <div class="card-body">
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        @if (session('error'))
-                            <div class="alert alert-danger">
-                                {{ session('error') }}
-                            </div>
-                        @endif
-
-                        <form
-                            action="{{ isset($barang) ? route('barang.update', $barang->kode_barang) : route('barang.store') }}"
-                            method="POST" enctype="multipart/form-data" id="barangForm">
-                            @csrf
-                            @if (isset($barang))
-                                @method('PUT')
+                    </li>
+                    <li class="separator">
+                        <i class="icon-arrow-right"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('barang.index') }}">@yield('title')</a>
+                    </li>
+                    <li class="separator">
+                        <i class="icon-arrow-right"></i>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            href="{{ isset($barang) ? route('barang.edit', $barang->kode_barang) : route('barang.create') }}">@yield('title')</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">{{ isset($barang) ? 'Edit Barang' : 'Tambah Barang' }}</h4>
+                            <a href="{{ route('barang.index') }}" class="btn btn-secondary btn-sm float-end">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            @if ($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             @endif
 
-                            <div class="row">
-                                <!-- Informasi Barang -->
-                                <div class="col-md-6">
-                                    <h5 class="mb-3">Informasi Barang</h5>
-
-                                    {{-- <div class="mb-3">
-                                        <label for="kode_barang" class="form-label">Kode Barang <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text"
-                                            class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang"
-                                            name="kode_barang" value="{{ old('kode_barang', $barang->kode_barang ?? '') }}"
-                                            {{ isset($barang) ? 'readonly' : '' }} required>
-                                        @error('kode_barang')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div> --}}
-
-                                    <div class="mb-3">
-                                        <label for="nama_barang" class="form-label">Nama Barang <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text"
-                                            class="form-control @error('nama_barang') is-invalid @enderror" id="nama_barang"
-                                            name="nama_barang" value="{{ old('nama_barang', $barang->nama_barang ?? '') }}"
-                                            required>
-                                        @error('nama_barang')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="berat" class="form-label">Berat (gram)</label>
-                                        <input type="number" class="form-control @error('berat') is-invalid @enderror"
-                                            id="berat" name="berat" value="{{ old('berat', $barang->berat ?? '') }}">
-                                        @error('berat')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Ganti select tipe dengan Select2 -->
-                                    <div class="mb-3">
-                                        <label for="kode_tipe" class="form-label">Tipe <span
-                                                class="text-danger">*</span></label>
-                                        <select class="form-select @error('kode_tipe') is-invalid @enderror" id="kode_tipe"
-                                            name="kode_tipe" required>
-                                            <option value="">Pilih Tipe</option>
-                                            @foreach ($tipes as $tipe)
-                                                <option value="{{ $tipe->kode_tipe }}"
-                                                    {{ old('kode_tipe', $barang->kode_tipe ?? '') == $tipe->kode_tipe ? 'selected' : '' }}>
-                                                    {{ $tipe->nama_tipe }} ({{ $tipe->brand->nama_brand }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('kode_tipe')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="deskripsi" class="form-label">Deskripsi</label>
-                                        <textarea class="form-control @error('deskripsi') is-invalid @enderror" id="deskripsi" name="deskripsi" rows="4">{{ old('deskripsi', $barang->deskripsi ?? '') }}</textarea>
-                                        @error('deskripsi')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                            @if (session('error'))
+                                <div class="alert alert-danger">
+                                    {{ session('error') }}
                                 </div>
+                            @endif
 
-                                <!-- Gambar -->
-                                <div class="col-md-6">
-                                    <h5 class="mb-3">Gambar</h5>
+                            <form
+                                action="{{ isset($barang) ? route('barang.update', $barang->kode_barang) : route('barang.store') }}"
+                                method="POST" enctype="multipart/form-data" id="barangForm">
+                                @csrf
+                                @if (isset($barang))
+                                    @method('PUT')
+                                @endif
 
-                                    <!-- Gambar Utama -->
-                                    <div class="mb-3">
-                                        <label for="gambar_utama" class="form-label">Gambar Utama</label>
-                                        <input type="file"
-                                            class="form-control @error('gambar_utama') is-invalid @enderror"
-                                            id="gambar_utama" name="gambar_utama" accept="image/*">
-                                        @error('gambar_utama')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <div class="mt-2">
-                                            @if (isset($barang) && $barang->gambar)
-                                                <img src="{{ asset('storage/' . $barang->gambar) }}" alt="Gambar Utama"
-                                                    class="img-thumbnail" style="max-width: 200px; max-height: 200px;"
-                                                    id="current_main_image">
-                                            @endif
-                                            <div id="main_image_preview" style="display: none;">
-                                                <img id="preview_main_image" class="img-thumbnail"
-                                                    style="max-width: 200px; max-height: 200px;">
+                                <div class="row">
+                                    <!-- Informasi Barang -->
+                                    <div class="col-md-6">
+                                        <h5 class="mb-3">Informasi Barang</h5>
+
+                                        {{-- <div class="mb-3">
+                                            <label for="kode_barang" class="form-label">Kode Barang <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text"
+                                                class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang"
+                                                name="kode_barang" value="{{ old('kode_barang', $barang->kode_barang ?? '') }}"
+                                                {{ isset($barang) ? 'readonly' : '' }} required>
+                                            @error('kode_barang')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div> --}}
+
+                                        <div class="mb-3">
+                                            <label for="nama_barang" class="form-label">Nama Barang <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text"
+                                                class="form-control @error('nama_barang') is-invalid @enderror" id="nama_barang"
+                                                name="nama_barang" value="{{ old('nama_barang', $barang->nama_barang ?? '') }}"
+                                                required>
+                                            @error('nama_barang')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="berat" class="form-label">Berat (gram)</label>
+                                            <input type="number" class="form-control @error('berat') is-invalid @enderror"
+                                                id="berat" name="berat" value="{{ old('berat', $barang->berat ?? '') }}">
+                                            @error('berat')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Ganti select tipe dengan Select2 -->
+                                        <div class="mb-3">
+                                            <label for="kode_tipe" class="form-label">Tipe <span
+                                                    class="text-danger">*</span></label>
+                                            {{-- <select class="form-select @error('kode_tipe') is-invalid @enderror" id="kode_tipe"
+                                                name="kode_tipe" required>
+                                                <option value="">Pilih Tipe</option>
+                                                @foreach ($tipes as $tipe)
+                                                    <option value="{{ $tipe->kode_tipe }}"
+                                                        {{ old('kode_tipe', $barang->kode_tipe ?? '') == $tipe->kode_tipe ? 'selected' : '' }}>
+                                                        {{ $tipe->nama_tipe }} ({{ $tipe->brand->nama_brand }})
+                                                    </option>
+                                                @endforeach
+                                            </select> --}}
+
+                                            <select class="form-select select2-custom @error('kode_tipe') is-invalid @enderror" id="kode_tipe" name="kode_tipe"
+                                                required>
+                                                <option value="">Pilih Tipe</option>
+                                                @foreach ($tipes as $tipe)
+                                                    <option value="{{ $tipe->kode_tipe }}" {{ old('kode_tipe', $barang->kode_tipe ?? '') == $tipe->kode_tipe ? 'selected' : '' }}>
+                                                        {{ $tipe->nama_tipe }} ({{ $tipe->brand->nama_brand }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('kode_tipe')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="deskripsi" class="form-label">Deskripsi</label>
+                                            <textarea class="form-control @error('deskripsi') is-invalid @enderror" id="deskripsi" name="deskripsi"
+                                                rows="4">{{ old('deskripsi', $barang->deskripsi ?? '') }}</textarea>
+                                            @error('deskripsi')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        </div>
+
+                                    <!-- Gambar -->
+                                    <div class="col-md-6">
+                                        <h5 class="mb-3">Gambar</h5>
+
+                                        <!-- Gambar Utama -->
+                                        <div class="mb-3">
+                                            <label for="gambar_utama" class="form-label">Gambar Utama</label>
+                                            <input type="file"
+                                                class="form-control @error('gambar_utama') is-invalid @enderror"
+                                                id="gambar_utama" name="gambar_utama" accept="image/*">
+                                            @error('gambar_utama')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="mt-2">
+                                                @if (isset($barang) && $barang->gambar)
+                                                    <img src="{{ asset('storage/' . $barang->gambar) }}" alt="Gambar Utama"
+                                                        class="img-thumbnail" style="max-width: 200px; max-height: 200px;"
+                                                        id="current_main_image">
+                                                @endif
+                                                <div id="main_image_preview" style="display: none;">
+                                                    <img id="preview_main_image" class="img-thumbnail"
+                                                        style="max-width: 200px; max-height: 200px;">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Gambar Pendukung -->
+                                        <div class="mb-3">
+                                            <label for="gambar_pendukung" class="form-label">Gambar Pendukung</label>
+                                            <input type="file"
+                                                class="form-control @error('gambar_pendukung.*') is-invalid @enderror"
+                                                id="gambar_pendukung" name="gambar_pendukung[]" accept="image/*" multiple>
+                                            @error('gambar_pendukung.*')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <div class="mt-2" id="supporting_images_preview">
+                                                @if (isset($barang) && $barang->galeriGambar->count() > 0)
+                                                    <div class="row">
+                                                        @foreach ($barang->galeriGambar as $gambar)
+                                                            <div class="col-md-3 mb-2"
+                                                                id="existing_image_{{ $gambar->kode_gambar }}">
+                                                                <div class="position-relative">
+                                                                    <img src="{{ asset('storage/barang/' . $gambar->gambar) }}"
+                                                                        alt="Gambar Pendukung" class="img-thumbnail"
+                                                                        style="width: 100%; height: 100px; object-fit: cover;">
+                                                                    <button type="button"
+                                                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-supporting-image"
+                                                                        data-id="{{ $gambar->kode_gambar }}">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Gambar Pendukung -->
-                                    <div class="mb-3">
-                                        <label for="gambar_pendukung" class="form-label">Gambar Pendukung</label>
-                                        <input type="file"
-                                            class="form-control @error('gambar_pendukung.*') is-invalid @enderror"
-                                            id="gambar_pendukung" name="gambar_pendukung[]" accept="image/*" multiple>
-                                        @error('gambar_pendukung.*')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <div class="mt-2" id="supporting_images_preview">
-                                            @if (isset($barang) && $barang->galeriGambar->count() > 0)
-                                                <div class="row">
-                                                    @foreach ($barang->galeriGambar as $gambar)
-                                                        <div class="col-md-3 mb-2"
-                                                            id="existing_image_{{ $gambar->kode_gambar }}">
-                                                            <div class="position-relative">
-                                                                <img src="{{ asset('storage/barang/' . $gambar->gambar) }}"
-                                                                    alt="Gambar Pendukung" class="img-thumbnail"
-                                                                    style="width: 100%; height: 100px; object-fit: cover;">
-                                                                <button type="button"
-                                                                    class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-supporting-image"
-                                                                    data-id="{{ $gambar->kode_gambar }}">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Detail Barang -->
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5>Detail Barang</h5>
-                                        <button type="button" class="btn btn-primary btn-sm" id="addDetailBtn">
-                                            <i class="fas fa-plus"></i> Tambah Detail
-                                        </button>
-                                    </div>
+                                <!-- Detail Barang -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5>Detail Barang</h5>
+                                            <button type="button" class="btn btn-primary btn-sm" id="addDetailBtn">
+                                                <i class="fas fa-plus"></i> Tambah Detail
+                                            </button>
+                                        </div>
 
-                                    <div class="table-responsive">
-                                        <!-- Detail Barang Table - Bagian yang diperbaiki -->
                                         <div class="table-responsive">
-                                            <table class="table table-bordered" id="detailTable">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th width="15%">Ukuran <span class="text-danger">*</span></th>
-                                                        <th width="20%">Warna <span class="text-danger">*</span></th>
-                                                        <th width="15%">Harga Normal</th>
-                                                        <th width="12%">Stok Min</th>
-                                                        <th width="15%">Potongan</th>
-                                                        @if (isset($barang))
-                                                            <th width="12%">Stok</th>
-                                                            <th width="15%">Harga Beli</th>
-                                                        @endif
-                                                        <th width="8%">Aksi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="detailTableBody">
-                                                    @if (isset($barang) && $barang->detailBarang->count() > 0)
-                                                        @foreach ($barang->detailBarang as $index => $detail)
+                                            <!-- Detail Barang Table - Bagian yang diperbaiki -->
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered" id="detailTable">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th width="15%">Ukuran <span class="text-danger">*</span></th>
+                                                            <th width="20%">Warna <span class="text-danger">*</span></th>
+                                                            <th width="15%">Harga Normal</th>
+                                                            <th width="12%">Stok Min</th>
+                                                            <th width="15%">Potongan</th>
+                                                            @if (isset($barang))
+                                                                <th width="12%">Stok</th>
+                                                                <th width="15%">Harga Beli</th>
+                                                            @endif
+                                                            <th width="8%">Aksi</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="detailTableBody">
+                                                        @if (isset($barang) && $barang->detailBarang->count() > 0)
+                                                            @foreach ($barang->detailBarang as $index => $detail)
+                                                                <tr>
+                                                                    <td>
+                                                                        <input type="number" class="form-control"
+                                                                            name="detail_barang[{{ $index }}][ukuran]"
+                                                                            value="{{ $detail->ukuran }}" step="0.1"
+                                                                            required min="0">
+                                                                    </td>
+                                                                    <td>
+                                                                        <select class="form-select warna-select"
+                                                                            name="detail_barang[{{ $index }}][kode_warna]"
+                                                                            required>
+                                                                            <option value="">Pilih Warna</option>
+                                                                            @foreach ($warnas as $warna)
+                                                                                <option value="{{ $warna->kode_warna }}"
+                                                                                    {{ $detail->kode_warna == $warna->kode_warna ? 'selected' : '' }}>
+                                                                                    {{ $warna->warna }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control"
+                                                                            name="detail_barang[{{ $index }}][harga_normal]"
+                                                                            value="{{ $detail->harga_normal }}"
+                                                                            min="0">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control"
+                                                                            name="detail_barang[{{ $index }}][stok_minimum]"
+                                                                            value="{{ $detail->stok_minimum }}"
+                                                                            min="0">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control"
+                                                                            name="detail_barang[{{ $index }}][potongan_harga]"
+                                                                            value="{{ $detail->potongan_harga }}"
+                                                                            min="0">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control"
+                                                                            name="detail_barang[{{ $index }}][stok]"
+                                                                            value="{{ $detail->stok }}" min="0"
+                                                                            readonly>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" class="form-control"
+                                                                            name="detail_barang[{{ $index }}][harga_beli]"
+                                                                            value="{{ $detail->harga_beli }}" min="0"
+                                                                            readonly>
+                                                                    </td>
+                                                                    <td>
+                                                                        <button type="button"
+                                                                            class="btn btn-danger btn-sm remove-detail">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        @else
                                                             <tr>
                                                                 <td>
                                                                     <input type="number" class="form-control"
-                                                                        name="detail_barang[{{ $index }}][ukuran]"
-                                                                        value="{{ $detail->ukuran }}" step="0.1"
-                                                                        required min="0">
+                                                                        name="detail_barang[0][ukuran]"
+                                                                        value="{{ old('detail_barang.0.ukuran') }}"
+                                                                        step="0.1" required min="0">
                                                                 </td>
                                                                 <td>
                                                                     <select class="form-select warna-select"
-                                                                        name="detail_barang[{{ $index }}][kode_warna]"
-                                                                        required>
+                                                                        name="detail_barang[0][kode_warna]" required>
                                                                         <option value="">Pilih Warna</option>
                                                                         @foreach ($warnas as $warna)
                                                                             <option value="{{ $warna->kode_warna }}"
-                                                                                {{ $detail->kode_warna == $warna->kode_warna ? 'selected' : '' }}>
+                                                                                {{ old('detail_barang.0.kode_warna') == $warna->kode_warna ? 'selected' : '' }}>
                                                                                 {{ $warna->warna }}
                                                                             </option>
                                                                         @endforeach
@@ -240,33 +309,21 @@
                                                                 </td>
                                                                 <td>
                                                                     <input type="number" class="form-control"
-                                                                        name="detail_barang[{{ $index }}][harga_normal]"
-                                                                        value="{{ $detail->harga_normal }}"
+                                                                        name="detail_barang[0][harga_normal]"
+                                                                        value="{{ old('detail_barang.0.harga_normal') }}"
                                                                         min="0">
                                                                 </td>
                                                                 <td>
                                                                     <input type="number" class="form-control"
-                                                                        name="detail_barang[{{ $index }}][stok_minimum]"
-                                                                        value="{{ $detail->stok_minimum }}"
+                                                                        name="detail_barang[0][stok_minimum]"
+                                                                        value="{{ old('detail_barang.0.stok_minimum') }}"
                                                                         min="0">
                                                                 </td>
                                                                 <td>
                                                                     <input type="number" class="form-control"
-                                                                        name="detail_barang[{{ $index }}][potongan_harga]"
-                                                                        value="{{ $detail->potongan_harga }}"
+                                                                        name="detail_barang[0][potongan_harga]"
+                                                                        value="{{ old('detail_barang.0.potongan_harga') }}"
                                                                         min="0">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" class="form-control"
-                                                                        name="detail_barang[{{ $index }}][stok]"
-                                                                        value="{{ $detail->stok }}" min="0"
-                                                                        readonly>
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" class="form-control"
-                                                                        name="detail_barang[{{ $index }}][harga_beli]"
-                                                                        value="{{ $detail->harga_beli }}" min="0"
-                                                                        readonly>
                                                                 </td>
                                                                 <td>
                                                                     <button type="button"
@@ -275,105 +332,290 @@
                                                                     </button>
                                                                 </td>
                                                             </tr>
-                                                        @endforeach
-                                                    @else
-                                                        <tr>
-                                                            <td>
-                                                                <input type="number" class="form-control"
-                                                                    name="detail_barang[0][ukuran]"
-                                                                    value="{{ old('detail_barang.0.ukuran') }}"
-                                                                    step="0.1" required min="0">
-                                                            </td>
-                                                            <td>
-                                                                <select class="form-select warna-select"
-                                                                    name="detail_barang[0][kode_warna]" required>
-                                                                    <option value="">Pilih Warna</option>
-                                                                    @foreach ($warnas as $warna)
-                                                                        <option value="{{ $warna->kode_warna }}"
-                                                                            {{ old('detail_barang.0.kode_warna') == $warna->kode_warna ? 'selected' : '' }}>
-                                                                            {{ $warna->warna }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" class="form-control"
-                                                                    name="detail_barang[0][harga_normal]"
-                                                                    value="{{ old('detail_barang.0.harga_normal') }}"
-                                                                    min="0">
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" class="form-control"
-                                                                    name="detail_barang[0][stok_minimum]"
-                                                                    value="{{ old('detail_barang.0.stok_minimum') }}"
-                                                                    min="0">
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" class="form-control"
-                                                                    name="detail_barang[0][potongan_harga]"
-                                                                    value="{{ old('detail_barang.0.potongan_harga') }}"
-                                                                    min="0">
-                                                            </td>
-                                                            <td>
-                                                                <button type="button"
-                                                                    class="btn btn-danger btn-sm remove-detail">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-                                                </tbody>
-                                            </table>
+                                                        @endif
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('barang.index') }}" class="btn btn-secondary">Batal</a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save"></i>
-                                            {{ isset($barang) ? 'Update' : 'Simpan' }}
-                                        </button>
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ route('barang.index') }}" class="btn btn-secondary">Batal</a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i>
+                                                {{ isset($barang) ? 'Update' : 'Simpan' }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </form>
+                                </form>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+
+        <!-- Modal untuk Crop Gambar -->
+       <div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cropModalLabel">Crop Gambar Utama</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="crop-container" style="max-height: 400px; overflow: hidden; border-radius: 8px; background: #f8f9fa;">
+                        <img id="cropImage" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal untuk Crop Gambar -->
-   <div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cropModalLabel">Crop Gambar Utama</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-3">
-                <div class="crop-container" style="max-height: 400px; overflow: hidden; border-radius: 8px; background: #f8f9fa;">
-                    <img id="cropImage" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="cropBtn">Crop & Simpan</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary btn-sm" id="cropBtn">Crop & Simpan</button>
-            </div>
         </div>
     </div>
-</div>
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
-        rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+            rel="stylesheet" />
+    <style>
+        /* Custom Select2 Styling */
+        .select2-container {
+            width: 100% !important;
+            z-index: 9999;
+        }
+
+        .select2-container--default .select2-selection--single {
+            height: calc(2.25rem + 2px) !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+            padding: 0.375rem 0.75rem !important;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            background-color: #fff;
+            background-image: none;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #86b7fe !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #212529 !important;
+            line-height: 1.5 !important;
+            padding-left: 0 !important;
+            padding-right: 20px !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #6c757d !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: calc(2.25rem + 2px) !important;
+            position: absolute;
+            top: 0;
+            right: 10px;
+            width: 20px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #6c757d transparent transparent transparent;
+            border-style: solid;
+            border-width: 5px 4px 0 4px;
+            height: 0;
+            left: 50%;
+            margin-left: -4px;
+            margin-top: -2px;
+            position: absolute;
+            top: 50%;
+            width: 0;
+        }
+
+        /* Dropdown styling */
+        .select2-dropdown {
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+            z-index: 9999 !important;
+        }
+
+        .select2-container--default .select2-results__option {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #212529;
+            background-color: transparent;
+            border: none;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+        }
+
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #e7f1ff !important;
+            color: #0d6efd !important;
+        }
+
+        .select2-container--default .select2-results__option[aria-selected=true]:hover {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+        }
+
+        /* Search box styling */
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+            padding: 0.375rem 0.75rem !important;
+            font-size: 1rem;
+            margin: 0.5rem !important;
+            width: calc(100% - 1rem) !important;
+        }
+
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: #86b7fe !important;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Invalid state styling */
+        .is-invalid+.select2-container--default .select2-selection--single {
+            border-color: #dc3545 !important;
+        }
+
+        .is-invalid+.select2-container--default .select2-selection--single:focus,
+        .is-invalid+.select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+        }
+
+        /* Valid state styling */
+        .is-valid+.select2-container--default .select2-selection--single {
+            border-color: #198754 !important;
+        }
+
+        .is-valid+.select2-container--default .select2-selection--single:focus,
+        .is-valid+.select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #198754 !important;
+            box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
+        }
+
+        /* Disabled state styling */
+        .select2-container--default.select2-container--disabled .select2-selection--single {
+            background-color: #e9ecef !important;
+            color: #6c757d !important;
+            cursor: not-allowed;
+        }
+
+        /* Size variants */
+        .select2-container--sm .select2-selection--single {
+            height: calc(1.5rem + 2px) !important;
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.875rem;
+        }
+
+        .select2-container--sm .select2-selection--single .select2-selection__arrow {
+            height: calc(1.5rem + 2px) !important;
+        }
+
+        .select2-container--lg .select2-selection--single {
+            height: calc(3rem + 2px) !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 1.25rem;
+        }
+
+        .select2-container--lg .select2-selection--single .select2-selection__arrow {
+            height: calc(3rem + 2px) !important;
+        }
+
+        /* Ensure dropdown doesn't overflow container */
+        .form-container {
+            position: relative;
+            overflow: visible;
+            z-index: 1;
+        }
+
+        /* Custom scrollbar for dropdown */
+        .select2-results__options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .select2-results__options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .select2-results__options::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .select2-results__options::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .select2-results__options::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Loading state */
+        .select2-container--default .select2-results__option--loading {
+            color: #6c757d !important;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* No results found */
+        .select2-container--default .select2-results__option--no-results {
+            color: #6c757d !important;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .select2-dropdown {
+                width: 100% !important;
+                max-width: none !important;
+            }
+        }
+
+        /* Demo styling */
+        .demo-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .demo-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
 @endpush
 
 @push('scripts')
@@ -385,19 +627,19 @@
             let cropper = null;
             let mainImageFile = null;
 
-            // Initialize Select2
-            $('#kode_tipe').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Pilih Tipe',
-                allowClear: true
-            });
+            // // Initialize Select2
+            // $('#kode_tipe').select2({
+            //     theme: 'bootstrap-5',
+            //     placeholder: 'Pilih Tipe',
+            //     allowClear: true
+            // });
 
-            // Initialize Select2 untuk warna yang sudah ada
-            $('.warna-select').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Pilih Warna',
-                allowClear: true
-            });
+            // // Initialize Select2 untuk warna yang sudah ada
+            // $('.warna-select').select2({
+            //     theme: 'bootstrap-5',
+            //     placeholder: 'Pilih Warna',
+            //     allowClear: true
+            // });
 
             // Template untuk baris detail baru (DIPERBAIKI)
             function getDetailRowTemplate(index) {
@@ -438,11 +680,11 @@
                 $('#detailTableBody').append(newRow);
 
                 // Initialize Select2 untuk select yang baru ditambahkan
-                newRow.find('.warna-select').select2({
-                    theme: 'bootstrap-5',
-                    placeholder: 'Pilih Warna',
-                    allowClear: true
-                });
+                // newRow.find('.warna-select').select2({
+                //     theme: 'bootstrap-5',
+                //     placeholder: 'Pilih Warna',
+                //     allowClear: true
+                // });
 
                 detailIndex++;
             });

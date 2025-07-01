@@ -578,37 +578,62 @@
         </div>
 
         <!-- Low Stock Alert -->
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fas fa-exclamation-triangle text-warning"></i>
-                        Stok Menipis (< 10) </div>
+                        Stok Menipis
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Warna</th>
+                                    <th>Ukuran</th>
+                                    <th>Stok</th>
+                                    <th>Stok Minimum</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($stokMenupis as $stok)
+                                    @php
+                                        if ($stok->stok <= $stok->stok_minimum) {
+                                            $badgeClass = 'danger';
+                                            $keterangan = 'Harus Restock';
+                                        } elseif ($stok->stok <= $stok->stok_minimum + 5) {
+                                            $badgeClass = 'warning';
+                                            $keterangan = 'Warning';
+                                        } elseif ($stok->stok >= $stok->stok_minimum + 10) {
+                                            $badgeClass = 'success';
+                                            $keterangan = 'Aman';
+                                        } else {
+                                            $badgeClass = 'secondary'; // opsional: kondisi antara +6 sampai +9
+                                            $keterangan = 'Cukup';
+                                        }
+                                    @endphp
                                     <tr>
-                                        <th>Produk</th>
-                                        <th>Warna</th>
-                                        <th>Ukuran</th>
-                                        <th>Stok</th>
+                                        <td>{{ $stok->nama_barang }}</td>
+                                        <td>{{ $stok->warna }}</td>
+                                        <td>{{ $stok->ukuran }}</td>
+                                        <td>
+                                            <span class="badge badge-{{ $badgeClass }}">
+                                                {{ $stok->stok }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $stok->stok_minimum }}</td>
+                                        <td>
+                                            <span class="badge badge-{{ $badgeClass }}">
+                                                {{ $keterangan }}
+                                            </span>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($stokMenupis as $stok)
-                                        <tr>
-                                            <td>{{ $stok->nama_barang }}</td>
-                                            <td>{{ $stok->warna }}</td>
-                                            <td>{{ $stok->ukuran }}</td>
-                                            <td>
-                                                <span class="badge badge-{{ $stok->stok <= 5 ? 'danger' : 'warning' }}">
-                                                    {{ $stok->stok }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @endforeach
+                                @endforeach
+
                                 </tbody>
                             </table>
                         </div>
