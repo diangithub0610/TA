@@ -138,16 +138,16 @@ class DashboardController extends Controller
         $stokMenupis = DB::table('detail_barang')
             ->join('barang', 'detail_barang.kode_barang', '=', 'barang.kode_barang')
             ->join('warna', 'detail_barang.kode_warna', '=', 'warna.kode_warna')
-            ->where('detail_barang.stok', '<', 10)
             ->where('barang.is_active', 1)
             ->select(
                 'barang.nama_barang',
                 'warna.warna',
                 'detail_barang.ukuran',
-                'detail_barang.stok'
+            'detail_barang.stok',
+            'detail_barang.stok_minimum',
             )
             ->orderBy('detail_barang.stok', 'asc')
-            ->limit(10)
+            // ->limit(10)
             ->get();
 
         return view('admin.dashboard.index', compact(
