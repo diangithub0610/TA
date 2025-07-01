@@ -68,7 +68,7 @@
                                             'menunggu_konfirmasi' => ['class' => 'warning', 'text' => 'Pesanan Baru'],
                                             'diproses' => ['class' => 'primary', 'text' => 'Dalam Proses'],
                                             'dikirim' => ['class' => 'info', 'text' => 'Dikirim'],
-                                            'selesai' => ['class' => 'success', 'text' => 'Selesai'],
+                                            'selesai' => ['class' => 'primary', 'text' => 'Selesai'],
                                             'dibatalkan' => ['class' => 'danger', 'text' => 'Dibatalkan'],
                                         ];
                                         $currentStatus = $statusBadge[$item->status] ?? [
