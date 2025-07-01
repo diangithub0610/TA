@@ -76,7 +76,7 @@
                                             'text' => ucfirst($item->status),
                                         ];
                                     @endphp
-                                    <span class="badge bg-{{ $currentStatus['class'] }} rounded-pill px-3 badge bg-primary py-2">
+                                    <span class="badge bg-{{ primary['class'] }} rounded-pill px-3 badge bg-primary py-2">
                                         {{ $currentStatus['text'] }}
                                     </span>
                                 </div>
